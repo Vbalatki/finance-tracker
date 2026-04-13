@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="navbar">
+    <!-- Простая навигация без сложной логики -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="/dashboard">
+                <i class="bi bi-graph-up"></i> Финансовый трекер
+            </a>
+            <div class="navbar-nav flex-row">
+                <a class="nav-link me-3" href="/dashboard">Главная</a>
+                <a class="nav-link me-3" href="/accounts">Счета</a>
+                <a class="nav-link me-3" href="/transactions">Транзакции</a>
+                <a class="nav-link me-3" href="/categories">Категории</a>
+            </div>
+            <div class="navbar-nav">
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-box-arrow-right"></i> Выйти
+                    </button>
+                </form>
+            </div>
+        </div>
+    </nav>
+</div>
+</body>
+</html>

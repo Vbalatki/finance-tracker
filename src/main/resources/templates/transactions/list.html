@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Транзакции - Финансовый трекер</title>
+    <!-- Подключаем head -->
+    <div th:replace="~{layout/head :: head}"></div>
+</head>
+<body>
+<!-- Подключаем header -->
+<div th:replace="~{layout/header :: header}"></div>
+
+<div class="container mt-4">
+    <!-- Заголовок и кнопки -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="bi bi-arrow-left-right text-primary"></i> Транзакции
+            </h1>
+            <p class="text-muted mb-0">История всех финансовых операций</p>
+        </div>
+        <div>
+            <a href="/transactions/create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Новая транзакция
+            </a>
+        </div>
+    </div>
+
+    <!-- Сообщения -->
+    <div th:if="${success != null}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${error != null}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Общая статистика -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 bg-light">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted">Всего транзакций</h5>
+                    <h2 class="card-text">
+                        <span th:text="${totalTransactions ?: 0}">0</span>
+                    </h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 bg-success bg-opacity-10">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-success">Поступления</h5>
+                    <h2 class="card-text text-success">
+                    <span th:if="${totalIncome != null}"
+                          th:text="${#numbers.formatDecimal(totalIncome, 0, 'COMMA', 2, 'POINT') + ' ₽'}">
+                        0 ₽
+                    </span>
+                        <span th:unless="${totalIncome != null}">0 ₽</span>
+                    </h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 bg-danger bg-opacity-10">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-danger">Расходы</h5>
+                    <h2 class="card-text text-danger">
+                    <span th:if="${totalExpense != null}"
+                          th:text="${#numbers.formatDecimal(totalExpense, 0, 'COMMA', 2, 'POINT') + ' ₽'}">
+                        0 ₽
+                    </span>
+                        <span th:unless="${totalExpense != null}">0 ₽</span>
+                    </h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 bg-primary bg-opacity-10">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-primary">Баланс</h5>
+                    <h2 class="card-text text-primary">
+                    <span th:if="${totalBalance != null}"
+                          th:text="${#numbers.formatDecimal(totalBalance, 0, 'COMMA', 2, 'POINT') + ' ₽'}">
+                        0 ₽
+                    </span>
+                        <span th:unless="${totalBalance != null}">0 ₽</span>
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Фильтры -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-funnel"></i> Фильтры
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="get" action="/transactions" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Счет</label>
+                    <select name="accountId" class="form-select" onchange="this.form.submit()">
+                        <option value="">Все счета</option>
+                        <option th:each="account : ${accounts}"
+                                th:value="${account.id}"
+                                th:text="${account.name}"
+                                th:selected="${selectedAccountId == account.id}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Категория</label>
+                    <select name="categoryId" class="form-select" onchange="this.form.submit()">
+                        <option value="">Все категории</option>
+                        <option th:each="category : ${categories}"
+                                th:value="${category.id}"
+                                th:text="${category.name}"
+                                th:selected="${selectedCategoryId == category.id}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-4 d-flex align-items-end">
+                    <a href="/transactions" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-x-circle"></i> Сбросить фильтры
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Список транзакций по счетам -->
+    <div th:if="${transactionsByAccount != null and not #maps.isEmpty(transactionsByAccount)}">
+        <div th:each="entry : ${transactionsByAccount}">
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-wallet2 me-2"></i>
+                        <strong th:text="${entry.key.name}">Название счёта</strong>
+                        <span class="ms-2 badge bg-light text-dark">
+                        Баланс: <span th:text="${#numbers.formatDecimal(entry.key.balance, 1, 2)}">0</span>
+                        <span th:text="${entry.key.currency}">RUB</span>
+                    </span>
+                    </div>
+                    <span class="badge bg-secondary">
+                    <i class="bi bi-receipt"></i> <span th:text="${entry.value.size()}">0</span> транзакций
+                </span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Описание</th>
+                                <th>Категория</th>
+                                <th>Сумма</th>
+                                <th>Тип</th>
+                                <th>Действия</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="tx : ${entry.value}">
+                                <td>
+                                    <span th:text="${#temporals.format(tx.createdAt, 'dd.MM.yyyy')}"></span>
+                                    <br>
+                                    <small class="text-muted" th:text="${#temporals.format(tx.createdAt, 'HH:mm')}"></small>
+                                </td>
+                                <td><strong th:text="${tx.description}">Описание</strong></td>
+                                <td>
+                                <span th:if="${tx.categoryName != null}" class="badge bg-secondary">
+                                    <i class="bi bi-tag"></i> <span th:text="${tx.categoryName}"></span>
+                                </span>
+                                    <span th:if="${tx.categoryName == null}" class="text-muted">—</span>
+                                </td>
+                                <td>
+                                <span th:class="${tx.type.name() == 'INCOME' ? 'text-success' : 'text-danger'}">
+                                    <span th:text="${tx.type.name() == 'INCOME' ? '+' : '-'}"></span>
+                                    <span th:text="${#numbers.formatDecimal(tx.amount, 1, 2)}"></span>
+                                </span>
+                                </td>
+                                <td>
+                                <span th:switch="${tx.type}" class="badge">
+                                    <span th:case="'INCOME'" class="bg-success"><i class="bi bi-arrow-down-left"></i> Поступление</span>
+                                    <span th:case="'EXPENSE'" class="bg-danger"><i class="bi bi-arrow-up-right"></i> Расход</span>
+                                </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button"
+                                                class="btn btn-outline-danger delete-transaction-btn"
+                                                th:attr="data-transaction-id=${tx.id},
+                                                     data-transaction-description=${tx.description}"
+                                                title="Удалить">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${entry.value.isEmpty()}">
+                                <td colspan="6" class="text-center text-muted">Нет транзакций по этому счёту</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Если нет ни одной транзакции ни на одном счету -->
+    <div th:if="${transactionsByAccount == null or #maps.isEmpty(transactionsByAccount)}" class="text-center py-5">
+        <div class="mb-4">
+            <i class="bi bi-arrow-left-right display-1 text-muted"></i>
+        </div>
+        <h4 class="text-muted mb-3">Транзакции не найдены</h4>
+        <p class="text-muted mb-4">Начните добавлять транзакции для отслеживания финансов</p>
+        <a href="/transactions/create" class="btn btn-primary btn-lg">
+            <i class="bi bi-plus-circle"></i> Добавить первую транзакцию
+        </a>
+    </div>
+
+    <!-- Инструкция -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <h6><i class="bi bi-lightbulb"></i> Советы по управлению транзакциями:</h6>
+            <ul class="mb-0">
+                <li>Регулярно добавляйте транзакции для точного учета финансов</li>
+                <li>Используйте категории для анализа расходов</li>
+                <li>Сортируйте транзакции по дате для отслеживания динамики</li>
+                <li>Используйте фильтры для поиска конкретных операций</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Футер из layout папки -->
+<footer th:replace="layout/footer :: footer"></footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Модальное окно для подтверждения удаления -->
+<div class="modal fade" id="transactionDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" id="deleteTransactionForm">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Подтверждение удаления
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body text-center">
+                    <div class="mb-4">
+                        <i class="bi bi-trash text-danger display-4"></i>
+                    </div>
+
+                    <h6 class="fw-bold mb-2" id="deleteTransactionDescription">[Описание транзакции]</h6>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-circle"></i>
+                        <strong>Внимание!</strong> Это действие невозможно отменить.
+                        Баланс счета будет пересчитан.
+                    </div>
+
+                    <p>Вы уверены, что хотите удалить эту транзакцию?</p>
+                </div>
+
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Отмена
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Да, удалить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Обработка удаления транзакции
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteButtons = document.querySelectorAll('.delete-transaction-btn');
+        const deleteModal = document.getElementById('transactionDeleteModal');
+        const deleteForm = document.getElementById('deleteTransactionForm');
+        const descriptionElement = document.getElementById('deleteTransactionDescription');
+
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const transactionId = this.getAttribute('data-transaction-id');
+                const description = this.getAttribute('data-transaction-description') || 'Без описания';
+
+                // Устанавливаем описание
+                descriptionElement.textContent = description;
+
+                // Обновляем action формы
+                deleteForm.action = `/transactions/${transactionId}/delete`;
+
+                // Показываем модальное окно
+                const modal = new bootstrap.Modal(deleteModal);
+                modal.show();
+            });
+        });
+
+        // Автоматическое скрытие алертов через 5 секунд
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Редактирование счета - Финансовый трекер</title>
+    <div th:replace="~{layout/head :: head}"></div>
+</head>
+<body>
+<div th:replace="~{layout/header :: header}"></div>
+
+<div class="container mt-4">
+    <!-- Хлебные крошки -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/accounts">Счета</a></li>
+            <li class="breadcrumb-item">
+                <a th:href="@{/accounts/{id}(id=${accountDto.id})}" th:text="${accountDto.name}"></a>
+            </li>
+            <li class="breadcrumb-item active">Редактирование</li>
+        </ol>
+    </nav>
+
+    <!-- Сообщения об ошибках -->
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle"></i> <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Заголовок -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Редактирование счета</h1>
+        <a th:href="@{/accounts/{id}(id=${accountDto.id})}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Назад
+        </a>
+    </div>
+
+    <!-- Форма редактирования -->
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/accounts/{id}/edit(id=${accountDto.id})}"
+                  method="post"
+                  th:object="${accountDto}">
+
+                <!-- ID счета (скрытое поле) -->
+                <input type="hidden" th:field="*{id}">
+                <input type="hidden" th:field="*{userId}">
+
+                <div class="row">
+                    <!-- Название счета -->
+                    <div class="col-md-6 mb-3">
+                        <label for="name" class="form-label">
+                            <i class="bi bi-card-heading"></i> Название счета *
+                        </label>
+                        <input type="text"
+                               class="form-control"
+                               id="name"
+                               th:field="*{name}"
+                               th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"
+                               required>
+                        <div th:if="${#fields.hasErrors('name')}" class="invalid-feedback">
+                            <span th:errors="*{name}"></span>
+                        </div>
+                    </div>
+
+                    <!-- Валюта -->
+                    <div class="col-md-6 mb-3">
+                        <label for="currency" class="form-label">
+                            <i class="bi bi-currency-exchange"></i> Валюта счета *
+                        </label>
+                        <select class="form-select"
+                                id="currency"
+                                th:field="*{currency}"
+                                th:classappend="${#fields.hasErrors('currency')} ? 'is-invalid' : ''"
+                                required>
+                            <option value="">Выберите валюту</option>
+                            <option th:each="currency : ${currencies}"
+                                    th:value="${currency}"
+                                    th:text="${currency}">
+                            </option>
+                        </select>
+                        <div th:if="${#fields.hasErrors('currency')}" class="invalid-feedback">
+                            <span th:errors="*{currency}"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Баланс (только для информации) -->
+                <div class="mb-3">
+                    <label class="form-label">
+                        <i class="bi bi-cash-stack"></i> Текущий баланс
+                    </label>
+                    <div class="input-group">
+                        <input type="text"
+                               class="form-control"
+                               th:value="${currencyFormatter.formatAmount(accountDto.balance, accountDto.currency)}"
+                               readonly>
+                        <span class="input-group-text">
+                            <span th:switch="${accountDto.currency}">
+                                <span th:case="RUB">₽</span>
+                                <span th:case="USD">$</span>
+                                <span th:case="EUR">€</span>
+                                <span th:case="GBP">£</span>
+                                <span th:case="KZT">₸</span>
+                                <span th:case="JPY">¥</span>
+                            </span>
+                        </span>
+                    </div>
+                    <small class="text-muted">
+                        Баланс можно изменить только через операции пополнения/снятия
+                    </small>
+                </div>
+
+                <!-- Кнопки -->
+                <div class="d-flex justify-content-between mt-4">
+                    <div>
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="bi bi-check-circle"></i> Сохранить изменения
+                        </button>
+                        <a th:href="@{/accounts/{id}(id=${accountDto.id})}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Отмена
+                        </a>
+                    </div>
+
+                    <!-- Кнопка удаления -->
+                    <button type="button"
+                            class="btn btn-outline-danger"
+                            onclick="if(confirm('Вы уверены, что хотите удалить этот счет?')) {
+                                document.getElementById('deleteForm').submit();
+                            }">
+                        <i class="bi bi-trash"></i> Удалить счет
+                    </button>
+                </div>
+            </form>
+
+            <!-- Форма для удаления (отдельная) -->
+            <form id="deleteForm"
+                  th:action="@{/accounts/{id}/delete(id=${accountDto.id})}"
+                  method="post"
+                  style="display: none;">
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Новая транзакция - Финансовый трекер</title>
+  <div th:replace="~{layout/head :: head}"></div>
+</head>
+<body>
+<div th:replace="~{layout/header :: header}"></div>
+
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <!-- Заголовок -->
+      <div class="mb-4">
+        <a href="/transactions" class="btn btn-outline-secondary btn-sm mb-3">
+          <i class="bi bi-arrow-left"></i> Назад к списку
+        </a>
+        <h1 class="h3 mb-0">
+          <i class="bi bi-plus-circle text-primary"></i> Новая транзакция
+        </h1>
+        <p class="text-muted">Добавьте информацию о финансовой операции</p>
+      </div>
+
+
+
+      <!-- Форма -->
+      <div class="card">
+        <div class="card-body">
+          <form th:action="@{/transactions}" th:object="${transactionDto}" method="post" novalidate>
+
+            <!-- Тип транзакции -->
+            <div class="mb-4">
+              <label class="form-label fw-bold">Тип транзакции *</label>
+              <div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio"
+                         th:field="*{type}" id="typeIncome" value="INCOME" required checked>
+                  <label class="form-check-label" for="typeIncome">
+                    <i class="bi bi-arrow-down-left text-success"></i> Поступление
+                  </label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio"
+                         th:field="*{type}" id="typeExpense" value="EXPENSE" required>
+                  <label class="form-check-label" for="typeExpense">
+                    <i class="bi bi-arrow-up-right text-danger"></i> Расход
+                  </label>
+                </div>
+              </div>
+              <div th:errors="*{type}" class="text-danger mt-2"></div>
+            </div>
+
+            <!-- Сумма -->
+            <div class="mb-4">
+              <label for="amount" class="form-label fw-bold">Сумма *</label>
+              <div class="input-group">
+                <input type="number" step="0.01" min="0.01"
+                       class="form-control" id="amount"
+                       th:field="*{amount}" required
+                       placeholder="0.00">
+                <span class="input-group-text" id="currencySymbol">₽</span>
+              </div>
+              <div th:errors="*{amount}" class="text-danger mt-2"></div>
+            </div>
+
+            <!-- Счет -->
+            <div class="mb-4">
+              <label for="accountId" class="form-label fw-bold">Счет *</label>
+              <select class="form-select" id="accountId" th:field="*{accountId}" required>
+                <option value="">Выберите счет</option>
+                <option th:each="account : ${accounts}"
+                        th:value="${account.id}"
+                        th:attr="data-currency=${account.currency}"
+                        th:text="${account.name} + ' (' + ${account.balance} + ' ' + ${account.currency} + ')'">
+                </option>
+              </select>
+              <div th:errors="*{accountId}" class="text-danger mt-2"></div>
+            </div>
+
+            <!-- Категория -->
+            <div class="mb-4">
+              <label for="categoryId" class="form-label fw-bold">Категория</label>
+              <select class="form-select" id="categoryId"
+                      th:field="*{categoryId}">
+                <option value="">Без категории</option>
+                <option th:each="category : ${categories}"
+                        th:value="${category.id}"
+                        th:text="${category.name}">
+                </option>
+              </select>
+              <div th:errors="*{categoryId}" class="text-danger mt-2"></div>
+            </div>
+
+            <!-- Описание -->
+            <div class="mb-4">
+              <label for="description" class="form-label fw-bold">Описание</label>
+              <textarea class="form-control" id="description"
+                        th:field="*{description}" rows="3"
+                        placeholder="Например: Зарплата за январь, Оплата интернета..."></textarea>
+              <div th:errors="*{description}" class="text-danger mt-2"></div>
+            </div>
+
+            <!-- Кнопки -->
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <a href="/transactions" class="btn btn-outline-secondary me-md-2">
+                <i class="bi bi-x-circle"></i> Отмена
+              </a>
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle"></i> Сохранить транзакцию
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Подсказки -->
+      <div class="card mt-4">
+        <div class="card-body">
+          <h6 class="card-title">
+            <i class="bi bi-lightbulb"></i> Советы по добавлению транзакций:
+          </h6>
+          <ul class="mb-0">
+            <li>Регулярность: Вносите данные ежедневно или еженедельно, чтобы не забыть детали.</li>
+            <li>Пишите конкретные описания операций, чтобы упростить анализ</li>
+            <li>Четко разделяйте личные и бизнес-транзакции</li>
+            <li>Проверяйте баланс счета после каждой операции</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer th:replace="layout/footer :: footer"></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<script>
+  function updateCurrencySymbol() {
+    const select = document.getElementById('accountId');
+    if (!select) return;
+    const selectedOption = select.options[select.selectedIndex];
+    const currency = selectedOption.getAttribute('data-currency');
+    const currencySymbol = getCurrencySymbol(currency);
+    const symbolSpan = document.getElementById('currencySymbol');
+    if (symbolSpan) symbolSpan.innerText = currencySymbol;
+  }
+
+  function getCurrencySymbol(currencyCode) {
+    switch(currencyCode) {
+      case 'RUB': return '₽';
+      case 'USD': return '$';
+      case 'EUR': return '€';
+      case 'GBP': return '£';
+      case 'KZT': return '₸';
+      case 'JPY': return '¥';
+      default: return '';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const select = document.getElementById('accountId');
+    if (select) {
+      updateCurrencySymbol();
+      select.addEventListener('change', updateCurrencySymbol);
+    }
+  });
+</script>
+</body>
+</html>

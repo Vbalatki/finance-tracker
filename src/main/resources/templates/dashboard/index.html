@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:thx="http://www.thymeleaf.org">
+<head>
+  <title>Dashboard - Финансовый трекер</title>
+  <!-- Подключаем head -->
+    <div th:replace="~{layout/head :: head}"></div>
+</head>
+<body>
+<!-- Подключаем header -->
+<div th:replace="~{layout/header :: header}"></div>
+
+<div class="container mt-4">
+  <h1>Дашборд</h1>
+
+  <!-- Информация о пользователе -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">Добро пожаловать,
+        <span th:if="${user != null}"
+              th:text="${user.name + ' ' + user.surname}">
+                        Пользователь
+                    </span>
+        <span th:unless="${user != null}">
+                        Пользователь
+                    </span>!
+      </h5>
+    </div>
+    <div class="card-body">
+      <p>Email:
+        <span th:if="${user != null and user.email != null}"
+              th:text="${user.email}">
+                        Не указан
+                    </span>
+        <span th:unless="${user != null and user.email != null}">
+                        Не указан
+                    </span>
+      </p>
+    </div>
+  </div>
+
+  <!-- Общий баланс -->
+  <div class="card mb-4">
+    <div class="card-header bg-success text-white">
+      <h5 class="mb-0">Общий баланс</h5>
+    </div>
+    <div class="card-body">
+      <h2 class="text-center">
+                    <span th:if="${totalBalance != null}"
+                          th:text="${#numbers.formatDecimal(totalBalance, 0, 'COMMA', 2, 'POINT') + ' ₽'}">
+                        0 ₽
+                    </span>
+        <span th:unless="${totalBalance != null}">
+                        0 ₽
+                    </span>
+      </h2>
+    </div>
+  </div>
+
+    <!-- Счета -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Мои счета</h5>
+        </div>
+        <div class="card-body">
+            <div th:if="${accounts != null}">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Название</th>
+                            <th>Валюта</th>
+                            <th>Баланс</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="account : ${accounts}">
+                            <td th:text="${account.name}">Счет</td>
+                            <td>
+                                <!-- Отображаем символ валюты вместо кода -->
+                                <span th:switch="${account.currency}">
+                  <span th:case="RUB" class="fw-bold">₽ RUB</span>
+                  <span th:case="USD" class="fw-bold">$ USD</span>
+                  <span th:case="EUR" class="fw-bold">€ EUR</span>
+                  <span th:case="GBP" class="fw-bold">£ GBP</span>
+                  <span th:case="KZT" class="fw-bold">₸ KZT</span>
+                  <span th:case="CNY" class="fw-bold">¥ CNY</span>
+                  <span th:case="JPY" class="fw-bold">¥ JPY</span>
+                  <span th:case="CHF" class="fw-bold">CHF</span>
+                  <span th:case="*" th:text="${account.currency}" class="fw-bold"></span>
+                </span>
+                            </td>
+                            <td>
+                <span th:if="${account.balance != null}">
+                  <!-- Форматируем сумму и добавляем символ валюты -->
+                  <span th:switch="${account.currency}">
+                    <!-- Для рубля -->
+                    <span th:case="RUB"
+                          th:text="${#numbers.formatDecimal(account.balance, 1, 'COMMA', 2, 'POINT') + ' ₽'}">
+                      0 ₽
+                    </span>
+                      <!-- Для доллара -->
+                    <span th:case="USD"
+                          th:text="'$' + ${#numbers.formatDecimal(account.balance, 1, 'COMMA', 2, 'POINT')}">
+                      $0
+                    </span>
+                      <!-- Для евро -->
+                    <span th:case="EUR"
+                          th:text="'€' + ${#numbers.formatDecimal(account.balance, 1, 'COMMA', 2, 'POINT')}">
+                      €0
+                    </span>
+                      <!-- Для фунта -->
+                    <span th:case="GBP"
+                          th:text="'£' + ${#numbers.formatDecimal(account.balance, 1, 'COMMA', 2, 'POINT')}">
+                      £0
+                    </span>
+                      <!-- Для тенге -->
+                    <span th:case="KZT"
+                          th:text="${#numbers.formatDecimal(account.balance, 1, 'COMMA', 2, 'POINT') + ' ₸'}">
+                      0 ₸
+                    </span>
+                      <!-- Для остальных валют -->
+                    <span th:case="*"
+                          th:text="${#numbers.formatDecimal(account.balance, 1, 'COMMA', 2, 'POINT') + ' ' + account.currency}">
+                      0
+                    </span>
+                  </span>
+                </span>
+                                <span th:unless="${account.balance != null}">
+                  0 ₽
+                </span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-muted">Всего счетов: <span th:text="${accounts.size()}">0</span></p>
+            </div>
+            <div th:if="${accounts == null}" class="text-center py-4">
+                <p class="text-muted">Счетов нет</p>
+                <a href="/accounts/create" class="btn btn-primary">Создать первый счет</a>
+            </div>
+        </div>
+    </div>
+
+  <!-- Последние транзакции -->
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0">Последние транзакции</h5>
+    </div>
+    <div class="card-body">
+      <div th:if="${recentTransactions != null}">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+            <tr>
+              <th>Дата</th>
+              <th>Описание</th>
+              <th>Счет</th>
+              <th>Сумма</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="transaction : ${recentTransactions}">
+              <td>
+                                        <span th:if="${transaction.createdAt != null}"
+                                              th:text="${#temporals.format(transaction.createdAt, 'dd.MM.yyyy HH:mm')}">
+                                            --
+                                        </span>
+                <span th:unless="${transaction.createdAt != null}">
+                                            --
+                                        </span>
+              </td>
+              <td>
+                                        <span th:if="${transaction.description != null}"
+                                              th:text="${transaction.description}">
+                                            Без описания
+                                        </span>
+                <span th:unless="${transaction.description != null}">
+                                            Без описания
+                                        </span>
+              </td>
+              <td>
+                                        <span th:text="${transaction.accountName != null ? transaction.accountName : 'Без названия'}"
+                                            class="badge bg-light text-dark">
+                                        </span>
+              </td>
+              <td th:class="${transaction.type == 'INCOME' ? 'text-success fw-bold' : 'text-danger fw-bold'}">
+                <span th:if="${transaction.amount != null}">
+                <!-- Знак -->
+                    <span th:if="${transaction.type == 'INCOME'}">+</span>
+                    <span th:if="${transaction.type == 'EXPENSE'}">-</span>
+
+                    <!-- Сумма -->
+                    <span th:text="${#numbers.formatDecimal(transaction.amount, 0, 'COMMA', 2, 'POINT')}">
+                    0
+                    </span>
+
+                    <!-- Валюта -->
+                    <span th:if="${transaction.accountCurrency != null}">
+                        <span th:switch="${transaction.accountCurrency}">
+                            <span th:case="RUB"> ₽</span>
+                            <span th:case="USD"> $</span>
+                            <span th:case="EUR"> €</span>
+                            <span th:case="GBP"> £</span>
+                            <span th:case="KZT"> ₸</span>
+                            <span th:case="*" th:text="${' ' + transaction.accountCurrency}"></span>
+                        </span>
+                    </span>
+                    <span th:if="${transaction.accountCurrency == null}"> ₽</span>
+                </span>
+                <span th:unless="${transaction.amount != null}">
+                0 ₽
+                </span>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div th:if="${recentTransactions == null}" class="text-center py-4">
+        <p class="text-muted">Транзакций нет</p>
+        <a href="/transactions/create" class="btn btn-primary">Добавить первую транзакцию</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Отладочная информация -->
+  <div class="mt-4 p-3 bg-light rounded" th:if="${false}">  <!-- Отключено по умолчанию -->
+    <h6>Отладочная информация:</h6>
+    <p>Пользователь: <span th:text="${user != null ? 'Есть (ID: ' + user.id + ')' : 'Нет'}">Нет</span></p>
+    <p>Количество счетов: <span th:text="${accounts != null ? accounts.size() : 0}">0</span></p>
+    <p>Количество транзакций: <span th:text="${recentTransactions != null ? recentTransactions.size() : 0}">0</span></p>
+  </div>
+</div>
+
+
+<footer th:replace="layout/footer :: footer"></footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

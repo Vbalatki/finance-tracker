@@ -1,0 +1,173 @@
+# ================================
+# ФИНАНСОВЫЙ ТРЕКЕР - MySQL КОНФИГ
+# ================================
+
+spring:
+  application:
+    name: finance-tracker
+  
+  # ======= НАСТРОЙКИ MySQL =======
+  datasource:
+    url: jdbc:mysql://localhost:3306/finance_tracker?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+    username: root
+    password: root1                  # ⚠️ ИЗМЕНИ НА СВОЙ ПАРОЛЬ!
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+    # Оптимизация пула соединений
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
+  
+  # ======= НАСТРОЙКИ JPA/HIBERNATE =======
+  jpa:
+    hibernate:
+      ddl-auto: update                # create / update / validate / none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+        show_sql: true                # Показывать SQL в консоли
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+        generate_statistics: false    # true для отладки производительности
+        connection:
+          charset: UTF-8
+          useUnicode: true
+    show-sql: true
+    open-in-view: false               # Лучше false для производительности
+  
+  # ======= НАСТРОЙКИ THYMELEAF =======
+  thymeleaf:
+    cache: false                      # false для разработки
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    check-template: true
+    check-template-location: true
+    enabled: true
+  
+  # ======= ЛОГИРОВАНИЕ =======
+  logging:
+    level:
+      com.finance.tracker: DEBUG
+    file:
+      name: logs/finance-tracker.log
+    pattern:
+      console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+      file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# ======= НАСТРОЙКИ СЕРВЕРА =======
+server:
+  address: 0.0.0.0
+  port: 8080
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  tomcat:
+    max-threads: 200
+    min-spare-threads: 10
+    connection-timeout: 5000
+
+# ======= КОНФИГУРАЦИЯ ЛОГИРОВАНИЯ =======
+logging:
+  level:
+    # Spring Security (ДЕБАГ ВКЛЮЧЕН!) ⬅⬅⬅ ВАЖНО
+    org.springframework.security: DEBUG
+    org.springframework.security.web: DEBUG
+    org.springframework.security.authentication: DEBUG
+    org.springframework.security.config: DEBUG
+    org.springframework.security.web.authentication: DEBUG
+
+    # Твое приложение
+    com.finance.tracker: DEBUG
+    com.finance.tracker.controller: DEBUG
+    com.finance.tracker.service: DEBUG
+    com.finance.tracker.repository: DEBUG
+    com.finance.tracker.security: DEBUG
+
+    # Spring Web
+    org.springframework.web: DEBUG
+    org.springframework.web.servlet: DEBUG
+    org.springframework.web.filter: DEBUG
+
+    # Spring Framework
+    org.springframework: INFO
+    org.springframework.transaction: DEBUG
+    org.springframework.orm.jpa: DEBUG
+    org.springframework.jdbc: DEBUG
+
+    # Hibernate/JPA
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.hibernate.stat: DEBUG
+    org.hibernate.engine.transaction.internal.TransactionImpl: DEBUG
+
+    # База данных
+    com.zaxxer.hikari: DEBUG
+    org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl: DEBUG
+
+    # Thymeleaf
+    org.thymeleaf: DEBUG
+    org.thymeleaf.TemplateEngine: INFO
+
+    # Другие полезные логгеры
+    org.springframework.boot.autoconfigure: INFO
+    org.springframework.context: INFO
+    org.springframework.beans: INFO
+
+  # Настройка файлов логов
+  file:
+    name: logs/finance-tracker.log
+    max-size: 10MB
+    max-history: 30
+
+  # Паттерны для логов
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{40} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{40} - %msg%n"
+
+  # Настройки Logback (если используется)
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
+      total-size-cap: 100MB
+      clean-history-on-start: false
+
+# ======= ДОПОЛНИТЕЛЬНЫЕ НАСТРОЙКИ =======
+# Для разработки
+spring.devtools:
+  restart:
+    enabled: true
+  livereload:
+    enabled: true
+
+# Кэширование (пока отключено)
+spring.cache:
+  type: none
+
+# ======= ПРОВЕРКА ЗДОРОВЬЯ =======
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+    metrics:
+      enabled: true
+
+# ======= НАСТРОЙКИ ДЛЯ ОТЛАДКИ =======
+debug: true  # Включает отладочную информацию Spring Boot
+trace: false # Включает трассировку (будет много логов)

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dashboard - Финансовый трекер</title>
+    <!-- Подключаем head -->
+    <div th:replace="~{layout/head :: head}"></div>
+</head>
+<body>
+<!-- Подключаем header -->
+<div th:replace="~{layout/header :: header}"></div>
+
+<div class="container mt-4">
+    <!-- Заголовок и кнопки -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="bi bi-wallet2 text-primary"></i> Мои счета
+            </h1>
+            <p class="text-muted mb-0">Управление вашими финансовыми счетами</p>
+        </div>
+        <div>
+            <a href="/accounts/create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Новый счет
+            </a>
+        </div>
+    </div>
+
+    <!-- Сообщения -->
+    <div th:if="${success != null}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${error != null}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Общая статистика -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 bg-light">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted">Всего счетов</h5>
+                    <h2 class="card-text">
+                        <span th:text="${accounts != null ? accounts.size() : 0}">0</span>
+                    </h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 bg-light">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted">Общий баланс</h5>
+                    <h2 class="card-text text-success">
+                            <span th:text="${currencyFormatter.formatAmountInRub(totalBalance)}">
+                                0 ₽
+                            </span>
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Баланс по валютам -->
+    <div th:if="${balanceByCurrency != null and !balanceByCurrency.isEmpty()}" class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-currency-exchange"></i> Баланс по валютам
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <th:block th:each="entry : ${balanceByCurrency}">
+                    <div class="col-md-3 mb-3">
+                        <div th:classappend="'currency-card currency-' + ${#strings.toLowerCase(entry.key)}"
+                             class="d-flex justify-content-between align-items-center p-3 border rounded">
+                            <div class="d-flex align-items-center">
+                                    <span th:switch="${entry.key}" class="fw-bold fs-5 me-2">
+                                        <span th:case="RUB" class="text-success">₽</span>
+                                        <span th:case="USD" class="text-primary">$</span>
+                                        <span th:case="EUR" class="text-warning">€</span>
+                                        <span th:case="GBP" class="text-danger">£</span>
+                                        <span th:case="KZT" class="text-purple">₸</span>
+                                        <span th:case="*" th:text="${entry.key}"></span>
+                                    </span>
+                                <div>
+                                    <div class="fw-bold" th:text="${entry.key}"></div>
+                                    <small class="text-muted">
+                                            <span th:switch="${entry.key}">
+                                                <span th:case="RUB">Российский рубль</span>
+                                                <span th:case="USD">Доллар США</span>
+                                                <span th:case="EUR">Евро</span>
+                                                <span th:case="GBP">Фунт стерлингов</span>
+                                                <span th:case="KZT">Казахстанский тенге</span>
+                                                <span th:case="*">Другая валюта</span>
+                                            </span>
+                                    </small>
+                                </div>
+                            </div>
+                            <span class="fw-bold fs-5"
+                                  th:text="${currencyFormatter.formatAmount(entry.value, entry.key)}">
+                                    0
+                                </span>
+                        </div>
+                    </div>
+                </th:block>
+            </div>
+        </div>
+    </div>
+
+    <!-- Список счетов -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Список счетов</h5>
+        </div>
+
+        <div class="card-body">
+            <!-- Проверка на наличие счетов -->
+            <div th:if="${accounts != null and accounts.size() > 0}">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Название</th>
+                            <th>Баланс</th>
+                            <th>Валюта</th>
+                            <th>Действия</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="account : ${accounts}" data-account-id="${account.id}">
+                            <td>
+                                <a th:href="@{/accounts/{id}(id=${account.id})}" class="text-decoration-none">
+                                    <strong th:text="${account.name}"></strong>
+                                </a>
+                            </td>
+                            <td th:text="${currencyFormatter.formatAmount(account.balance, account.currency)}"></td>
+                            <td>
+                <span th:switch="${account.currency}" class="badge">
+                    <span th:case="RUB" class="bg-success">RUB</span>
+                    <span th:case="USD" class="bg-primary">USD</span>
+                    <span th:case="EUR" class="bg-warning text-dark">EUR</span>
+                    <span th:case="GBP" class="bg-danger">GBP</span>
+                    <span th:case="JPY" class="bg-secondary">JPY</span>
+                    <span th:case="KZT" class="bg-purple">KZT</span>
+                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <!-- Кнопка просмотра -->
+                                    <a th:href="@{/accounts/{id}(id=${account.id})}"
+                                       class="btn btn-outline-primary" title="Просмотр">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+
+<!--                                       &lt;!&ndash; Кнопка редактирования &ndash;&gt;-->
+<!--                                    <a th:href="@{/accounts/{id}/edit(id=${account.id})}"-->
+<!--                                       class="btn btn-outline-warning" title="Редактировать">-->
+<!--                                        <i class="bi bi-pencil"></i>-->
+<!--                                    </a>-->
+
+                                    <!-- Кнопка удаления -->
+                                    <button type="button"
+                                            class="btn btn-outline-danger btn-sm delete-account-btn"
+                                            th:attr="data-account-id=${account.id},
+                                            data-account-name=${account.name},
+                                            data-account-currency=${account.currency}"
+                                            title="Удалить">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Пустой список -->
+            <div th:if="${accounts == null or accounts.size() == 0}" class="text-center py-5">
+                <div class="mb-4">
+                    <i class="bi bi-wallet2 display-1 text-muted"></i>
+                </div>
+                <h4 class="text-muted mb-3">У вас пока нет счетов</h4>
+                <p class="text-muted mb-4">Создайте свой первый счет для управления финансами</p>
+                <a href="/accounts/create" class="btn btn-primary btn-lg">
+                    <i class="bi bi-plus-circle"></i> Создать первый счет
+                </a>
+            </div>
+        </div>
+
+        <!-- Футер таблицы -->
+        <div class="card-footer">
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">
+                    Обновлено: <span th:text="${#dates.format(#dates.createNow(), 'dd.MM.yyyy HH:mm')}"></span>
+                </small>
+                <div class="text-muted">
+                    <i class="bi bi-info-circle"></i> Всего:
+                    <span th:text="${accounts != null ? accounts.size() : 0}">0</span> счетов
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Инструкция -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <h6><i class="bi bi-lightbulb"></i> Советы по управлению счетами:</h6>
+            <ul class="mb-0">
+                <li>Создавайте отдельные счета для разных целей (повседневные расходы, накопления)</li>
+                <li>Регулярно проверяйте балансы для точного учета</li>
+                <li>Используйте разные валюты для диверсификации</li>
+                <li>Добавляйте описания к важным счетам</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Футер из layout папки -->
+<footer th:replace="layout/footer :: footer"></footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/accounts-modal.js" defer></script>
+
+<!-- Модальное окно для детального просмотра -->
+<div class="modal fade" id="accountDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Детали счета</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="accountDetailContent">
+                <!-- Контент будет загружен через AJAX -->
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Загрузка...</span>
+                    </div>
+                    <p class="mt-2">Загрузка данных...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <button type="button" class="btn btn-primary" id="editAccountBtn">Редактировать</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для редактирования -->
+<div class="modal fade" id="accountEditModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="accountEditForm">
+                <input type="hidden" id="editAccountId" name="id">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Редактирование счета</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div id="editFormErrors" class="alert alert-danger d-none"></div>
+
+                    <div class="mb-3">
+                        <label for="editName" class="form-label">Название счета *</label>
+                        <input type="text" class="form-control" id="editName" name="name" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editCurrency" class="form-label">Валюта *</label>
+                        <select class="form-select" id="editCurrency" name="currency" required>
+                            <option value="RUB">RUB - Российский рубль</option>
+                            <option value="USD">USD - Доллар США</option>
+                            <option value="EUR">EUR - Евро</option>
+                            <option value="GBP">GBP - Фунт стерлингов</option>
+                            <option value="JPY">JPY - Японская йена</option>
+                            <option value="KZT">KZT - Казахстанский тенге</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editDescription" class="form-label">Описание</label>
+                        <textarea class="form-control" id="editDescription" name="description" rows="3"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editBalance" class="form-label">Текущий баланс</label>
+                        <div class="input-group">
+                            <input type="number" step="0.01" class="form-control"
+                                   id="editBalance" name="balance" readonly>
+                            <span class="input-group-text" id="currencySymbol">₽</span>
+                        </div>
+                        <small class="text-muted">Баланс можно изменить только через операции</small>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для подтверждения удаления -->
+<div class="modal fade" id="accountDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Подтверждение удаления
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body text-center">
+                <div class="mb-4">
+                    <i class="bi bi-trash text-danger display-4"></i>
+                </div>
+
+                <!-- ЭТИ ЭЛЕМЕНТЫ ДОЛЖНЫ БЫТЬ БЕЗ Thymeleaf -->
+                <h6 class="fw-bold mb-2" id="deleteAccountName">[Название счета]</h6>
+                <p class="text-muted mb-1">ID: <span id="deleteAccountId">-</span></p>
+                <p class="text-muted mb-4">Валюта: <span id="deleteAccountCurrency">-</span></p>
+
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-circle"></i>
+                    <strong>Внимание!</strong> Это действие невозможно отменить.
+                    Все транзакции, связанные с этим счетом, также будут удалены.
+                </div>
+
+                <p>Вы уверены, что хотите удалить этот счет?</p>
+            </div>
+
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Отмена
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="bi bi-trash me-1"></i>Да, удалить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Контейнер для уведомлений -->
+<div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+</body>
+</html>

@@ -1,0 +1,198 @@
+databaseChangeLog:
+  - changeSet:
+      id: 8
+      author: SidorovDA
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: name
+                  value: Иван
+              - column:
+                  name: surname
+                  value: Иванов
+              - column:
+                  name: birthday
+                  value: "1990-01-01"
+              - column:
+                  name: email
+                  value: ivan@example.com
+              - column:
+                  name: password
+                  value: "$2a$10$X5h5BzR1wvPq3wZ2Q5YzY.OwJkLmN8Q7PqR5sT8uVwXyZ3A4B6C7D8E9F0" # encoded 'password'
+              - column:
+                  name: is_active
+                  valueBoolean: true
+
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: name
+                  value: Мария
+              - column:
+                  name: surname
+                  value: Петрова
+              - column:
+                  name: birthday
+                  value: "1992-05-15"
+              - column:
+                  name: email
+                  value: maria@example.com
+              - column:
+                  name: password
+                  value: "$2a$10$X5h5BzR1wvPq3wZ2Q5YzY.OwJkLmN8Q7PqR5sT8uVwXyZ3A4B6C7D8E9F0"
+              - column:
+                  name: is_active
+                  valueBoolean: true
+
+  - changeSet:
+      id: 9
+      author: your_name
+      changes:
+        - insert:
+            tableName: accounts
+            columns:
+              - column:
+                  name: name
+                  value: Основной счет
+              - column:
+                  name: balance
+                  valueNumeric: 10000.00
+              - column:
+                  name: currency
+                  value: RUB
+              - column:
+                  name: user_id
+                  valueNumeric: 1
+
+        - insert:
+            tableName: accounts
+            columns:
+              - column:
+                  name: name
+                  value: Долларовый счет
+              - column:
+                  name: balance
+                  valueNumeric: 500.00
+              - column:
+                  name: currency
+                  value: USD
+              - column:
+                  name: user_id
+                  valueNumeric: 1
+
+        - insert:
+            tableName: accounts
+            columns:
+              - column:
+                  name: name
+                  value: Основной счет
+              - column:
+                  name: balance
+                  valueNumeric: 15000.00
+              - column:
+                  name: currency
+                  value: RUB
+              - column:
+                  name: user_id
+                  valueNumeric: 2
+
+  - changeSet:
+      id: 10
+      author: your_name
+      changes:
+        - insert:
+            tableName: categories
+            columns:
+              - column:
+                  name: name
+                  value: Продукты
+              - column:
+                  name: user_id
+                  valueNumeric: 1
+
+        - insert:
+            tableName: categories
+            columns:
+              - column:
+                  name: name
+                  value: Транспорт
+              - column:
+                  name: user_id
+                  valueNumeric: 1
+
+        - insert:
+            tableName: categories
+            columns:
+              - column:
+                  name: name
+                  value: Развлечения
+              - column:
+                  name: user_id
+                  valueNumeric: 1
+
+        - insert:
+            tableName: categories
+            columns:
+              - column:
+                  name: name
+                  value: Зарплата
+              - column:
+                  name: user_id
+                  valueNumeric: 1
+
+        - insert:
+            tableName: categories
+            columns:
+              - column:
+                  name: name
+                  value: Продукты
+              - column:
+                  name: user_id
+                  valueNumeric: 2
+
+        - insert:
+            tableName: categories
+            columns:
+              - column:
+                  name: name
+                  value: Комуналка
+              - column:
+                  name: user_id
+                  valueNumeric: 2
+
+  - changeSet:
+      id: 11
+      author: your_name
+      changes:
+        - insert:
+            tableName: budgets
+            columns:
+              - column:
+                  name: monthly_limit
+                  valueNumeric: 15000.00
+              - column:
+                  name: category_id
+                  valueNumeric: 1
+
+        - insert:
+            tableName: budgets
+            columns:
+              - column:
+                  name: monthly_limit
+                  valueNumeric: 5000.00
+              - column:
+                  name: category_id
+                  valueNumeric: 2
+
+        - insert:
+            tableName: budgets
+            columns:
+              - column:
+                  name: monthly_limit
+                  valueNumeric: 3000.00
+              - column:
+                  name: category_id
+                  valueNumeric: 6

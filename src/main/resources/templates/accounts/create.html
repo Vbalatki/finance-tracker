@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dashboard - Финансовый трекер</title>
+    <!-- Подключаем head -->
+    <div th:replace="~{layout/head :: head}"></div>
+</head>
+<body>
+<!-- Подключаем header -->
+<div th:replace="~{layout/header :: header}"></div>
+</body>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Сообщения -->
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle"></i>
+                <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Форма -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Создание нового счета</h5>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/accounts}" th:object="${accountDto}" method="post">
+                        <!-- Название счета -->
+                        <div class="mb-3">
+                            <label for="name" class="form-label">
+                                <i class="bi bi-card-heading"></i> Название счета *
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="name"
+                                   th:field="*{name}"
+                                   placeholder="Например: Основной счет, Кредитная карта"
+                                   required>
+                            <div class="form-text">
+                                Придумайте понятное название для счета
+                            </div>
+                        </div>
+
+                        <!-- Валюта -->
+                        <div class="mb-3">
+                            <label for="currency" class="form-label">
+                                <i class="bi bi-currency-exchange"></i> Валюта счета *
+                            </label>
+                            <select class="form-select"
+                                    id="currency"
+                                    th:field="*{currency}"
+                                    required>
+                                <option value="">Выберите валюту</option>
+                                <option th:each="currency : ${currencies}"
+                                        th:value="${currency}"
+                                        th:text="${currency}">
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Начальный баланс -->
+                        <div class="mb-3">
+                            <label for="balance" class="form-label">
+                                <i class="bi bi-cash-stack"></i> Начальный баланс
+                            </label>
+                            <input type="number"
+                                   class="form-control"
+                                   id="balance"
+                                   th:field="*{balance}"
+                                   step="0.01"
+                                   min="0"
+                                   value="0">
+                            <div class="form-text">
+                                Оставьте 0, если хотите начать с нулевого баланса
+                            </div>
+                        </div>
+
+                        <!-- Скрытое поле userId -->
+                        <input type="hidden" th:field="*{userId}">
+
+                        <!-- Кнопки -->
+                        <div class="d-flex justify-content-between">
+                            <a href="/accounts" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Отмена
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Создать счет
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Подсказки -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6><i class="bi bi-lightbulb"></i> Советы по созданию счетов:</h6>
+                    <ul class="mb-0">
+                        <li>Создавайте отдельные счета для разных целей</li>
+                        <li>Используйте разные валюты для диверсификации</li>
+                        <li>Начинайте с нулевого баланса, если не уверены</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

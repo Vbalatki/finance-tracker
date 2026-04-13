@@ -1,0 +1,95 @@
+databaseChangeLog:
+  - changeSet:
+      id: 7
+      author: SidorovDA
+      changes:
+        - createIndex:
+            tableName: users
+            indexName: idx_users_email
+            columns:
+              - column:
+                  name: email
+                  descending: false
+
+        - createIndex:
+            tableName: users
+            indexName: idx_users_active
+            columns:
+              - column:
+                  name: is_active
+                  descending: false
+
+        - createIndex:
+            tableName: accounts
+            indexName: idx_accounts_user_id
+            columns:
+              - column:
+                  name: user_id
+                  descending: false
+
+        - createIndex:
+            tableName: accounts
+            indexName: idx_accounts_currency
+            columns:
+              - column:
+                  name: currency
+                  descending: false
+
+        - createIndex:
+            tableName: categories
+            indexName: idx_categories_user_id
+            columns:
+              - column:
+                  name: user_id
+                  descending: false
+
+        - createIndex:
+            tableName: categories
+            indexName: idx_categories_user_name
+            columns:
+              - column:
+                  name: user_id
+                  descending: false
+              - column:
+                  name: name
+                  descending: false
+
+        - createIndex:
+            tableName: budgets
+            indexName: idx_budgets_category_id
+            columns:
+              - column:
+                  name: category_id
+                  descending: false
+
+        - createIndex:
+            tableName: transactions
+            indexName: idx_transactions_account_id
+            columns:
+              - column:
+                  name: account_id
+                  descending: false
+
+        - createIndex:
+            tableName: transactions
+            indexName: idx_transactions_category_id
+            columns:
+              - column:
+                  name: category_id
+                  descending: false
+
+        - createIndex:
+            tableName: transactions
+            indexName: idx_transactions_created_at
+            columns:
+              - column:
+                  name: created_at
+                  descending: true
+
+        - createIndex:
+            tableName: transactions
+            indexName: idx_transactions_type
+            columns:
+              - column:
+                  name: type
+                  descending: false

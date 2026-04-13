@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changelog/V1__initial_schema.yaml
+  - include:
+      file: db/changelog/changelog/V2__add_foreign_keys.yaml
+  - include:
+      file: db/changelog/changelog/V3__add_indexes.yaml
+  - include:
+      file: db/changelog/changelog/V4__seed_data.yaml

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <!-- Пустой head, он уже подключен в основном шаблоне -->
+</head>
+<body>
+<!-- ФРАГМЕНТ С ИМЕНЕМ "header" -->
+<div th:fragment="header">
+    <!-- Навигационная панель -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-wallet2 me-2"></i>Финансовый трекер
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard" id="nav-dashboard">
+                            <i class="bi bi-house-door"></i> Дашборд
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/accounts" id="nav-accounts">
+                            <i class="bi bi-wallet2"></i> Счета
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/transactions" id="nav-transactions">
+                            <i class="bi bi-cash-stack"></i> Транзакции
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/budgets" id="nav-budgets">
+                            <i class="bi bi-graph-up"></i> Бюджеты
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/categories" id="nav-categories">
+                            <i class="bi bi-tags"></i> Категории
+                        </a>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> Профиль
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/users/profile">
+                                <i class="bi bi-person"></i> Мой профиль
+                            </a></li>
+                            <li><a class="dropdown-item" href="/users/accounts">
+                                <i class="bi bi-wallet"></i> Мои счета
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form action="/logout" method="post">
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="bi bi-box-arrow-right"></i> Выйти
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- JavaScript для активации текущего пункта меню -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            let activeId = '';
+
+            if (currentPath.includes('/dashboard')) {
+                activeId = 'nav-dashboard';
+            } else if (currentPath.includes('/accounts')) {
+                activeId = 'nav-accounts';
+            } else if (currentPath.includes('/transactions')) {
+                activeId = 'nav-transactions';
+            } else if (currentPath.includes('/budgets')) {
+                activeId = 'nav-budgets';
+            } else if (currentPath.includes('/categories')) {
+                activeId = 'nav-categories';
+            }
+
+            if (activeId) {
+                const activeElement = document.getElementById(activeId);
+                if (activeElement) {
+                    activeElement.classList.add('active');
+                }
+            }
+        });
+    </script>
+</div>
+</body>
+</html>
