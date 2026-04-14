@@ -40,6 +40,10 @@ public class Category {
     @OneToOne(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     private Budget budget;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     public void setBudget(Budget budget) {
         this.budget = budget;
         budget.setCategory(this);

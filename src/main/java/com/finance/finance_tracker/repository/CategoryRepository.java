@@ -18,11 +18,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     //поиск
     Optional<Category> findById(Long id);
     List<Category> findAll();
-    @Query("SELECT DISTINCT c FROM Category c " +
-            "JOIN c.transactions t " +
-            "JOIN t.account a " +
-            "JOIN a.user u " +
-            "WHERE u.id = :userId")
+    @Query("SELECT c FROM Category c WHERE c.user.id = :userId")
     List<Category> findByUserId(Long userId);
 
 

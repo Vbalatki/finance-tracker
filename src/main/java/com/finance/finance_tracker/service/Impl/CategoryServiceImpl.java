@@ -12,6 +12,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,26 +25,22 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Transactional
     public CategoryDto createCategory(CategoryDto dto) {
-        User user = dto.getId() != null
-                ? userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new EntityNotFoundException("User not found"))
-                : null;
+        User user = userRepository.findById(dto.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
 
         if (categoryRepository.existsByNameAndUserId(dto.getName(), user.getId())) {
-            throw new IllegalArgumentException("Category already exists for this user");
+            throw new IllegalArgumentException("Уже есть такая категория");
         }
-
         Category category = new Category();
         category.setName(dto.getName());
-        category.setBudget(dto.getBudget());
-        category.setTransactions(dto.getTransactions());
+        category.setUser(user);
 
         return categoryMapper.toDto(categoryRepository.save(category));
     }
 
     public CategoryDto getCategoryById(Long id) {
         return categoryMapper.toDto(categoryRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Category not found")));
+                .orElseThrow(() -> new EntityNotFoundException("Категория не найдена")));
     }
 
     public List<CategoryDto> getAllCategories() {
@@ -56,17 +53,31 @@ public class CategoryServiceImpl implements CategoryService {
     public List<CategoryDto> getUserCategories(Long userId) {
         List<Category> list =  categoryRepository.findByUserId(userId);
         return list.stream()
-                .map(categoryMapper::toDto)
+                .map(category ->
+                {
+                    CategoryDto dto = categoryMapper.toDto(category);
+                    dto.setTransactionsCount(category.getTransactions() != null?
+                                            category.getTransactions().size(): 0);
+                    return dto;
+                })
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void updateCategory(Long id, String name) {
+        Category category  = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Категория не найдена"));
+        category.setName(name);
+        categoryRepository.save(category);
     }
 
     @Transactional
     public void deleteCategory(Long id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Category not found with id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Категория не найдена по id: " + id));
 
         if (!category.getTransactions().isEmpty()) {
-            throw new IllegalStateException("Cannot delete category with associated transactions");
+            throw new IllegalStateException("Невозможно удалить категорию");
         }
 
         categoryRepository.delete(category);

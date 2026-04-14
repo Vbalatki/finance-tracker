@@ -21,7 +21,7 @@ spring:
       idle-timeout: 600000
       max-lifetime: 1800000
       connection-test-query: SELECT 1
-  
+
   # ======= НАСТРОЙКИ JPA/HIBERNATE =======
   jpa:
     hibernate:
@@ -52,7 +52,9 @@ spring:
     check-template: true
     check-template-location: true
     enabled: true
-  
+
+
+
   # ======= ЛОГИРОВАНИЕ =======
   logging:
     level:

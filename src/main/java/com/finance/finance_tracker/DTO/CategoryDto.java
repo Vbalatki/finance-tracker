@@ -19,12 +19,9 @@ public class CategoryDto {
     @Size(min = 2, max = 255, message = "Name must not exceed 255 characters")
     private String name;
 
-    private List<Transaction> transactions;
 
-    @NotNull(message = "UserId cannot be null")
-    private Long userId;
-
+    private int transactionsCount;
     private Budget budget;
-
+    private Long userId;
     private User user;
 }
