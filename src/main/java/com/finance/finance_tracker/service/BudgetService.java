@@ -6,10 +6,8 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public interface BudgetService {
-    BudgetDto createBudget(BudgetDto dto);
-    BudgetDto updateBudget(Long id, BigDecimal newLimit);
-    List<BudgetDto> findByUserId(Long userId);
-    void resetBudgetSpending(Long id);
-    void deleteBudget(Long id);
-    void addExpenseToBudget(Long categoryId, BigDecimal amount);
+    List<BudgetDto> getBudgetsByUserId(Long userId);
+    BudgetDto saveBudget(BudgetDto budgetDto, Long userId);
+    void resetSpending(Long budgetId);
+    void deleteBudget(Long budgetId);
 }

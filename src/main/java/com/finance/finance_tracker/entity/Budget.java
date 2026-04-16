@@ -7,21 +7,27 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Data
 @Entity
-@Table(name = "budgets")
+@Table(name = "budgets", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"user_id", "category_id"})
+})
 @NoArgsConstructor
 @AllArgsConstructor
 public class Budget {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,8 +38,12 @@ public class Budget {
     @Column(name = "current_spending", nullable = false, precision = 15, scale = 2)
     private BigDecimal currentSpending = BigDecimal.ZERO;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", unique = true)
+    @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
     @Transient
@@ -45,9 +55,6 @@ public class Budget {
         this.currentSpending = currentSpending.add(amount);
     }
 
-    public void setCategory(Category category) {
-        this.category = category;
-    }
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -58,6 +65,6 @@ public class Budget {
 
     @Override
     public int hashCode() {
-        return getClass().hashCode(); // или return id != null ? id.hashCode() : 0;
+        return getClass().hashCode();
     }
 }

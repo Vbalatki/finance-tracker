@@ -7,10 +7,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface CategoryMapper {
-    @Mapping(target = "transactionsCount", ignore = true) // заполняем в сервисе
     CategoryDto toDto(Category entity);
-
-
-    @Mapping(target = "transactions", ignore = true)
+    @Mapping(target = "user", ignore = true)
     Category toEntity(CategoryDto dto);
 }

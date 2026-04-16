@@ -1,21 +1,21 @@
 package com.finance.finance_tracker.service.Impl;
 
 import com.finance.finance_tracker.DTO.BudgetDto;
-import com.finance.finance_tracker.DTO.CategoryDto;
+import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.mapper.BudgetMapper;
-import com.finance.finance_tracker.mapper.CategoryMapper;
 import com.finance.finance_tracker.entity.Budget;
 import com.finance.finance_tracker.entity.Category;
 import com.finance.finance_tracker.repository.BudgetRepository;
 import com.finance.finance_tracker.repository.CategoryRepository;
+import com.finance.finance_tracker.repository.UserRepository;
 import com.finance.finance_tracker.service.BudgetService;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,92 +23,61 @@ import java.util.stream.Collectors;
 public class BudgetServiceImpl implements BudgetService {
 
     private final BudgetRepository budgetRepository;
+    private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final BudgetMapper budgetMapper;
-    private final CategoryMapper categoryMapper;
 
-    @Transactional
-    public BudgetDto createBudget(BudgetDto dto) {
-        Category category = categoryMapper.toEntity(findByCategoryId(dto.getCategoryId()));
-
-        if (budgetRepository.existsByCategory(category)) {
-            throw new IllegalArgumentException("Budget already exists for this category");
-        }
-
-        Budget budget = budgetMapper.toEntity(dto);
-        budget.setCategory(category);
-        budget.setCurrentSpending(BigDecimal.ZERO);
-
-        Budget savedBudget = budgetRepository.save(budget);
-        return budgetMapper.toDto(savedBudget);
-    }
-
-    @Transactional
-    public List<BudgetDto> findByUserId(Long userId) {
-        List<Budget> list = budgetRepository.findByUserId(userId);
-        return list.stream()
+    @Override
+    @Transactional(readOnly = true)
+    public List<BudgetDto> getBudgetsByUserId(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден, id: " + userId));
+        return budgetRepository.findByUserWithCategory(user).stream()
                 .map(budgetMapper::toDto)
                 .collect(Collectors.toList());
     }
 
+    @Override
     @Transactional
-    public BudgetDto updateBudget(Long id, BigDecimal newLimit) {
-        Budget budget = budgetRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+    public BudgetDto saveBudget(BudgetDto budgetDto, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден, id: " + userId));
+        Category category = categoryRepository.findById(budgetDto.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("Категория не найдена, id: " + budgetDto.getCategoryId()));
 
-        budget.setMonthlyLimit(newLimit);
-        Budget updatedBudget = budgetRepository.save(budget);
-        return budgetMapper.toDto(updatedBudget);
+        Optional<Budget> existingBudget = budgetRepository.findByUserAndCategory(user, category);
+
+        Budget budget;
+        if (existingBudget.isPresent()) {
+            budget = existingBudget.get();
+            budget.setMonthlyLimit(budgetDto.getMonthlyLimit());
+        } else {
+            budget = new Budget();
+            budget.setUser(user);
+            budget.setCategory(category);
+            budget.setMonthlyLimit(budgetDto.getMonthlyLimit());
+            budget.setCurrentSpending(BigDecimal.ZERO);
+        }
+
+        Budget saved = budgetRepository.save(budget);
+        return budgetMapper.toDto(saved);
     }
 
+    @Override
     @Transactional
-    public void resetBudgetSpending(Long id) {
-        Budget budget = budgetRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
-
+    public void resetSpending(Long budgetId) {
+        Budget budget = budgetRepository.findById(budgetId)
+                .orElseThrow(() -> new IllegalArgumentException("Бюджет не найден, id: " + budgetId));
         budget.setCurrentSpending(BigDecimal.ZERO);
         budgetRepository.save(budget);
     }
 
+    @Override
     @Transactional
-    public void deleteBudget(Long id) {
-        budgetRepository.deleteById(id);
-    }
-
-    @Transactional
-    public void addExpenseToBudget(Long categoryId, BigDecimal amount) {
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
-
-        budgetRepository.findByCategory(category).ifPresent(budget -> {
-            BigDecimal newSpending = budget.getCurrentSpending().add(amount);
-            budget.setCurrentSpending(newSpending);
-
-            if (newSpending.compareTo(budget.getMonthlyLimit()) > 0) {
-                notifyBudgetExceeded(budget);
-            }
-
-            budgetRepository.save(budget);
-        });
-    }
-
-    private void notifyBudgetExceeded(Budget budget) {
-        String message = String.format(
-                "Budget exceeded for category %s: %s/%s",
-                budget.getCategory().getName(),
-                budget.getCurrentSpending(),
-                budget.getMonthlyLimit()
-        );
-        System.out.println("ALERT: " + message);
-    }
-
-    private CategoryDto findByCategoryId(Long id) {
-        return categoryMapper.toDto(categoryRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Category not found")));
-    }
-
-    private BudgetDto findById(Long id) {
-        return budgetMapper.toDto(budgetRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Budget not found")));
+    public void deleteBudget(Long budgetId) {
+        if (!budgetRepository.existsById(budgetId)) {
+            throw new IllegalArgumentException("Бюджет не найден, id: " + budgetId);
+        }
+        budgetRepository.deleteById(budgetId);
     }
 }

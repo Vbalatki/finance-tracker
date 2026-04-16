@@ -8,8 +8,6 @@ public interface CategoryService {
     CategoryDto createCategory(CategoryDto dto);
     CategoryDto getCategoryById(Long id);
     List<CategoryDto> getAllCategories();
-    List<CategoryDto> getUserCategories(Long userId);
     void updateCategory(Long id, String name);
-    List<CategoryDto> findWithoutBudget(Long userId);
     void deleteCategory(Long id);
 }

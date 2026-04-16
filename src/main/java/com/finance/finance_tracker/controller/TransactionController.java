@@ -87,7 +87,7 @@ public class TransactionController {
         model.addAttribute("totalExpense", totalExpense);
         model.addAttribute("totalBalance", balance);
         model.addAttribute("accounts", allAccounts);
-        model.addAttribute("categories", categoryService.getUserCategories(userId));
+        model.addAttribute("categories", categoryService.getAllCategories());
         model.addAttribute("selectedAccountId", accountId);
         model.addAttribute("selectedCategoryId", categoryId);
 
@@ -102,7 +102,7 @@ public class TransactionController {
         Long userId = 1L;
 
         List<AccountDto> accounts = accountService.getUserAccounts(userId);
-        List<CategoryDto> categories = categoryService.getUserCategories(userId);
+        List<CategoryDto> categories = categoryService.getAllCategories();
 
         TransactionDto dto = new TransactionDto();
         if (accountId != null) {
@@ -126,7 +126,7 @@ public class TransactionController {
             System.out.println("Validation errors: " + result.getAllErrors());
             Long userId = 1L;
             model.addAttribute("accounts", accountService.getUserAccounts(userId));
-            model.addAttribute("categories", categoryService.getUserCategories(userId));
+            model.addAttribute("categories", categoryService.getAllCategories());
             model.addAttribute("transactionTypes", TransactionType.values());
             return "transactions/create";
         }

@@ -12,6 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,10 +24,12 @@ import static com.finance.finance_tracker.Util.DataConstants.LENGTH_255;
 
 @Data
 @Entity
-@Table(name = "categories")
+@Table(uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"name", "user_id"})})
 @NoArgsConstructor
 @AllArgsConstructor
 public class Category {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -34,20 +37,15 @@ public class Category {
     @Column(name = "name", nullable = false, length = LENGTH_255)
     private String name;
 
-    @OneToMany(mappedBy = "category", fetch = FetchType.EAGER)
-    private List<Transaction> transactions = new ArrayList<>();;
-
-    @OneToOne(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Budget budget;
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
+    private List<Transaction> transactions = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    public void setBudget(Budget budget) {
-        this.budget = budget;
-        budget.setCategory(this);
-    }
+    @OneToOne(mappedBy = "category", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private Budget budget;
 
     @Override
     public boolean equals(Object o) {
