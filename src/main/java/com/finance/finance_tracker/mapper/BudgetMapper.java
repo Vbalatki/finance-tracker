@@ -8,6 +8,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface BudgetMapper {
+    @Mapping(source = "category.id", target = "categoryId")
     @Mapping(target = "categoryName", source = "category.name")
     BudgetDto toDto(Budget budget);
 

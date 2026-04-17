@@ -7,6 +7,7 @@ import com.finance.finance_tracker.entity.Budget;
 import com.finance.finance_tracker.entity.Category;
 import com.finance.finance_tracker.repository.BudgetRepository;
 import com.finance.finance_tracker.repository.CategoryRepository;
+import com.finance.finance_tracker.repository.TransactionRepository;
 import com.finance.finance_tracker.repository.UserRepository;
 import com.finance.finance_tracker.service.BudgetService;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,7 @@ public class BudgetServiceImpl implements BudgetService {
     private final BudgetRepository budgetRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final TransactionRepository transactionRepository;
     private final BudgetMapper budgetMapper;
 
     @Override
@@ -32,9 +34,15 @@ public class BudgetServiceImpl implements BudgetService {
     public List<BudgetDto> getBudgetsByUserId(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден, id: " + userId));
-        return budgetRepository.findByUserWithCategory(user).stream()
-                .map(budgetMapper::toDto)
-                .collect(Collectors.toList());
+        List<Budget> list = budgetRepository.findByUserWithCategory(user);
+
+        return list.stream().map(budget -> {
+            BudgetDto dto = budgetMapper.toDto(budget);
+            BigDecimal spent = transactionRepository.getCurrentMonthExpenseByCategory(dto.getCategoryId());
+            System.out.println("Category ID: " + dto.getCategoryId() + ", spent from DB: " + spent);
+            dto.setCurrentSpending(spent == null ? BigDecimal.ZERO : spent);
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     @Override

@@ -185,22 +185,22 @@
                                             class="badge bg-light text-dark">
                                         </span>
               </td>
-              <td th:class="${transaction.type == 'INCOME' ? 'text-success fw-bold' : 'text-danger fw-bold'}">
-                <span th:if="${transaction.amount != null}">
-                <!-- Знак -->
-                    <span th:if="${transaction.type == 'INCOME'}">+</span>
-                    <span th:if="${transaction.type == 'EXPENSE'}">-</span>
+                <td th:class="${transaction.type.name() == 'INCOME' ? 'text-success fw-bold' : 'text-danger fw-bold'}">
+                    <span th:if="${transaction.amount != null}">
+                        <!-- Знак -->
+                        <span th:if="${transaction.type.name() == 'INCOME'}">+</span>
+                        <span th:if="${transaction.type.name() == 'EXPENSE'}">-</span>
 
-                    <!-- Сумма -->
-                    <span th:text="${#numbers.formatDecimal(transaction.amount, 0, 'COMMA', 2, 'POINT')}">
-                    0
+                        <!-- Сумма -->
+                        <span th:text="${#numbers.formatDecimal(transaction.amount, 0, 'COMMA', 2, 'POINT')}">
+            0
                     </span>
 
                     <!-- Валюта -->
                     <span th:if="${transaction.accountCurrency != null}">
                         <span th:switch="${transaction.accountCurrency}">
                             <span th:case="RUB"> ₽</span>
-                            <span th:case="USD"> $</span>
+                           <span th:case="USD"> $</span>
                             <span th:case="EUR"> €</span>
                             <span th:case="GBP"> £</span>
                             <span th:case="KZT"> ₸</span>
@@ -208,11 +208,11 @@
                         </span>
                     </span>
                     <span th:if="${transaction.accountCurrency == null}"> ₽</span>
-                </span>
-                <span th:unless="${transaction.amount != null}">
-                0 ₽
-                </span>
-              </td>
+                     </span>
+                                <span th:unless="${transaction.amount != null}">
+                                0 ₽
+                     </span>
+                </td>
             </tr>
             </tbody>
           </table>

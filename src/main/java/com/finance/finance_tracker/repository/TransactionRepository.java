@@ -13,10 +13,8 @@ import java.util.Optional;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
-    //save
     Transaction save(Transaction transaction);
 
-    //find methods
     Optional<Transaction> findById(Long id);
 
     @Query("SELECT DISTINCT t FROM Transaction t " +
@@ -35,14 +33,19 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "WHERE t.account.id = :accountId")
     List<Transaction> findByAccountId(Long accountId);
 
-    //delete
     void deleteById(Long id);
 
-    //Custom
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t " +
             "WHERE t.account.id = :userId AND t.type = :type")
     Optional<BigDecimal> sumAmountByUserIdAndType(
             @Param("account_id") Long userId,
             @Param("type") TransactionType type
     );
+
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t " +
+            "WHERE t.category.id = :categoryId " +
+            "AND t.type = com.finance.finance_tracker.entity.enums.TransactionType.EXPENSE " +
+            "AND YEAR(t.createdAt) = YEAR(CURRENT_DATE) " +
+            "AND MONTH(t.createdAt) = MONTH(CURRENT_DATE)")
+    BigDecimal getCurrentMonthExpenseByCategory(@Param("categoryId") Long categoryId);
 }
