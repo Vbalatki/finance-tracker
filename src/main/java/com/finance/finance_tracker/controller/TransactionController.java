@@ -21,9 +21,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -139,6 +141,31 @@ public class TransactionController {
             redirectAttributes.addFlashAttribute("error", "Ошибка: " + e.getMessage());
             return "redirect:/transactions/create";
         }
+    }
+
+    @GetMapping("transactions/{id}/edit")
+    @ResponseBody
+    public TransactionDto getTransactionEditForm(@PathVariable Long id) {
+        return transactionService.findById(id);
+    }
+
+    @PostMapping("/transactions/{id}/update")
+    public String updateTransaction(@PathVariable Long id,
+                                    @Valid @ModelAttribute TransactionDto dto,
+                                    BindingResult result,
+                                    RedirectAttributes redirectAttributes) {
+        if (result.hasErrors()) {
+            redirectAttributes.addFlashAttribute("error", "Ошибка валидации");
+            return "redirect:/transactions";
+        }
+        dto.setId(id);
+        try {
+            transactionService.updateTransaction(dto);
+            redirectAttributes.addFlashAttribute("success", "Транзакция обновлена");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/transactions";
     }
 
     @PostMapping("/transactions/{id}/delete")

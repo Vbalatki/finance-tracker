@@ -193,20 +193,29 @@
                                 </span>
                                 </td>
                                 <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <button type="button"
-                                                class="btn btn-outline-danger delete-transaction-btn"
-                                                th:attr="data-transaction-id=${tx.id},
-                                                     data-transaction-description=${tx.description}"
-                                                title="Удалить">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button"
+                                            class="btn btn-outline-primary edit-transaction-btn"
+                                            th:attr="data-transaction-id=${tx.id}"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#transactionEditModal"
+                                            title="Редактировать">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-outline-danger delete-transaction-btn"
+                                            th:attr="data-transaction-id=${tx.id},
+                                                    data-transaction-description=${tx.description}"
+                                            title="Удалить">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
                                 </td>
                             </tr>
                             <tr th:if="${entry.value.isEmpty()}">
                                 <td colspan="6" class="text-center text-muted">Нет транзакций по этому счёту</td>
                             </tr>
+
                             </tbody>
                         </table>
                     </div>
@@ -288,30 +297,75 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
-    // Обработка удаления транзакции
     document.addEventListener('DOMContentLoaded', function() {
+        // ========== УДАЛЕНИЕ ТРАНЗАКЦИИ ==========
         const deleteButtons = document.querySelectorAll('.delete-transaction-btn');
         const deleteModal = document.getElementById('transactionDeleteModal');
         const deleteForm = document.getElementById('deleteTransactionForm');
         const descriptionElement = document.getElementById('deleteTransactionDescription');
 
-        deleteButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const transactionId = this.getAttribute('data-transaction-id');
-                const description = this.getAttribute('data-transaction-description') || 'Без описания';
+        if (deleteModal && deleteForm && descriptionElement) {
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const transactionId = this.getAttribute('data-transaction-id');
+                    const description = this.getAttribute('data-transaction-description') || 'Без описания';
 
-                // Устанавливаем описание
-                descriptionElement.textContent = description;
+                    if (!transactionId || transactionId === 'null') {
+                        alert('Ошибка: ID транзакции не определён');
+                        return;
+                    }
 
-                // Обновляем action формы
-                deleteForm.action = `/transactions/${transactionId}/delete`;
+                    descriptionElement.textContent = description;
+                    deleteForm.action = `/transactions/${transactionId}/delete`;
 
-                // Показываем модальное окно
-                const modal = new bootstrap.Modal(deleteModal);
-                modal.show();
+                    const modal = new bootstrap.Modal(deleteModal);
+                    modal.show();
+                });
             });
-        });
+        } else {
+            console.error('Элементы для удаления не найдены');
+        }
+
+        // ========== РЕДАКТИРОВАНИЕ ТРАНЗАКЦИИ ==========
+        const editModal = document.getElementById('transactionEditModal');
+        const editForm = document.getElementById('editTransactionForm');
+
+        if (editModal && editForm) {
+            editModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                let transactionId = button.getAttribute('data-transaction-id');
+
+                if (!transactionId || transactionId === 'null' || transactionId === 'undefined') {
+                    console.error('Invalid transaction ID:', transactionId);
+                    alert('Ошибка: ID транзакции не определён');
+                    const modal = bootstrap.Modal.getInstance(editModal);
+                    if (modal) modal.hide();
+                    return;
+                }
+
+                editForm.action = `/transactions/${transactionId}/update`;
+
+                fetch(`/transactions/${transactionId}/edit`)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.json();
+                    })
+                    .then(data => {
+                        document.getElementById('editType').value = data.type;
+                        document.getElementById('editAmount').value = data.amount;
+                        document.getElementById('editAccountId').value = data.accountId;
+                        document.getElementById('editCategoryId').value = data.categoryId || '';
+                        document.getElementById('editDescription').value = data.description || '';
+                    })
+                    .catch(error => console.error('Ошибка загрузки транзакции:', error));
+            });
+        } else {
+            console.error('Элементы для редактирования не найдены');
+        }
 
         // Автоматическое скрытие алертов через 5 секунд
         setTimeout(function() {
@@ -323,5 +377,61 @@
         }, 5000);
     });
 </script>
+
+<div class="modal fade" id="transactionEditModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil-square"></i> Редактирование транзакции</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" th:action="@{/transactions/__${transactionId}__/update}" id="editTransactionForm">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Тип *</label>
+                            <select class="form-select" name="type" id="editType" required>
+                                <option value="INCOME">Поступление</option>
+                                <option value="EXPENSE">Расход</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Сумма *</label>
+                            <input type="number" step="0.01" class="form-control" name="amount" id="editAmount" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Счет *</label>
+                            <select class="form-select" name="accountId" id="editAccountId" required>
+                                <option value="">Выберите счет</option>
+                                <option th:each="acc : ${accounts}"
+                                        th:value="${acc.id}"
+                                        th:text="${acc.name + ' (' + acc.balance + ' ' + acc.currency + ')'}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Категория</label>
+                            <select class="form-select" name="categoryId" id="editCategoryId">
+                                <option value="">Без категории</option>
+                                <option th:each="cat : ${categories}"
+                                        th:value="${cat.id}"
+                                        th:text="${cat.name}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Описание</label>
+                            <textarea class="form-control" name="description" id="editDescription" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 </body>
 </html>
