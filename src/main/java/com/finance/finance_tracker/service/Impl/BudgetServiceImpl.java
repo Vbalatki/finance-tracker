@@ -78,6 +78,9 @@ public class BudgetServiceImpl implements BudgetService {
                 .orElseThrow(() -> new IllegalArgumentException("Бюджет не найден, id: " + budgetId));
         budget.setCurrentSpending(BigDecimal.ZERO);
         budgetRepository.save(budget);
+
+        //удаление связанных транзакций
+        transactionRepository.deleteByUserIdAndCategoryId(budget.getUser().getId(), budget.getCategory().getId());
     }
 
     @Override

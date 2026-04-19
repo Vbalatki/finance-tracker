@@ -8,6 +8,7 @@ import com.finance.finance_tracker.mapper.UserMapper;
 import com.finance.finance_tracker.entity.Account;
 import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.repository.AccountRepository;
+import com.finance.finance_tracker.repository.TransactionRepository;
 import com.finance.finance_tracker.repository.UserRepository;
 import com.finance.finance_tracker.service.AccountService;
 import jakarta.persistence.EntityNotFoundException;
@@ -30,6 +31,7 @@ import static com.finance.finance_tracker.Util.DataConstants.CANNOT_DELETE_ACCOU
 @RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
+    private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
     private final AccountMapper accountMapper;
 
@@ -100,10 +102,7 @@ public class AccountServiceImpl implements AccountService {
         Account account = accountRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(ACCOUNT_NOT_FOUND));
 
-        if (!account.getTransactions().isEmpty()) {
-            throw new IllegalArgumentException(CANNOT_DELETE_ACCOUNT);
-        }
-
+        transactionRepository.deleteByAccountId(id);
         accountRepository.delete(account);
     }
 

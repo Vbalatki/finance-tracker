@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 
 @Data
 public class TransactionDto {
-    @NotNull(message = "id cannot be null")
     private Long id;
 
     @NotNull(message = "Amount cannot be null")

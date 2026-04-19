@@ -3,6 +3,7 @@ package com.finance.finance_tracker.repository;
 import com.finance.finance_tracker.entity.Transaction;
 import com.finance.finance_tracker.entity.enums.TransactionType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -34,6 +35,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<Transaction> findByAccountId(Long accountId);
 
     void deleteById(Long id);
+
+    void deleteByAccountId(Long accountId);
+
+    @Modifying
+    @Query("DELETE FROM Transaction t WHERE t.account.user.id = :userId AND t.category.id = :categoryId")
+    void deleteByUserIdAndCategoryId(@Param("userId") Long userId, @Param("categoryId") Long categoryId);
 
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t " +
             "WHERE t.account.id = :userId AND t.type = :type")
