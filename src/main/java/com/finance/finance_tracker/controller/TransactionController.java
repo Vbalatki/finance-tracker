@@ -134,7 +134,7 @@ public class TransactionController {
         }
 
         try {
-            transactionService.createTransaction(dto);  // вызов вашего сервиса
+            transactionService.createTransaction(dto);
             redirectAttributes.addFlashAttribute("success", "Транзакция успешно добавлена!");
             return "redirect:/transactions";
         } catch (Exception e) {

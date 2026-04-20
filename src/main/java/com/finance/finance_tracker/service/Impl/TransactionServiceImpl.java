@@ -114,7 +114,16 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setAccount(account);
         transaction.setCategory(category);
 
-        return transactionMapper.toDto(transactionRepository.save(transaction));
+        Transaction savedTransaction = transactionRepository.save(transaction);
+
+        if (savedTransaction.getType() == TransactionType.INCOME) {
+            account.setBalance(account.getBalance().add(savedTransaction.getAmount()));
+        } else {
+            account.setBalance(account.getBalance().subtract(savedTransaction.getAmount()));
+        }
+        accountRepository.save(account);
+
+        return transactionMapper.toDto(savedTransaction);
     }
 
     @Transactional
@@ -185,12 +194,21 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Transactional
     public void deleteTransaction(Long id) {
-        if (!transactionRepository.existsById(id)) {
-            throw new EntityNotFoundException("Transaction not found");
+        Transaction transaction = transactionRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Transaction not found"));
+
+        Account account = accountRepository.findById(transaction.getAccount().getId())
+                .orElseThrow(() -> new IllegalArgumentException("Account not found with id: " + id));
+
+        if (transaction.getType() == TransactionType.INCOME) {
+            account.setBalance(account.getBalance().subtract(transaction.getAmount()));
+        } else {
+            account.setBalance(account.getBalance().add(transaction.getAmount()));
         }
+        accountRepository.save(account);
+
         transactionRepository.deleteById(id);
     }
-
 
     private void adjustBalance(Account account, TransactionType type, BigDecimal amount, boolean add) {
         int sign = (type == TransactionType.INCOME) ? 1 : -1;
