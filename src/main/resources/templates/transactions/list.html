@@ -56,7 +56,7 @@
                     <h5 class="card-title text-success">Поступления</h5>
                     <h2 class="card-text text-success">
                     <span th:if="${totalIncome != null}"
-                          th:text="${#numbers.formatDecimal(totalIncome, 0, 'COMMA', 2, 'POINT') + ' ₽'}">
+                          th:text="${#numbers.formatDecimal(totalIncome, 0, 'COMMA', 0, 'POINT') + ' ₽'}">
                         0 ₽
                     </span>
                         <span th:unless="${totalIncome != null}">0 ₽</span>
@@ -70,7 +70,7 @@
                     <h5 class="card-title text-danger">Расходы</h5>
                     <h2 class="card-text text-danger">
                     <span th:if="${totalExpense != null}"
-                          th:text="${#numbers.formatDecimal(totalExpense, 0, 'COMMA', 2, 'POINT') + ' ₽'}">
+                          th:text="${#numbers.formatDecimal(totalExpense, 0, 'COMMA', 0, 'POINT') + ' ₽'}">
                         0 ₽
                     </span>
                         <span th:unless="${totalExpense != null}">0 ₽</span>
@@ -84,7 +84,7 @@
                     <h5 class="card-title text-primary">Баланс</h5>
                     <h2 class="card-text text-primary">
                     <span th:if="${totalBalance != null}"
-                          th:text="${#numbers.formatDecimal(totalBalance, 0, 'COMMA', 2, 'POINT') + ' ₽'}">
+                          th:text="${#numbers.formatDecimal(totalBalance, 0, 'COMMA', 0, 'POINT') + ' ₽'}">
                         0 ₽
                     </span>
                         <span th:unless="${totalBalance != null}">0 ₽</span>
