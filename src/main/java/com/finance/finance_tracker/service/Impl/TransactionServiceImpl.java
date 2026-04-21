@@ -96,7 +96,7 @@ public class TransactionServiceImpl implements TransactionService {
 
 
     @Transactional
-    public TransactionDto createTransaction(TransactionDto dto) {
+    public TransactionDto saveTransaction(TransactionDto dto) {
         Account account = accountRepository.findById(dto.getAccountId())
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Account not found with id: " + dto.getAccountId()

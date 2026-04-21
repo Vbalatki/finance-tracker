@@ -24,7 +24,8 @@ import static com.finance.finance_tracker.Util.DataConstants.LENGTH_255;
 
 @Data
 @Entity
-@Table(uniqueConstraints = {
+@Table(name = "categories", schema = "finance_tracker",
+        uniqueConstraints = {
         @UniqueConstraint(columnNames = {"name", "user_id"})})
 @NoArgsConstructor
 @AllArgsConstructor

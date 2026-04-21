@@ -1,15 +1,18 @@
 package com.finance.finance_tracker.service.Impl;
 
 import com.finance.finance_tracker.DTO.BudgetDto;
+import com.finance.finance_tracker.entity.Transaction;
 import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.mapper.BudgetMapper;
 import com.finance.finance_tracker.entity.Budget;
 import com.finance.finance_tracker.entity.Category;
+import com.finance.finance_tracker.repository.AccountRepository;
 import com.finance.finance_tracker.repository.BudgetRepository;
 import com.finance.finance_tracker.repository.CategoryRepository;
 import com.finance.finance_tracker.repository.TransactionRepository;
 import com.finance.finance_tracker.repository.UserRepository;
 import com.finance.finance_tracker.service.BudgetService;
+import org.hibernate.annotations.BatchSize;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,6 +31,7 @@ public class BudgetServiceImpl implements BudgetService {
     private final CategoryRepository categoryRepository;
     private final TransactionRepository transactionRepository;
     private final BudgetMapper budgetMapper;
+    private final AccountRepository accountRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -39,7 +43,6 @@ public class BudgetServiceImpl implements BudgetService {
         return list.stream().map(budget -> {
             BudgetDto dto = budgetMapper.toDto(budget);
             BigDecimal spent = transactionRepository.getCurrentMonthExpenseByCategory(dto.getCategoryId());
-            System.out.println("Category ID: " + dto.getCategoryId() + ", spent from DB: " + spent);
             dto.setCurrentSpending(spent == null ? BigDecimal.ZERO : spent);
             return dto;
         }).collect(Collectors.toList());
@@ -78,9 +81,15 @@ public class BudgetServiceImpl implements BudgetService {
                 .orElseThrow(() -> new IllegalArgumentException("Бюджет не найден, id: " + budgetId));
         budget.setCurrentSpending(BigDecimal.ZERO);
         budgetRepository.save(budget);
+//
+//        List<Transaction> transactions =
+//                transactionRepository.findByUserIdAndCategoryId(budget.getUser().getId(), budget.getCategory().getId());
+//
+//        for (Transaction t : transactions) {
+//            accountRepository.updateAccountBalanceById(t.getAccount().getId());
+//            transactionRepository.delete(t);
+//        }
 
-        //удаление связанных транзакций
-        transactionRepository.deleteByUserIdAndCategoryId(budget.getUser().getId(), budget.getCategory().getId());
     }
 
     @Override

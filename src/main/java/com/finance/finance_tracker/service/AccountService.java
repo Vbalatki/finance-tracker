@@ -12,7 +12,7 @@ import java.util.List;
 
 public interface AccountService {
     AccountDto findById(Long id);
-    AccountDto createAccount(AccountDto dto);
+    AccountDto saveAccount(AccountDto dto);
     AccountDto deposit(Long accountId, BigDecimal amount);
     AccountDto withdraw(Long accountId, BigDecimal amount);
     List<AccountDto> getUserAccounts(Long userId);

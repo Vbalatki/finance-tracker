@@ -25,7 +25,7 @@ import static com.finance.finance_tracker.Util.DataConstants.LENGTH_255;
 
 @Data
 @Entity
-@Table(name = "accounts")
+@Table(name = "accounts", schema = "finance_tracker")
 @AllArgsConstructor
 public class Account {
     @Id

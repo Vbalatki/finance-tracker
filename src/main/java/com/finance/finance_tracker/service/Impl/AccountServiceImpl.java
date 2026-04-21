@@ -36,7 +36,7 @@ public class AccountServiceImpl implements AccountService {
     private final AccountMapper accountMapper;
 
     @Transactional
-    public AccountDto createAccount(AccountDto dto) {
+    public AccountDto saveAccount(AccountDto dto) {
         User user = userRepository.findById(dto.getUserId())
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND));
 

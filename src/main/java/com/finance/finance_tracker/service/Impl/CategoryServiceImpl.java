@@ -24,7 +24,7 @@ public class CategoryServiceImpl implements CategoryService {
     private final UserRepository userRepository;
 
     @Transactional
-    public CategoryDto createCategory(CategoryDto dto) {
+    public CategoryDto saveCategory(CategoryDto dto) {
         User user = userRepository.findById(dto.getUserId())
                 .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
 

@@ -53,7 +53,7 @@ public class CategoryController {
         try {
             UserDto userDto = userService.getUserByEmail(userDetails.getUsername());
             dto.setUserId(userDto.getId());
-            categoryService.createCategory(dto);
+            categoryService.saveCategory(dto);
             redirectAttributes.addFlashAttribute("success", "Категория создана!");
             return "redirect:/categories";
         } catch (Exception e) {

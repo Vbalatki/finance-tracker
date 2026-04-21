@@ -24,7 +24,7 @@ import java.util.List;
 import static com.finance.finance_tracker.Util.DataConstants.LENGTH_255;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", schema = "finance_tracker")
 @SQLDelete(sql = "UPDATE users SET active = false WHERE id = ?")        // При delete вызывается UPDATE
 @Where(clause = "active = true")                                        // Автоматически добавляется WHERE ко всем запросам
 @FilterDef(name = "activeFilter", defaultCondition = "active = true")   //

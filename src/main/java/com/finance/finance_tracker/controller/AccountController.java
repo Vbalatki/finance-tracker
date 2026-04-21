@@ -100,7 +100,7 @@ public class AccountController {
         }
 
         try {
-            accountService.createAccount(dto);
+            accountService.saveAccount(dto);
             redirectAttributes.addFlashAttribute("success",
                     String.format("Счет '%s' успешно создан!", dto.getName()));
             return "redirect:/accounts";

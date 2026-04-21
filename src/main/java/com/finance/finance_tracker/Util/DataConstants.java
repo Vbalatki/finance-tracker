@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class DataConstants {
+
     public static final int LENGTH_255 = 255;
 
     //User

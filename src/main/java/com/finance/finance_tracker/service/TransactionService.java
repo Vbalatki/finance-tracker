@@ -9,7 +9,7 @@ import java.util.List;
 public interface TransactionService {
     TransactionDto findById(Long id);
     void updateTransaction(TransactionDto dto);
-    TransactionDto createTransaction(TransactionDto dto);
+    TransactionDto saveTransaction(TransactionDto dto);
     TransactionDto getTransactionById(Long id);
     List<TransactionDto> getUserTransactions(Long userId);
     List<TransactionDto> findByAccountId(Long accountId);

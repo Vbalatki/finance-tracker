@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "transactions")
+@Table(name = "transactions", schema = "finance_tracker")
 @NoArgsConstructor
 @AllArgsConstructor
 public class Transaction {

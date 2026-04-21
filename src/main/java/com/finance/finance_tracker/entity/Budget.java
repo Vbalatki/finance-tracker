@@ -21,7 +21,8 @@ import java.time.LocalDate;
 
 @Data
 @Entity
-@Table(name = "budgets", uniqueConstraints = {
+@Table(name = "budgets", schema = "finance_tracker",
+        uniqueConstraints = {
         @UniqueConstraint(columnNames = {"user_id", "category_id"})
 })
 @NoArgsConstructor

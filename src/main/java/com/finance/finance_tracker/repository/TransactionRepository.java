@@ -34,11 +34,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "WHERE t.account.id = :accountId")
     List<Transaction> findByAccountId(Long accountId);
 
+    void delete(Transaction transaction);
+
     void deleteById(Long id);
 
     void deleteByAccountId(Long accountId);
 
-    @Modifying
     @Query("DELETE FROM Transaction t WHERE t.account.user.id = :userId AND t.category.id = :categoryId")
     void deleteByUserIdAndCategoryId(@Param("userId") Long userId, @Param("categoryId") Long categoryId);
 
