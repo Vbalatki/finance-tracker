@@ -16,6 +16,6 @@ public class AuditController {
 
     @GetMapping("/list")
     public String auditPage() {
-
+        return "";
     }
 }
