@@ -61,21 +61,27 @@ public class AuditAspect {
     @Around("auditableMethods()")
     public Object audit(ProceedingJoinPoint joinPoint) throws Throwable {
         String methodName = joinPoint.getSignature().getName();
-        Object args[] = joinPoint.getArgs();
+        Object[] args = joinPoint.getArgs();
         Object result = null;
-        Throwable e = null;
-        Long start = System.currentTimeMillis();
+        Throwable exception = null;
+        long start = System.currentTimeMillis();
+
+        // Получаем данные пользователя ДО асинхронного вызова (в текущем потоке)
+        Long userId = SecurityUtil.getCurrentUserId();
+        String username = SecurityUtil.getCurrentUsername();
 
         try {
             result = joinPoint.proceed();
             return result;
         } catch (Throwable t) {
-            e = t;
+            exception = t;
             throw t;
         } finally {
             long duration = System.currentTimeMillis() - start;
             final Object finalResult = result;
-            final Throwable finalException = e;
+            final Throwable finalException = exception;
+            final Long finalUserId = userId;
+            final String finalUsername = username;
 
             CompletableFuture.runAsync(() -> {
                 String action = determineAction(methodName);
@@ -84,8 +90,8 @@ public class AuditAspect {
                 String details = buildDetails(action, entityType, entityId, args, finalResult, finalException, duration);
 
                 auditService.log(
-                        SecurityUtil.getCurrentUserId(),
-                        SecurityUtil.getCurrentUsername(),
+                        finalUserId,
+                        finalUsername,
                         action,
                         entityType,
                         entityId instanceof Long ? (Long) entityId : null,

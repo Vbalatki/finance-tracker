@@ -29,7 +29,6 @@ public class TransactionDto {
     @NotNull(message = "AccountId cannot be null")
     private Long accountId;
 
-    @NotNull(message = "CategoryId cannot be null")
     private Long categoryId;
 
     private String accountName;

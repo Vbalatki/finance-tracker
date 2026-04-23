@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class SecurityUtil {
+
     public static Long getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof UserDetails) {
