@@ -1,6 +1,7 @@
 package com.finance.finance_tracker.repository;
 
 import com.finance.finance_tracker.entity.Category;
+import com.finance.finance_tracker.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -16,7 +17,9 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     @Query("SELECT c FROM Category c ORDER BY c.id ASC")
     List<Category> findAllOrderById();
 
-    Boolean existsByName(String name);
+    List<Category> findByUserId(Long userId);
+
+    Boolean existsByNameAndUserId(String name, Long userId);
 
     void delete(Category category);
 

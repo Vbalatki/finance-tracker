@@ -2,6 +2,8 @@ package com.finance.finance_tracker.repository;
 
 import com.finance.finance_tracker.entity.Transaction;
 import com.finance.finance_tracker.entity.enums.TransactionType;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,6 +17,8 @@ import java.util.Optional;
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
     Transaction save(Transaction transaction);
+
+    boolean existsByAccountId(Long id);
 
     Optional<Transaction> findById(Long id);
 
@@ -33,6 +37,13 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "LEFT JOIN FETCH t.category " +
             "WHERE t.account.id = :accountId")
     List<Transaction> findByAccountId(Long accountId);
+
+    @Query("SELECT t FROM Transaction t WHERE t.account.user.id = :userId ORDER BY t.createdAt DESC")
+    List<Transaction> findRecentByUserId(@Param("userId") Long userId, Pageable pageable);
+
+    default List<Transaction> findRecentByUserId(Long userId, int limit) {
+        return findRecentByUserId(userId, PageRequest.of(0, limit));
+    }
 
     void delete(Transaction transaction);
 
