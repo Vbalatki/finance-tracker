@@ -8,10 +8,15 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -29,6 +34,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())  // Для разработки отключил
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/login", "/register", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/audit/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -50,6 +57,21 @@ public class SecurityConfig {
                 );
 
         return http.build();
+    }
+
+    @Bean
+    public AuthenticationSuccessHandler successHandler() {
+        return (request, response, authentication) -> {
+            Set<String> roles = authentication.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.toSet());
+
+            if (roles.contains("ROLE_ADMIN")) {
+                response.sendRedirect("/admin/dashboard");
+            } else {
+                response.sendRedirect("/dashboard");
+            }
+        };
     }
 
     @Bean

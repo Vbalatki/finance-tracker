@@ -11,6 +11,7 @@ import com.finance.finance_tracker.entity.User;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 public interface UserService {
     UserDto registerUser(UserDto dto);
@@ -18,6 +19,11 @@ public interface UserService {
     List<UserDto> getAllUsers();
     UserDto updateUser(Long id, UserDto dto);
     void deleteUser(Long id);
+
+    void assignRoles(Long userId, List<Long> roleIds);
+    void toggleActive(Long userId);
+    Set<Long> getUserRoleIds(Long userId);
+
     void changePassword(Long userId, String currentPassword, String newPassword);
     UserDto getUserByEmail(String email);
     AccountDto addAccountToUser(Long userId, AccountDto dto);

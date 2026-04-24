@@ -3,26 +3,26 @@ package com.finance.finance_tracker.service.Impl;
 import com.finance.finance_tracker.DTO.AccountDto;
 import com.finance.finance_tracker.DTO.TransactionDto;
 import com.finance.finance_tracker.DTO.UserDto;
+import com.finance.finance_tracker.entity.Role;
 import com.finance.finance_tracker.entity.enums.Currency;
 import com.finance.finance_tracker.entity.enums.TransactionType;
 import com.finance.finance_tracker.mapper.AccountMapper;
-import com.finance.finance_tracker.mapper.CategoryMapper;
 import com.finance.finance_tracker.mapper.UserMapper;
 import com.finance.finance_tracker.entity.Account;
 import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.repository.AccountRepository;
-import com.finance.finance_tracker.repository.CategoryRepository;
+import com.finance.finance_tracker.repository.RoleRepository;
 import com.finance.finance_tracker.repository.UserRepository;
-import com.finance.finance_tracker.service.AccountService;
 import com.finance.finance_tracker.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,11 +31,10 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
-    private final CategoryRepository categoryRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final AccountMapper accountMapper;
-    private final CategoryMapper categoryMapper;
 
 
     @Transactional
@@ -64,6 +63,7 @@ public class UserServiceImpl implements UserService {
         return userMapper.toDto(user);
     }
 
+    @Transactional(readOnly = true)
     public List<UserDto> getAllUsers() {
         List<User> list = userRepository.findAll();
         return list.stream()
@@ -90,6 +90,35 @@ public class UserServiceImpl implements UserService {
         User user = findById(id);
 
         userRepository.delete(user);
+    }
+
+    @Transactional
+    public void assignRoles(Long userId, List<Long> roleIds) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+        Set<Role> roles = roleIds.stream()
+                .map(roleId -> roleRepository.findById(roleId)
+                        .orElseThrow(() -> new RuntimeException("Роль не найдена: " + roleId)))
+                .collect(Collectors.toSet());
+        user.setRoles(roles);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void toggleActive(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+        user.setActive(!user.isActive());
+        userRepository.save(user);
+    }
+
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public Set<Long> getUserRoleIds(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+        return user.getRoles().stream()
+                .map(Role::getId)
+                .collect(Collectors.toSet());
     }
 
     @Transactional

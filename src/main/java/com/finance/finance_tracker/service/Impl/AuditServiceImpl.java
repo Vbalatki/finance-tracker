@@ -5,10 +5,14 @@ import com.finance.finance_tracker.entity.Audit;
 import com.finance.finance_tracker.mapper.AuditMapper;
 import com.finance.finance_tracker.repository.AuditRepository;
 import com.finance.finance_tracker.service.AuditService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,5 +43,22 @@ public class AuditServiceImpl implements AuditService {
         return list.stream()
                 .map(auditMapper::toDto)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<AuditDto> getRecentLogs(int limit) {
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        PageRequest pageRequest = PageRequest.of(0, limit, sort);
+        return auditRepository.findAll(pageRequest)
+                .stream()
+                .map(auditMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<AuditDto> getAuditLogs(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return auditRepository.findAll(pageable)
+                .map(auditMapper::toDto);
     }
 }

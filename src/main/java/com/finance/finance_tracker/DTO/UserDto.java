@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Email;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @Data
 public class UserDto {
@@ -36,7 +37,11 @@ public class UserDto {
     @Size(min = 8, max = 255, message = "Password must be 8-255 characters")
     private String password;
 
+    private boolean active = true;
+
     private List<Account> accounts;
 
     private List<Category> categories;
+
+    private Set<RoleDto> roles;
 }
