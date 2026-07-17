@@ -3,7 +3,9 @@ package com.finance.finance_tracker.controller;
 import com.finance.finance_tracker.DTO.AccountDto;
 import com.finance.finance_tracker.DTO.CategoryDto;
 import com.finance.finance_tracker.DTO.TransactionDto;
+import com.finance.finance_tracker.Util.SecurityUtil;
 import com.finance.finance_tracker.entity.enums.TransactionType;
+import com.finance.finance_tracker.exception.AccessDeniedException;
 import com.finance.finance_tracker.service.AccountService;
 import com.finance.finance_tracker.service.CategoryService;
 import com.finance.finance_tracker.service.TransactionService;
@@ -13,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -48,8 +52,10 @@ public class TransactionController {
     @GetMapping("/transactions")
     public String transactionsPage(@RequestParam(required = false) Long accountId,
                                    @RequestParam(required = false) Long categoryId,
+                                   @AuthenticationPrincipal UserDetails userDetails,
                                    Model model) {
-        Long userId = 1L;
+        if (userDetails == null) return "redirect:/login";
+        Long userId = SecurityUtil.getCurrentUserId();
 
         List<AccountDto> allAccounts = accountService.getUserAccounts(userId);
         List<AccountDto> accountsToShow = allAccounts;
@@ -101,7 +107,7 @@ public class TransactionController {
             @RequestParam(required = false) Long accountId,
             Model model) {
 
-        Long userId = 1L;
+        Long userId = SecurityUtil.getCurrentUserId();
 
         List<AccountDto> accounts = accountService.getUserAccounts(userId);
         List<CategoryDto> categories = categoryService.getAllCategories();
@@ -126,7 +132,7 @@ public class TransactionController {
                                     Model model) {
         if (result.hasErrors()) {
             System.out.println("Validation errors: " + result.getAllErrors());
-            Long userId = 1L;
+            Long userId = SecurityUtil.getCurrentUserId();
             model.addAttribute("accounts", accountService.getUserAccounts(userId));
             model.addAttribute("categories", categoryService.getAllCategories());
             model.addAttribute("transactionTypes", TransactionType.values());
@@ -146,6 +152,11 @@ public class TransactionController {
     @GetMapping("transactions/{id}/edit")
     @ResponseBody
     public TransactionDto getTransactionEditForm(@PathVariable Long id) {
+        TransactionDto existing = transactionService.getTransactionById(id);
+        AccountDto account = accountService.findById(existing.getAccountId());
+        if (!account.getUserId().equals(SecurityUtil.getCurrentUserId())) {
+            throw new AccessDeniedException("Нет доступа к этой транзакции");
+        }
         return transactionService.findById(id);
     }
 
@@ -154,6 +165,12 @@ public class TransactionController {
                                     @Valid @ModelAttribute TransactionDto dto,
                                     BindingResult result,
                                     RedirectAttributes redirectAttributes) {
+        TransactionDto existing = transactionService.getTransactionById(id);
+        AccountDto account = accountService.findById(existing.getAccountId());
+        if (!account.getUserId().equals(SecurityUtil.getCurrentUserId())) {
+            throw new AccessDeniedException("Нет доступа к этой транзакции");
+        }
+
         if (result.hasErrors()) {
             redirectAttributes.addFlashAttribute("error", "Ошибка валидации");
             return "redirect:/transactions";
@@ -173,6 +190,11 @@ public class TransactionController {
                                     RedirectAttributes redirectAttributes) {
         try {
             TransactionDto transaction = transactionService.getTransactionById(id);
+            AccountDto account = accountService.findById(transaction.getAccountId());
+            if (!account.getUserId().equals(SecurityUtil.getCurrentUserId())) {
+                throw new AccessDeniedException("Нет доступа к этой транзакции");
+            }
+
             Long accountId = transaction.getAccountId();
             transactionService.deleteTransaction(id);
             redirectAttributes.addFlashAttribute("success", "Транзакция удалена");

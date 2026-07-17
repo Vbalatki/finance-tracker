@@ -3,8 +3,10 @@ package com.finance.finance_tracker.controller;
 import com.finance.finance_tracker.DTO.AccountDto;
 import com.finance.finance_tracker.DTO.TransactionDto;
 import com.finance.finance_tracker.Util.CurrencyFormatter;
+import com.finance.finance_tracker.Util.SecurityUtil;
 import com.finance.finance_tracker.entity.Account;
 import com.finance.finance_tracker.entity.enums.Currency;
+import com.finance.finance_tracker.exception.AccessDeniedException;
 import com.finance.finance_tracker.service.AccountService;
 import com.finance.finance_tracker.service.TransactionService;
 import com.finance.finance_tracker.service.UserService;
@@ -41,11 +43,8 @@ public class AccountController {
     @GetMapping
     public String accountsPage(Model model,
                                @AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails == null) {
-            return "redirect:/login";
-        }
-
-        Long userId = 1L;
+        if (userDetails == null) return "redirect:/login";
+        Long userId = SecurityUtil.getCurrentUserId();
 
         List<AccountDto> accounts = accountService.getUserAccounts(userId);
 
@@ -72,8 +71,7 @@ public class AccountController {
         if (userDetails == null) {
             return "redirect:/login";
         }
-
-        Long userId = 1L;
+        Long userId = SecurityUtil.getCurrentUserId();
 
         AccountDto accountDto = new AccountDto();
         accountDto.setUserId(userId);
@@ -112,9 +110,14 @@ public class AccountController {
     }
 
     @GetMapping("/{id}")
-    public String accountDetail(@PathVariable Long id, Model model) {
+    public String accountDetail(@PathVariable Long id,
+                                @AuthenticationPrincipal UserDetails userDetails,
+                                Model model) {
         AccountDto account = accountService.findById(id);
-
+        Long currentUserId = SecurityUtil.getCurrentUserId();
+        if (!account.getUserId().equals(currentUserId)) {
+            throw new AccessDeniedException("Нет доступа к этому счёту");
+        }
         List<TransactionDto> transactions = transactionService.findByAccountId(id);
 
         String formattedBalance = currencyFormatter.formatAmount(
@@ -168,8 +171,14 @@ public class AccountController {
     @PostMapping("/{id}/deposit")
     public String deposit(@PathVariable Long id,
                           @RequestParam @DecimalMin(value = "0.01", message = "Сумма должна быть больше 0") BigDecimal amount,
+                          @AuthenticationPrincipal UserDetails userDetails,
                           RedirectAttributes redirectAttributes) {
         try {
+            AccountDto account = accountService.findById(id);
+            Long currentUserId = SecurityUtil.getCurrentUserId();
+            if (!account.getUserId().equals(currentUserId)) {
+                throw new AccessDeniedException("Нет доступа к этому счёту");
+            }
             accountService.deposit(id, amount);
             redirectAttributes.addFlashAttribute("success",
                     String.format("Счет пополнен на %s",
@@ -183,8 +192,14 @@ public class AccountController {
     @PostMapping("/{id}/withdraw")
     public String withdraw(@PathVariable Long id,
                            @RequestParam @DecimalMin(value = "0.01", message = "Сумма должна быть больше 0") BigDecimal amount,
+                           @AuthenticationPrincipal UserDetails userDetails,
                            RedirectAttributes redirectAttributes) {
         try {
+            AccountDto account = accountService.findById(id);
+            Long currentUserId = SecurityUtil.getCurrentUserId();
+            if (!account.getUserId().equals(currentUserId)) {
+                throw new AccessDeniedException("Нет доступа к этому счёту");
+            }
             accountService.withdraw(id, amount);
             redirectAttributes.addFlashAttribute("success",
                     String.format("Со счета снято %s",
@@ -197,9 +212,15 @@ public class AccountController {
 
     @PostMapping("/{id}/delete")
     public String deleteAccount(@PathVariable Long id,
+                                @AuthenticationPrincipal UserDetails userDetails,
                                 RedirectAttributes redirectAttributes) {
         try {
             AccountDto account = accountService.findById(id);
+            Long currentUserId = SecurityUtil.getCurrentUserId();
+            if (!account.getUserId().equals(currentUserId)) {
+                throw new AccessDeniedException("Нет доступа к этому счёту");
+            }
+             account = accountService.findById(id);
             accountService.deleteAccount(id);
             redirectAttributes.addFlashAttribute("success",
                     String.format("Счет '%s' удален", account.getName()));

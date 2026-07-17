@@ -49,10 +49,6 @@ public class AccountServiceImpl implements AccountService {
             throw new DuplicateEntityException(ACCOUNT_NAME_EXISTS + ": " + dto.getName());
         }
 
-        if (dto.getCurrency() == null) {
-            throw new InvalidDataException("Валюта счёта не указана");
-        }
-
         Account account = new Account();
         account.setName(dto.getName());
         account.setBalance(dto.getBalance() != null ? dto.getBalance() : BigDecimal.ZERO);
@@ -126,9 +122,6 @@ public class AccountServiceImpl implements AccountService {
         Account account = accountRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(ACCOUNT_NOT_FOUND + ", id: " + id));
 
-        if (transactionRepository.existsByAccountId(id)) {
-            throw new InvalidDataException("Нельзя удалить счёт, на котором есть транзакции");
-        }
 
         transactionRepository.deleteByAccountId(id);
         accountRepository.delete(account);

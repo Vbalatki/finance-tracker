@@ -2,10 +2,13 @@ package com.finance.finance_tracker.controller;
 
 import com.finance.finance_tracker.DTO.BudgetDto;
 import com.finance.finance_tracker.DTO.CategoryDto;
+import com.finance.finance_tracker.Util.SecurityUtil;
 import com.finance.finance_tracker.service.BudgetService;
 import com.finance.finance_tracker.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -28,8 +31,10 @@ public class BudgetController {
     private final CategoryService categoryService;
 
     @GetMapping
-    public String listBudgets(Model model) {
-        Long userId = 1L;
+    public String listBudgets(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+        if (userDetails == null) return "redirect:/login";
+        Long userId = SecurityUtil.getCurrentUserId();
+
         List<BudgetDto> budgets = budgetService.getBudgetsByUserId(userId);
         model.addAttribute("budgets", budgets);
         return "budgets/list";

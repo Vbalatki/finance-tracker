@@ -16,6 +16,7 @@ import com.finance.finance_tracker.mapper.UserMapper;
 import com.finance.finance_tracker.repository.AccountRepository;
 import com.finance.finance_tracker.repository.RoleRepository;
 import com.finance.finance_tracker.repository.UserRepository;
+import com.finance.finance_tracker.service.CurrencyApiService;
 import com.finance.finance_tracker.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +48,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final AccountMapper accountMapper;
+    private final CurrencyApiService currencyApiService;
 
 
 
@@ -234,7 +236,10 @@ public class UserServiceImpl implements UserService {
         for (AccountDto dto : accounts) {
             BigDecimal balance = dto.getBalance();
             Currency currency = dto.getCurrency();
-            totalInRub = totalInRub.add(convertToRub(balance, currency));
+            BigDecimal rubAmount = currencyApiService.convertCurrency(
+                    currency.name(), "RUB", balance
+            );
+            totalInRub = totalInRub.add(rubAmount);
         }
         log.debug("Общий баланс в рублях: {}", totalInRub);
         return totalInRub;
@@ -261,14 +266,27 @@ public class UserServiceImpl implements UserService {
         if (transactions == null || transactions.isEmpty()) {
             return BigDecimal.ZERO;
         }
+
         BigDecimal total = BigDecimal.ZERO;
         for (TransactionDto t : transactions) {
-            if (t.getType() == TransactionType.EXPENSE) {
-                Currency currency = t.getAccountCurrency();
-                total = total.add(convertToRub(t.getAmount(), currency));
+            if (t.getType() != TransactionType.EXPENSE) {
+                continue;
             }
+
+            Currency currency = t.getAccountCurrency();
+            if (currency == null) {
+                log.warn("Currency is null for transaction id {}, treating as RUB", t.getId());
+                currency = Currency.RUB;
+            }
+
+            BigDecimal amountInRub = currencyApiService.convertCurrency(
+                    currency.name(),
+                    "RUB",
+                    t.getAmount()
+            );
+
+            total = total.add(amountInRub);
         }
-        log.debug("Общий расход в рублях: {}", total);
         return total;
     }
 
@@ -281,18 +299,11 @@ public class UserServiceImpl implements UserService {
     }
 
     private BigDecimal convertToRub(BigDecimal amount, Currency currency) {
-        if (currency == null) {
-            log.warn("Валюта не указана, считаем как RUB");
+        if (currency == null || currency == Currency.RUB) {
             return amount;
         }
-        if (currency == Currency.RUB) {
-            return amount;
-        }
-        BigDecimal rate = currency.getRateToRub();
-        if (rate == null) {
-            log.warn("Курс для валюты {} не найден, считаем как RUB", currency);
-            return amount;
-        }
+
+        BigDecimal rate = currencyApiService.convertCurrency(currency.name(), "RUB", BigDecimal.ONE);
         return amount.multiply(rate);
     }
 }
