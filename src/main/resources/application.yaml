@@ -153,12 +153,20 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       show-details: when-authorized
     metrics:
       enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
 
 # ======= НАСТРОЙКИ ДЛЯ ОТЛАДКИ =======
 debug: true  # Включает отладочную информацию Spring Boot
@@ -167,4 +175,4 @@ trace: false # Включает трассировку (будет много л
 # ======= FrankfurtAPI =======
 currencyapi:
   url: "https://v6.exchangerate-api.com/v6/"
-  key: 1e9727d031dcc12c5a56c6ab
+  key: 1e9727d031dcc12c5a56c6ab   # потом скрыть в .env

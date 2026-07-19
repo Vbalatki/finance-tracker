@@ -1,0 +1,19 @@
+# Исправлено: было host.docker.internal:8186, хотя приложение слушает 8080
+# (см. server.port в application.yaml). Это и была причина, почему Prometheus
+# не мог собирать метрики.
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'finance_tracker_app'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+        labels:
+          application: 'finance-tracker'
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

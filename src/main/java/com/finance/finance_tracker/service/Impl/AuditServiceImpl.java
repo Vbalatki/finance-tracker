@@ -31,7 +31,7 @@ public class AuditServiceImpl implements AuditService {
     private final AuditRepository auditRepository;
     private final AuditMapper auditMapper;
 
-    @Async
+
     @Transactional
     public void log(Long userId, String username, String action, String entityType, Long entityId, String details) {
         if (userId == null) {

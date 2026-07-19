@@ -21,8 +21,8 @@ public class CurrencyController {
     private final CurrencyApiService currencyApiService;
 
     @GetMapping("/rates")
-    public ResponseEntity<Map<String, Double>> getRates(@RequestParam(defaultValue = "USD") String base) {
-        return ResponseEntity.ok(currencyApiService.getExchangeRates(base.toUpperCase()));
+    public ResponseEntity<Map<String, Double>> getRates(@RequestParam(defaultValue = "USD") String currency) {
+        return ResponseEntity.ok(currencyApiService.getExchangeRates(currency.toUpperCase()));
     }
 
     @GetMapping("/convert")

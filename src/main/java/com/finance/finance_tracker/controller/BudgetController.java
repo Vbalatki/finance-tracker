@@ -62,7 +62,7 @@ public class BudgetController {
             return "budgets/form";
         }
         try {
-            Long userId = 1L;
+            Long userId = SecurityUtil.getCurrentUserId();
             budgetService.saveBudget(budgetDto, userId);
             redirectAttributes.addFlashAttribute("success", "Бюджет сохранён");
         } catch (Exception e) {

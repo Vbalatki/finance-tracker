@@ -15,6 +15,7 @@ import com.finance.finance_tracker.repository.AccountRepository;
 import com.finance.finance_tracker.repository.TransactionRepository;
 import com.finance.finance_tracker.repository.UserRepository;
 import com.finance.finance_tracker.service.AccountService;
+import com.finance.finance_tracker.service.CurrencyApiService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,7 @@ public class AccountServiceImpl implements AccountService {
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
     private final AccountMapper accountMapper;
+    private final CurrencyApiService currencyApiService;
 
     @Transactional
     public AccountDto saveAccount(AccountDto dto) {
@@ -148,8 +150,38 @@ public class AccountServiceImpl implements AccountService {
 
     @Transactional(readOnly = true)
     public BigDecimal getTotalBalanceInCurrency(Long userId, Currency currency) {
-        BigDecimal totalInRub = getTotalBalance(userId);
-        return totalInRub;
+        if (currency == null) {
+            throw new InvalidDataException("Валюта для конвертации не указана");
+        }
+
+        // Получаем все счета пользователя
+        List<Account> accounts = accountRepository.findByUserId(userId);
+        if (accounts.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        // Суммируем балансы, конвертируя каждый в целевую валюту
+        BigDecimal total = BigDecimal.ZERO;
+        for (Account account : accounts) {
+            BigDecimal balance = account.getBalance();
+            if (balance == null || balance.compareTo(BigDecimal.ZERO) == 0) {
+                continue;
+            }
+            Currency fromCurrency = account.getCurrency();
+            if (fromCurrency == null) {
+                // Если валюта не указана, считаем, что это рубли (или логируем предупреждение)
+                log.warn("Account {} has no currency, treating as RUB", account.getId());
+                fromCurrency = Currency.RUB;
+            }
+            // Конвертируем в целевую валюту (используем пакетный или одиночный метод)
+            BigDecimal converted = currencyApiService.convertCurrency(
+                    fromCurrency.name(),
+                    currency.name(),
+                    balance
+            );
+            total = total.add(converted);
+        }
+        return total;
     }
 
     @Transactional

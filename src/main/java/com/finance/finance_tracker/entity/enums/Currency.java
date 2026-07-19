@@ -27,20 +27,4 @@ public enum Currency {
         return rateToRub;
     }
 
-    // Конвертация суммы в рубли
-    public BigDecimal convertToRub(BigDecimal amount) {
-        return amount.multiply(rateToRub);
-    }
-
-    // Конвертация из рублей в эту валюту
-    public BigDecimal convertFromRub(BigDecimal rubAmount) {
-        return rubAmount.divide(rateToRub, 2, RoundingMode.HALF_UP);
-    }
-
-    // Конвертация из одной валюты в другую
-    public static BigDecimal convert(BigDecimal amount, Currency from, Currency to) {
-        if (from == to) return amount;
-        BigDecimal inRub = from.convertToRub(amount);
-        return to.convertFromRub(inRub);
-    }
 }
