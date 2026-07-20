@@ -105,9 +105,10 @@ class BudgetControllerTest {
     }
 
     @Test
-    @DisplayName("ИЗВЕСТНЫЙ БАГ: POST /budgets всегда сохраняет бюджет под userId=1, игнорируя текущего пользователя")
-    void saveBudget_alwaysUsesHardcodedUserId() throws Exception {
-        // аутентифицируемся как пользователь с id=42, а не 1
+    @DisplayName("POST /budgets сохраняет бюджет под id текущего аутентифицированного пользователя")
+    void saveBudget_usesCurrentAuthenticatedUserId() throws Exception {
+        // баг с захардкоженным userId=1L починен — теперь контроллер должен
+        // использовать реального текущего пользователя (id=42), а не 1L
         SecurityContextHolder.clearContext();
         authenticateAsUserId(42L, "other@example.com");
 
@@ -120,15 +121,16 @@ class BudgetControllerTest {
 
         ArgumentCaptor<Long> userIdCaptor = ArgumentCaptor.forClass(Long.class);
         verify(budgetService).saveBudget(any(BudgetDto.class), userIdCaptor.capture());
-        // Ожидалось бы 42L (текущий пользователь), но контроллер хардкодит 1L — баг зафиксирован тестом
-        assertThat(userIdCaptor.getValue()).isEqualTo(1L);
+        assertThat(userIdCaptor.getValue()).isEqualTo(42L);
     }
 
     @Test
     @DisplayName("POST /budgets без обязательных полей возвращает форму с ошибками")
     void saveBudget_missingRequiredFields_returnsFormView() throws Exception {
-        when(categoryService.getAllCategories()).thenReturn(List.of());
-
+        // Внимание: контроллер при ошибках валидации НЕ подкладывает "categories"
+        // обратно в модель (в отличие от showCreateForm), поэтому реальный
+        // Thymeleaf-рендеринг budgets/form.html в этом случае сломается —
+        // отдельный баг в BudgetController.saveBudget(), стаб категорий здесь не нужен.
         mockMvc.perform(post("/budgets").param("monthlyLimit", ""))
                 .andExpect(status().isOk())
                 .andExpect(view().name("budgets/form"));
