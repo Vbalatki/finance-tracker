@@ -13,6 +13,7 @@ spring:
     password: root1
     driver-class-name: com.mysql.cj.jdbc.Driver
     
+
     # Оптимизация пула соединений
     hikari:
       connection-timeout: 30000
@@ -147,6 +148,15 @@ spring.devtools:
 # Кэширование (пока отключено)
 spring.cache:
   type: none
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    disable-swagger-default-url: true
 
 # ======= ПРОВЕРКА ЗДОРОВЬЯ =======
 management:

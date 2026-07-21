@@ -12,25 +12,17 @@ import com.finance.finance_tracker.service.TransactionService;
 import com.finance.finance_tracker.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
@@ -38,9 +30,16 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * Thymeleaf-контроллер для страниц управления транзакциями: список с
+ * фильтрами и статистикой, создание, редактирование через модальное окно
+ * (AJAX, {@link #getTransactionEditForm}/{@link #updateTransaction}) и удаление.
+ *
+ * <p>Доступ к чужим транзакциям запрещается проверкой владельца счёта,
+ * к которому привязана транзакция.
+ */
 @Controller
 @RequiredArgsConstructor
 public class TransactionController {
@@ -49,6 +48,16 @@ public class TransactionController {
     private final TransactionService transactionService;
     private final UserService userService;
 
+    /**
+     * Страница списка транзакций пользователя с фильтрами по счёту и
+     * категории, а также сводной статистикой (доходы/расходы/баланс).
+     *
+     * @param accountId   id счёта для фильтрации, необязателен
+     * @param categoryId  id категории для фильтрации, необязателен
+     * @param userDetails текущий пользователь; {@code null}, если не аутентифицирован
+     * @param model       модель представления
+     * @return {@code "transactions/list"}, либо редирект на {@code /login}
+     */
     @GetMapping("/transactions")
     public String transactionsPage(@RequestParam(required = false) Long accountId,
                                    @RequestParam(required = false) Long categoryId,
@@ -102,6 +111,13 @@ public class TransactionController {
         return "transactions/list";
     }
 
+    /**
+     * Страница формы создания новой транзакции.
+     *
+     * @param accountId предзаполняемый id счёта, необязателен
+     * @param model     модель представления
+     * @return {@code "transactions/create"}
+     */
     @GetMapping("/transactions/create")
     public String createTransactionPage(
             @RequestParam(required = false) Long accountId,
@@ -125,6 +141,15 @@ public class TransactionController {
         return "transactions/create";
     }
 
+    /**
+     * Обрабатывает отправку формы создания транзакции.
+     *
+     * @param dto                данные формы
+     * @param result             результат валидации
+     * @param redirectAttributes атрибуты для flash-сообщений
+     * @param model              модель представления (при повторном рендере формы)
+     * @return редирект на {@code /transactions} при успехе, иначе {@code "transactions/create"}
+     */
     @PostMapping("/transactions")
     public String createTransaction(@ModelAttribute("transactionDto") @Valid TransactionDto dto,
                                     BindingResult result,
@@ -149,6 +174,14 @@ public class TransactionController {
         }
     }
 
+    /**
+     * Отдаёт данные транзакции в формате JSON для предзаполнения модального
+     * окна редактирования (вызывается через {@code fetch} из клиентского JS).
+     *
+     * @param id id транзакции
+     * @return DTO транзакции
+     * @throws AccessDeniedException если транзакция привязана к чужому счёту
+     */
     @GetMapping("transactions/{id}/edit")
     @ResponseBody
     public TransactionDto getTransactionEditForm(@PathVariable Long id) {
@@ -160,6 +193,16 @@ public class TransactionController {
         return transactionService.findById(id);
     }
 
+    /**
+     * Обрабатывает отправку формы редактирования транзакции (модальное окно).
+     *
+     * @param id                 id транзакции
+     * @param dto                новые значения полей
+     * @param result             результат валидации
+     * @param redirectAttributes атрибуты для flash-сообщений
+     * @return редирект на {@code /transactions}
+     * @throws AccessDeniedException если транзакция привязана к чужому счёту
+     */
     @PostMapping("/transactions/{id}/update")
     public String updateTransaction(@PathVariable Long id,
                                     @Valid @ModelAttribute TransactionDto dto,
@@ -185,6 +228,14 @@ public class TransactionController {
         return "redirect:/transactions";
     }
 
+    /**
+     * Удаляет транзакцию. Ошибки (включая доступ к чужой транзакции)
+     * перехватываются и отображаются как flash-сообщение.
+     *
+     * @param id                 id транзакции
+     * @param redirectAttributes атрибуты для flash-сообщений
+     * @return редирект на {@code /accounts/{accountId}} при успехе, иначе на {@code /transactions}
+     */
     @PostMapping("/transactions/{id}/delete")
     public String deleteTransaction(@PathVariable Long id,
                                     RedirectAttributes redirectAttributes) {

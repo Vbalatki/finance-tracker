@@ -1,22 +1,21 @@
 package com.finance.finance_tracker.controller;
 
 import com.finance.finance_tracker.DTO.*;
-import com.finance.finance_tracker.entity.enums.Currency;
-import com.finance.finance_tracker.entity.enums.TransactionType;
 import com.finance.finance_tracker.service.*;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * Thymeleaf-контроллер корневых страниц: главная (редирект в зависимости
+ * от аутентификации) и дашборд со сводкой по счетам и последним транзакциям.
+ */
 @Controller
 @RequiredArgsConstructor
 public class MainController {
@@ -25,7 +24,13 @@ public class MainController {
     private final AccountService accountService;
     private final TransactionService transactionService;
 
-    //home page
+    /**
+     * Корневая страница — просто редиректит дальше в зависимости от
+     * статуса аутентификации.
+     *
+     * @param userDetails текущий пользователь; {@code null}, если не аутентифицирован
+     * @return редирект на {@code /dashboard}, если аутентифицирован, иначе на {@code /login}
+     */
     @GetMapping("/")
     public String home(@AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
         if (userDetails != null) {
@@ -34,6 +39,15 @@ public class MainController {
         return "redirect:/login";
     }
 
+    /**
+     * Дашборд: данные пользователя, список счетов, суммарный баланс в
+     * рублях и 10 последних транзакций.
+     *
+     * @param model       модель представления
+     * @param userDetails текущий пользователь; {@code null}, если не аутентифицирован
+     * @param request     текущий HTTP-запрос (используется для подсветки активного пункта меню)
+     * @return {@code "dashboard/index"}, либо редирект на {@code /login}
+     */
     @GetMapping("/dashboard")
     public String dashboard(Model model,
                             @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails,

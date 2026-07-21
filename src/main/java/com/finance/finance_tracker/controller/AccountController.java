@@ -4,7 +4,6 @@ import com.finance.finance_tracker.DTO.AccountDto;
 import com.finance.finance_tracker.DTO.TransactionDto;
 import com.finance.finance_tracker.Util.CurrencyFormatter;
 import com.finance.finance_tracker.Util.SecurityUtil;
-import com.finance.finance_tracker.entity.Account;
 import com.finance.finance_tracker.entity.enums.Currency;
 import com.finance.finance_tracker.exception.AccessDeniedException;
 import com.finance.finance_tracker.service.AccountService;
@@ -31,6 +30,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Thymeleaf-контроллер для страниц управления счетами: список, создание,
+ * детальный просмотр, пополнение/снятие, редактирование, удаление.
+ *
+ * <p>Доступ к чужим счетам (по id, не принадлежащему текущему
+ * аутентифицированному пользователю) запрещается проверкой
+ * {@code account.getUserId().equals(SecurityUtil.getCurrentUserId())}
+ * в каждом методе, работающем с конкретным счётом.
+ */
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/accounts")
@@ -40,6 +48,13 @@ public class AccountController {
     private final TransactionService transactionService;
     private final CurrencyFormatter currencyFormatter;
 
+    /**
+     * Страница списка счетов текущего пользователя со сводкой по валютам.
+     *
+     * @param model       модель представления
+     * @param userDetails текущий пользователь; {@code null}, если не аутентифицирован
+     * @return {@code "accounts/list"}, либо редирект на {@code /login}, если пользователь не аутентифицирован
+     */
     @GetMapping
     public String accountsPage(Model model,
                                @AuthenticationPrincipal UserDetails userDetails) {
@@ -65,6 +80,13 @@ public class AccountController {
         return "accounts/list";
     }
 
+    /**
+     * Страница формы создания нового счёта.
+     *
+     * @param model       модель представления
+     * @param userDetails текущий пользователь; {@code null}, если не аутентифицирован
+     * @return {@code "accounts/create"}, либо редирект на {@code /login}
+     */
     @GetMapping("/create")
     public String createAccountPage(Model model,
                                     @AuthenticationPrincipal UserDetails userDetails) {
@@ -82,6 +104,16 @@ public class AccountController {
         return "accounts/create";
     }
 
+    /**
+     * Обрабатывает отправку формы создания счёта.
+     *
+     * @param dto               данные формы
+     * @param result            результат валидации
+     * @param userDetails       текущий пользователь; {@code null}, если не аутентифицирован
+     * @param redirectAttributes атрибуты для flash-сообщений после редиректа
+     * @param model             модель представления (используется при повторном рендере формы)
+     * @return редирект на {@code /accounts} при успехе, иначе {@code "accounts/create"}
+     */
     @PostMapping
     public String createAccount(@ModelAttribute("accountDto") @Valid AccountDto dto,
                                 BindingResult result,
@@ -109,6 +141,15 @@ public class AccountController {
         }
     }
 
+    /**
+     * Страница деталей счёта: баланс, последние операции, быстрые действия.
+     *
+     * @param id          id счёта
+     * @param userDetails текущий пользователь
+     * @param model       модель представления
+     * @return {@code "accounts/detail"}
+     * @throws AccessDeniedException если счёт принадлежит другому пользователю
+     */
     @GetMapping("/{id}")
     public String accountDetail(@PathVariable Long id,
                                 @AuthenticationPrincipal UserDetails userDetails,
@@ -134,6 +175,18 @@ public class AccountController {
         return "accounts/detail";
     }
 
+    /**
+     * Страница формы редактирования счёта.
+     *
+     * <p><b>Внимание:</b> в отличие от остальных методов, здесь нет проверки
+     * принадлежности счёта текущему пользователю — форму по id чужого счёта
+     * можно открыть на просмотр (сама форма отправки, впрочем, не подключена
+     * отдельным POST-обработчиком в этом контроллере).
+     *
+     * @param id    id счёта
+     * @param model модель представления
+     * @return {@code "accounts/edit"}
+     */
     @GetMapping("/{id}/edit")
     public String editAccountPage(@PathVariable Long id, Model model) {
         AccountDto account = accountService.findById(id);
@@ -145,29 +198,17 @@ public class AccountController {
         return "accounts/edit";
     }
 
-/*  может, понадобится
-    @PostMapping("/{id}/edit")
-    public String updateAccount(@PathVariable Long id,
-                                @ModelAttribute("accountDto") @Valid AccountDto dto,
-                                BindingResult result,
-                                RedirectAttributes redirectAttributes,
-                                Model model) {
-        if (result.hasErrors()) {
-            model.addAttribute("currencies", Currency.values());
-            return "accounts/edit";
-        }
-
-        try {
-            accountService.updateAccount(id, dto);
-            redirectAttributes.addFlashAttribute("success", "Счет успешно обновлен");
-            return "redirect:/accounts/" + id;
-        } catch (Exception e) {
-            model.addAttribute("currencies", Currency.values());
-            model.addAttribute("error", e.getMessage());
-            return "accounts/edit";
-        }
-    }*/
-
+    /**
+     * Пополняет счёт на указанную сумму. Ошибки (включая попытку доступа
+     * к чужому счёту) не приводят к HTTP-ошибке — они перехватываются и
+     * отображаются как flash-сообщение после редиректа.
+     *
+     * @param id                 id счёта
+     * @param amount             сумма пополнения, минимум 0.01
+     * @param userDetails        текущий пользователь
+     * @param redirectAttributes атрибуты для flash-сообщений
+     * @return редирект на {@code /accounts/{id}}
+     */
     @PostMapping("/{id}/deposit")
     public String deposit(@PathVariable Long id,
                           @RequestParam @DecimalMin(value = "0.01", message = "Сумма должна быть больше 0") BigDecimal amount,
@@ -189,6 +230,16 @@ public class AccountController {
         return "redirect:/accounts/" + id;
     }
 
+    /**
+     * Снимает средства со счёта. Ошибки (недостаточно средств, чужой счёт
+     * и т.д.) перехватываются и отображаются как flash-сообщение.
+     *
+     * @param id                 id счёта
+     * @param amount             сумма снятия, минимум 0.01
+     * @param userDetails        текущий пользователь
+     * @param redirectAttributes атрибуты для flash-сообщений
+     * @return редирект на {@code /accounts/{id}}
+     */
     @PostMapping("/{id}/withdraw")
     public String withdraw(@PathVariable Long id,
                            @RequestParam @DecimalMin(value = "0.01", message = "Сумма должна быть больше 0") BigDecimal amount,
@@ -210,6 +261,15 @@ public class AccountController {
         return "redirect:/accounts/" + id;
     }
 
+    /**
+     * Удаляет счёт вместе со всеми его транзакциями. Ошибки перехватываются
+     * и отображаются как flash-сообщение вместо HTTP-ошибки.
+     *
+     * @param id                 id счёта
+     * @param userDetails        текущий пользователь
+     * @param redirectAttributes атрибуты для flash-сообщений
+     * @return редирект на {@code /accounts}
+     */
     @PostMapping("/{id}/delete")
     public String deleteAccount(@PathVariable Long id,
                                 @AuthenticationPrincipal UserDetails userDetails,

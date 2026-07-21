@@ -85,6 +85,16 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("IllegalArgumentException -> 400 BAD_REQUEST")
+    void handleIllegalArgument_returnsBadRequest() {
+        ResponseEntity<ErrorResponse> response =
+                handler.handleIllegalArgumentException(new IllegalArgumentException("Курс не найден"), request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getMessage()).isEqualTo("Курс не найден");
+    }
+
+    @Test
     @DisplayName("DuplicateEntityException -> 409 CONFLICT")
     void handleDuplicateEntity_returnsConflict() {
         ResponseEntity<ErrorResponse> response =

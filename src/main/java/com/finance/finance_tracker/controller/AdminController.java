@@ -21,6 +21,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
+/**
+ * Thymeleaf-контроллер админ-панели: управление пользователями, ролями и
+ * просмотр журнала аудита. Доступ ограничен на уровне
+ * {@code SecurityConfig} ({@code hasRole("ADMIN")} для {@code /admin/**}) —
+ * сам контроллер прав не проверяет.
+ */
 @Controller
 @RequestMapping("/admin")
 @AllArgsConstructor
@@ -29,6 +35,13 @@ public class AdminController {
     private final UserService userService;
     private final AuditService auditService;
 
+    /**
+     * Главная страница админ-панели: список пользователей, список ролей и
+     * последние 50 записей аудита.
+     *
+     * @param model модель представления
+     * @return {@code "admin/dashboard"}
+     */
     @GetMapping
     public String dashboard(Model model) {
         List<UserDto> users = userService.getAllUsers();
@@ -42,6 +55,14 @@ public class AdminController {
         return "admin/dashboard";
     }
 
+    /**
+     * Страница полного журнала аудита с постраничной навигацией.
+     *
+     * @param page  номер страницы, начиная с 0
+     * @param size  размер страницы
+     * @param model модель представления
+     * @return {@code "admin/audit"}
+     */
     @GetMapping("/audit")
     public String auditLogs(@RequestParam(defaultValue = "0") int page,
                             @RequestParam(defaultValue = "50") int size,
@@ -55,6 +76,15 @@ public class AdminController {
         return "admin/audit";
     }
 
+    /**
+     * Создаёт новую роль. Ошибки валидации и ошибки сервиса отображаются
+     * как flash-сообщение после редиректа обратно на дашборд.
+     *
+     * @param dto                данные новой роли
+     * @param result             результат валидации
+     * @param redirectAttributes атрибуты для flash-сообщений
+     * @return редирект на {@code /admin}
+     */
     @PostMapping("/roles/create")
     public String createRole(@Valid @ModelAttribute("newRole") RoleDto dto,
                              BindingResult result,
@@ -72,6 +102,14 @@ public class AdminController {
         return "redirect:/admin";
     }
 
+    /**
+     * Полностью заменяет набор ролей пользователя выбранными в форме.
+     *
+     * @param userId             id пользователя
+     * @param roleIds            id выбранных ролей; {@code null}, если ни одна не выбрана
+     * @param redirectAttributes атрибуты для flash-сообщений
+     * @return редирект на {@code /admin}
+     */
     @PostMapping("/users/{userId}/roles")
     public String updateUserRoles(@PathVariable Long userId,
                                   @RequestParam(value = "roles", required = false) List<Long> roleIds,
@@ -85,6 +123,13 @@ public class AdminController {
         return "redirect:/admin";
     }
 
+    /**
+     * Переключает статус активности пользователя (блокировка/разблокировка).
+     *
+     * @param userId             id пользователя
+     * @param redirectAttributes атрибуты для flash-сообщений
+     * @return редирект на {@code /admin}
+     */
     @PostMapping("/users/{userId}/toggle")
     public String toggleUserActive(@PathVariable Long userId,
                                    RedirectAttributes redirectAttributes) {
@@ -97,6 +142,13 @@ public class AdminController {
         return "redirect:/admin";
     }
 
+    /**
+     * Удаляет пользователя.
+     *
+     * @param userId             id пользователя
+     * @param redirectAttributes атрибуты для flash-сообщений
+     * @return редирект на {@code /admin}
+     */
     @PostMapping("/users/{userId}/delete")
     public String deleteUser(@PathVariable Long userId,
                              RedirectAttributes redirectAttributes) {
@@ -109,6 +161,14 @@ public class AdminController {
         return "redirect:/admin";
     }
 
+    /**
+     * Удаляет роль. Стандартные роли ({@code ROLE_ADMIN}/{@code ROLE_USER})
+     * удалить нельзя — ошибка отображается как flash-сообщение.
+     *
+     * @param roleId             id роли
+     * @param redirectAttributes атрибуты для flash-сообщений
+     * @return редирект на {@code /admin}
+     */
     @PostMapping("/roles/{roleId}/delete")
     public String deleteRole(@PathVariable Long roleId,
                              RedirectAttributes redirectAttributes) {

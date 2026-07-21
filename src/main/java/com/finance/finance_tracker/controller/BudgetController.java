@@ -22,6 +22,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
+/**
+ * Thymeleaf-контроллер для страниц управления месячными бюджетами по категориям.
+ */
 @Controller
 @RequestMapping("/budgets")
 @RequiredArgsConstructor
@@ -30,6 +33,13 @@ public class BudgetController {
     private final BudgetService budgetService;
     private final CategoryService categoryService;
 
+    /**
+     * Страница списка бюджетов текущего пользователя.
+     *
+     * @param userDetails текущий пользователь; {@code null}, если не аутентифицирован
+     * @param model       модель представления
+     * @return {@code "budgets/list"}, либо редирект на {@code /login}
+     */
     @GetMapping
     public String listBudgets(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         if (userDetails == null) return "redirect:/login";
@@ -40,6 +50,13 @@ public class BudgetController {
         return "budgets/list";
     }
 
+    /**
+     * Страница формы создания бюджета.
+     *
+     * @param categoryId предзаполняемая категория, необязателен
+     * @param model      модель представления
+     * @return {@code "budgets/form"}
+     */
     @GetMapping("/create")
     public String showCreateForm(@RequestParam(required = false) Long categoryId, Model model) {
         List<CategoryDto> categories = categoryService.getAllCategories();
@@ -52,6 +69,15 @@ public class BudgetController {
         return "budgets/form";
     }
 
+    /**
+     * Обрабатывает отправку формы создания/обновления бюджета.
+     *
+     * @param budgetDto          данные формы
+     * @param result             результат валидации
+     * @param redirectAttributes атрибуты для flash-сообщений
+     * @param model              модель представления (при повторном рендере формы)
+     * @return редирект на {@code /budgets}, либо {@code "budgets/form"} при ошибках валидации
+     */
     @PostMapping
     public String saveBudget(@Valid @ModelAttribute("budgetDto") BudgetDto budgetDto,
                              BindingResult result,
@@ -71,6 +97,14 @@ public class BudgetController {
         return "redirect:/budgets";
     }
 
+    /**
+     * Обнуляет накопленные траты бюджета. Ошибки перехватываются и
+     * отображаются как flash-сообщение.
+     *
+     * @param id                 id бюджета
+     * @param redirectAttributes атрибуты для flash-сообщений
+     * @return редирект на {@code /budgets}
+     */
     @PostMapping("/{id}/reset")
     public String resetBudget(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
@@ -82,6 +116,13 @@ public class BudgetController {
         return "redirect:/budgets";
     }
 
+    /**
+     * Удаляет бюджет. Ошибки перехватываются и отображаются как flash-сообщение.
+     *
+     * @param id                 id бюджета
+     * @param redirectAttributes атрибуты для flash-сообщений
+     * @return редирект на {@code /budgets}
+     */
     @PostMapping("/{id}/delete")
     public String deleteBudget(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
