@@ -1,0 +1,143 @@
+databaseChangeLog:
+  - changeSet:
+      id: 11
+      author: claude-migration
+      changes:
+        - createIndex:
+            schemaName: finance_tracker
+            tableName: users
+            indexName: idx_users_email
+            columns:
+              - column:
+                  name: email
+                  descending: false
+
+        - createIndex:
+            schemaName: finance_tracker
+            tableName: users
+            indexName: idx_users_active
+            columns:
+              - column:
+                  name: active
+                  descending: false
+
+        - createIndex:
+            schemaName: finance_tracker
+            tableName: accounts
+            indexName: idx_accounts_user_id
+            columns:
+              - column:
+                  name: user_id
+                  descending: false
+
+        - createIndex:
+            schemaName: finance_tracker
+            tableName: accounts
+            indexName: idx_accounts_currency
+            columns:
+              - column:
+                  name: currency
+                  descending: false
+
+        - createIndex:
+            schemaName: finance_tracker
+            tableName: categories
+            indexName: idx_categories_user_id
+            columns:
+              - column:
+                  name: user_id
+                  descending: false
+
+        - createIndex:
+            schemaName: finance_tracker
+            tableName: budgets
+            indexName: idx_budgets_category_id
+            columns:
+              - column:
+                  name: category_id
+                  descending: false
+
+        - createIndex:
+            schemaName: finance_tracker
+            tableName: budgets
+            indexName: idx_budgets_user_id
+            columns:
+              - column:
+                  name: user_id
+                  descending: false
+
+        - createIndex:
+            schemaName: finance_tracker
+            tableName: transactions
+            indexName: idx_transactions_account_id
+            columns:
+              - column:
+                  name: account_id
+                  descending: false
+
+        - createIndex:
+            schemaName: finance_tracker
+            tableName: transactions
+            indexName: idx_transactions_category_id
+            columns:
+              - column:
+                  name: category_id
+                  descending: false
+
+        - createIndex:
+            schemaName: finance_tracker
+            tableName: transactions
+            indexName: idx_transactions_created_at
+            columns:
+              - column:
+                  name: created_at
+                  descending: true
+
+        - createIndex:
+            schemaName: finance_tracker
+            tableName: transactions
+            indexName: idx_transactions_type
+            columns:
+              - column:
+                  name: type
+                  descending: false
+
+        - createIndex:
+            schemaName: finance_tracker
+            tableName: audit
+            indexName: idx_audit_created_at
+            columns:
+              - column:
+                  name: created_at
+                  descending: true
+
+        - createIndex:
+            schemaName: finance_tracker
+            tableName: audit
+            indexName: idx_audit_user_id
+            columns:
+              - column:
+                  name: user_id
+                  descending: false
+
+  - changeSet:
+      id: 12
+      author: claude-migration
+      comment: >
+        Unique-constraints, заявленные в @Table(uniqueConstraints = ...) сущностей
+        Category и Budget, но отсутствовавшие в исходном changelog — их не хватало,
+        и уникальность имени категории/пары пользователь-категория для бюджета
+        фактически ничем не была защищена на уровне БД (только проверкой в сервисе,
+        подверженной гонкам при параллельных запросах).
+      changes:
+        - addUniqueConstraint:
+            schemaName: finance_tracker
+            tableName: categories
+            columnNames: name, user_id
+            constraintName: uk_categories_name_user
+
+        - addUniqueConstraint:
+            schemaName: finance_tracker
+            tableName: budgets
+            columnNames: user_id, category_id
+            constraintName: uk_budgets_user_category
