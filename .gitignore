@@ -33,5 +33,24 @@ build/
 ### VS Code ###
 .vscode/
 
+# Environment
 .env
-*.env
+.env.*
+
+# Logs
+*.log
+logs/
+
+# Build
+target/
+*.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Maven
+.classpath
+.project
+.settings/
