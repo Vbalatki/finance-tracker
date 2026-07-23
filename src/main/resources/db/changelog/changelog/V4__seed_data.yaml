@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: 13
-      author: claude-migration
+      author: dmitriy-sidorov
       changes:
         - insert:
             schemaName: finance_tracker
@@ -51,12 +51,9 @@ databaseChangeLog:
 
   - changeSet:
       id: 14
-      author: claude-migration
+      author: dmitriy-sidorov
       comment: >
-        ROLE_ADMIN и ROLE_USER — стандартные роли, защищённые от изменения/удаления
-        в RoleServiceImpl (см. DataConstants.DEFAULT_ROLE_ADMIN/DEFAULT_ROLE_USER).
-        Раньше ничего их не создавало — первый /admin запрос упал бы, так как
-        роль ROLE_ADMIN физически не существовала бы ни у одного пользователя.
+        ROLE_ADMIN и ROLE_USER — стандартные роли
       changes:
         - insert:
             schemaName: finance_tracker
@@ -75,7 +72,7 @@ databaseChangeLog:
 
   - changeSet:
       id: 15
-      author: claude-migration
+      author: dmitriy-sidorov
       comment: Иван (id=1) — администратор, Мария (id=2) — обычный пользователь.
       changes:
         - insert:
@@ -111,7 +108,7 @@ databaseChangeLog:
 
   - changeSet:
       id: 16
-      author: claude-migration
+      author: dmitriy-sidorov
       changes:
         - insert:
             schemaName: finance_tracker
@@ -166,7 +163,7 @@ databaseChangeLog:
 
   - changeSet:
       id: 17
-      author: claude-migration
+      author: dmitriy-sidorov
       changes:
         - insert:
             schemaName: finance_tracker
@@ -236,7 +233,7 @@ databaseChangeLog:
 
   - changeSet:
       id: 18
-      author: claude-migration
+      author: dmitriy-sidorov
       comment: >
         Добавлена колонка user_id в insert (в исходном seed её не было, так как
         в схеме budgets тогда не было этой колонки вообще — см. V1).

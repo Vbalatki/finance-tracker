@@ -135,4 +135,4 @@ springdoc:
 # ======= Внешний API курсов валют =======
 currencyapi:
   url: "https://v6.exchangerate-api.com/v6/"
-  key: ${CURRENCY_API_KEY:1e9727d031dcc12c5a56c6ab}
+  key: ${CURRENCY_API_KEY:}

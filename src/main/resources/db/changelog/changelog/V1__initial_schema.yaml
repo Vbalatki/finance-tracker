@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: 2
-      author: claude-migration
+      author: dmitriy-sidorov
       changes:
         - createTable:
             schemaName: finance_tracker
@@ -40,9 +40,6 @@ databaseChangeLog:
                   type: VARCHAR(255)
                   constraints:
                     nullable: false
-              # ВАЖНО: имя колонки "active" (не "is_active"), должно совпадать
-              # с @Column(name = "active") в сущности User — раньше здесь была
-              # "is_active", что ломает Hibernate ddl-auto=validate.
               - column:
                   name: active
                   type: BOOLEAN
@@ -56,8 +53,8 @@ databaseChangeLog:
 
   - changeSet:
       id: 3
-      author: claude-migration
-      comment: Таблица ролей. Отсутствовала в исходном changelog, хотя используется Role/SecurityConfig.
+      author: dmitriy-sidorov
+      comment: Таблица ролей.
       changes:
         - createTable:
             schemaName: finance_tracker
@@ -79,10 +76,9 @@ databaseChangeLog:
 
   - changeSet:
       id: 4
-      author: claude-migration
+      author: dmitriy-sidorov
       comment: >
-        Связующая таблица ролей пользователей (User.roles, @ManyToMany
-        через @JoinTable(name = "user_roles")). Отсутствовала в исходном changelog.
+        Связующая таблица ролей пользователей
       changes:
         - createTable:
             schemaName: finance_tracker
@@ -106,7 +102,7 @@ databaseChangeLog:
 
   - changeSet:
       id: 5
-      author: claude-migration
+      author: dmitriy-sidorov
       changes:
         - createTable:
             schemaName: finance_tracker
@@ -153,7 +149,7 @@ databaseChangeLog:
 
   - changeSet:
       id: 6
-      author: claude-migration
+      author: dmitriy-sidorov
       changes:
         - createTable:
             schemaName: finance_tracker
@@ -183,12 +179,7 @@ databaseChangeLog:
 
   - changeSet:
       id: 7
-      author: claude-migration
-      comment: >
-        Добавлена колонка user_id (в исходном changelog отсутствовала, хотя
-        Budget.user — обязательное поле @JoinColumn(name = "user_id", nullable = false)).
-        Precision/scale (15,2) приведены в соответствие с @Column(precision = 15, scale = 2)
-        в сущности Budget (было 19,2).
+      author: dmitriy-sidorov
       changes:
         - createTable:
             schemaName: finance_tracker
@@ -233,7 +224,7 @@ databaseChangeLog:
 
   - changeSet:
       id: 8
-      author: claude-migration
+      author: dmitriy-sidorov
       changes:
         - createTable:
             schemaName: finance_tracker
@@ -274,13 +265,9 @@ databaseChangeLog:
 
   - changeSet:
       id: 9
-      author: claude-migration
+      author: dmitriy-sidorov
       comment: >
-        Таблица журнала аудита. Отсутствовала в исходном changelog, хотя
-        используется Audit entity/AuditServiceImpl/AuditAspect. Без неё
-        AuditAspect тихо ловил бы исключение при первой же save/update/delete
-        операции (запись аудита идёт асинхронно, поэтому ошибка не блокирует
-        основной поток, но теряется в логах).
+        Таблица журнала аудита.
       changes:
         - createTable:
             schemaName: finance_tracker

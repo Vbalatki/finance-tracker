@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: 11
-      author: claude-migration
+      author: dmitriy-sidorov
       changes:
         - createIndex:
             schemaName: finance_tracker
@@ -122,13 +122,7 @@ databaseChangeLog:
 
   - changeSet:
       id: 12
-      author: claude-migration
-      comment: >
-        Unique-constraints, заявленные в @Table(uniqueConstraints = ...) сущностей
-        Category и Budget, но отсутствовавшие в исходном changelog — их не хватало,
-        и уникальность имени категории/пары пользователь-категория для бюджета
-        фактически ничем не была защищена на уровне БД (только проверкой в сервисе,
-        подверженной гонкам при параллельных запросах).
+      author: dmitriy-sidorov
       changes:
         - addUniqueConstraint:
             schemaName: finance_tracker
