@@ -1,20 +1,18 @@
 # ================================
-# ФИНАНСОВЫЙ ТРЕКЕР - MySQL КОНФИГ
+# ФИНАНСОВЫЙ ТРЕКЕР - PostgreSQL КОНФИГ
 # ================================
 
 spring:
   application:
     name: finance-tracker
-  
-  # ======= НАСТРОЙКИ MySQL =======
-  datasource:
-    url: jdbc:mysql://localhost:3306/finance_tracker?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
-    username: root
-    password: root1
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    
 
-    # Оптимизация пула соединений
+  # ======= НАСТРОЙКИ PostgreSQL =======
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:finance_tracker}
+    username: ${DB_USERNAME:finance_tracker}
+    password: ${DB_PASSWORD:finance_tracker}
+    driver-class-name: org.postgresql.Driver
+
     hikari:
       connection-timeout: 30000
       maximum-pool-size: 10
@@ -23,27 +21,40 @@ spring:
       max-lifetime: 1800000
       connection-test-query: SELECT 1
 
+  # ======= НАСТРОЙКИ LIQUIBASE =======
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    # default-schema — куда попадают таблицы приложения (совпадает со
+    # schema = "finance_tracker" в @Table у сущностей).
+    # liquibase-schema — где Liquibase хранит свои служебные таблицы
+    # DATABASECHANGELOG/DATABASECHANGELOGLOCK; оставляем в public, так как
+    # эта схема гарантированно существует ещё до первого запуска Liquibase
+    # (сама finance_tracker создаётся первым же changeset'ом V0).
+    default-schema: finance_tracker
+    liquibase-schema: public
+
   # ======= НАСТРОЙКИ JPA/HIBERNATE =======
   jpa:
+    hibernate:
+      # схема создаётся Liquibase, Hibernate её не трогает
+      ddl-auto: validate
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-        show_sql: true                # Показывать SQL в консоли
+        show_sql: true
         jdbc:
           batch_size: 20
         order_inserts: true
         order_updates: true
-        generate_statistics: false    # true для отладки производительности
-        connection:
-          charset: UTF-8
-          useUnicode: true
+        generate_statistics: false
     show-sql: true
-    open-in-view: false               # Лучше false для производительности
-  
+    open-in-view: false
+
   # ======= НАСТРОЙКИ THYMELEAF =======
   thymeleaf:
-    cache: false                      # false для разработки
+    cache: false
     prefix: classpath:/templates/
     suffix: .html
     mode: HTML
@@ -52,9 +63,14 @@ spring:
     check-template-location: true
     enabled: true
 
+  devtools:
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
 
-
-
+  cache:
+    type: none
 
 # ======= НАСТРОЙКИ СЕРВЕРА =======
 server:
@@ -72,93 +88,23 @@ server:
     connection-timeout: 5000
 
 # ======= КОНФИГУРАЦИЯ ЛОГИРОВАНИЯ =======
+# Уровни DEBUG/TRACE уместны локально, но не в контейнере/проде —
+# при необходимости переопределите через application-prod.yaml
 logging:
   level:
-    # Spring Security (ДЕБАГ ВКЛЮЧЕН!) ⬅⬅⬅ ВАЖНО
-    org.springframework.security: DEBUG
-    org.springframework.security.web: DEBUG
-    org.springframework.security.authentication: DEBUG
-    org.springframework.security.config: DEBUG
-    org.springframework.security.web.authentication: DEBUG
-
-    # Твое приложение
-    com.finance.tracker: DEBUG
-    com.finance.tracker.controller: DEBUG
-    com.finance.tracker.service: DEBUG
-    com.finance.tracker.repository: DEBUG
-    com.finance.tracker.security: DEBUG
-
-    # Spring Web
-    org.springframework.web: DEBUG
-    org.springframework.web.servlet: DEBUG
-    org.springframework.web.filter: DEBUG
-
-    # Spring Framework
-    org.springframework: INFO
-    org.springframework.transaction: DEBUG
-    org.springframework.orm.jpa: DEBUG
-    org.springframework.jdbc: DEBUG
-
-    # Hibernate/JPA
+    org.springframework.security: INFO
+    com.finance.finance_tracker: DEBUG
+    org.springframework.web: INFO
     org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    org.hibernate.stat: DEBUG
-    org.hibernate.engine.transaction.internal.TransactionImpl: DEBUG
-
-    # База данных
-    com.zaxxer.hikari: DEBUG
-    org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl: DEBUG
-
-    # Thymeleaf
-    org.thymeleaf: DEBUG
-    org.thymeleaf.TemplateEngine: INFO
-
-    # Другие полезные логгеры
-    org.springframework.boot.autoconfigure: INFO
-    org.springframework.context: INFO
-    org.springframework.beans: INFO
-
-  # Настройка файлов логов
-  file:
-    name: logs/finance-tracker.log
-    max-size: 10MB
-    max-history: 30
-
-  # Паттерны для логов
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    liquibase: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{40} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{40} - %msg%n"
 
-  # Настройки Logback (если используется)
-  logback:
-    rollingpolicy:
-      max-file-size: 10MB
-      max-history: 30
-      total-size-cap: 100MB
-      clean-history-on-start: false
+debug: false
+trace: false
 
-# ======= ДОПОЛНИТЕЛЬНЫЕ НАСТРОЙКИ =======
-# Для разработки
-spring.devtools:
-  restart:
-    enabled: true
-  livereload:
-    enabled: true
-
-# Кэширование (пока отключено)
-spring.cache:
-  type: none
-
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    operations-sorter: method
-    tags-sorter: alpha
-    disable-swagger-default-url: true
-
-# ======= ПРОВЕРКА ЗДОРОВЬЯ =======
+# ======= ПРОВЕРКА ЗДОРОВЬЯ / МЕТРИКИ =======
 management:
   endpoints:
     web:
@@ -174,15 +120,19 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
-    distribution:
-      percentiles-histogram:
-        http.server.requests: true
 
-# ======= НАСТРОЙКИ ДЛЯ ОТЛАДКИ =======
-debug: true  # Включает отладочную информацию Spring Boot
-trace: false # Включает трассировку (будет много логов)
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    disable-swagger-default-url: true
+  paths-to-match: /api/**
+  packages-to-scan: com.finance.finance_tracker.controller
 
-# ======= FrankfurtAPI =======
+# ======= Внешний API курсов валют =======
 currencyapi:
   url: "https://v6.exchangerate-api.com/v6/"
-  key: 1e9727d031dcc12c5a56c6ab   # потом скрыть в .env
+  key: ${CURRENCY_API_KEY:1e9727d031dcc12c5a56c6ab}

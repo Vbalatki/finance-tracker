@@ -55,16 +55,27 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     void deleteByUserIdAndCategoryId(@Param("userId") Long userId, @Param("categoryId") Long categoryId);
 
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t " +
-            "WHERE t.account.id = :userId AND t.type = :type")
+            "WHERE t.account.id = :accountId AND t.type = :type")
     Optional<BigDecimal> sumAmountByUserIdAndType(
-            @Param("userId") Long userId,
+            @Param("accountId") Long accountId,
             @Param("type") TransactionType type
     );
 
+    /**
+     * Сумма расходов по категории за произвольный период (обычно — текущий месяц,
+     * границы вычисляются в BudgetServiceImpl через {@code LocalDate.now()}).
+     *
+     * <p>Раньше здесь использовались функции {@code YEAR()}/{@code MONTH()},
+     * специфичные для MySQL — на PostgreSQL таких JPQL-функций нет. Заменено на
+     * сравнение диапазона дат, что работает одинаково на любой СУБД и вдобавок
+     * не зависит от часового пояса сервера БД.
+     */
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t " +
             "WHERE t.category.id = :categoryId " +
             "AND t.type = com.finance.finance_tracker.entity.enums.TransactionType.EXPENSE " +
-            "AND YEAR(t.createdAt) = YEAR(CURRENT_DATE) " +
-            "AND MONTH(t.createdAt) = MONTH(CURRENT_DATE)")
-    BigDecimal getCurrentMonthExpenseByCategory(@Param("categoryId") Long categoryId);
+            "AND t.createdAt >= :monthStart AND t.createdAt < :monthEnd")
+    BigDecimal getCurrentMonthExpenseByCategory(
+            @Param("categoryId") Long categoryId,
+            @Param("monthStart") LocalDateTime monthStart,
+            @Param("monthEnd") LocalDateTime monthEnd);
 }

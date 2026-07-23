@@ -1,0 +1,50 @@
+# Основной стек: приложение + PostgreSQL.
+# Мониторинг (Prometheus/Grafana) — отдельный файл docker-compose.monitoring.yml,
+# запускается параллельно при необходимости.
+#
+# Запуск:
+#   docker compose up -d --build
+#
+# Приложение:  http://localhost:8080
+# Swagger UI:  http://localhost:8080/swagger-ui.html
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: finance-tracker-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-finance_tracker}
+      POSTGRES_USER: ${DB_USERNAME:-finance_tracker}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-finance_tracker}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-finance_tracker} -d ${DB_NAME:-finance_tracker}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: ../Users/стас/AppData/Local/Temp
+      dockerfile: Dockerfile
+    container_name: finance-tracker-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-finance_tracker}
+      DB_USERNAME: ${DB_USERNAME:-finance_tracker}
+      DB_PASSWORD: ${DB_PASSWORD:-finance_tracker}
+      CURRENCY_API_KEY: ${CURRENCY_API_KEY:-}
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres-data:

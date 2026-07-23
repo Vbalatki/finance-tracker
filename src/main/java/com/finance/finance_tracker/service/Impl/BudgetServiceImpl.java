@@ -1,15 +1,11 @@
 package com.finance.finance_tracker.service.Impl;
 
 import com.finance.finance_tracker.DTO.BudgetDto;
-import com.finance.finance_tracker.entity.Transaction;
 import com.finance.finance_tracker.entity.User;
-import com.finance.finance_tracker.exception.DuplicateEntityException;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
-import com.finance.finance_tracker.exception.InvalidDataException;
 import com.finance.finance_tracker.mapper.BudgetMapper;
 import com.finance.finance_tracker.entity.Budget;
 import com.finance.finance_tracker.entity.Category;
-import com.finance.finance_tracker.repository.AccountRepository;
 import com.finance.finance_tracker.repository.BudgetRepository;
 import com.finance.finance_tracker.repository.CategoryRepository;
 import com.finance.finance_tracker.repository.TransactionRepository;
@@ -21,13 +17,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.finance.finance_tracker.Util.DataConstants.BUDGET_NOT_FOUND;
 import static com.finance.finance_tracker.Util.DataConstants.CATEGORY_NOT_FOUND;
-import static com.finance.finance_tracker.Util.DataConstants.INVALID_MONTHLY_LIMIT;
 import static com.finance.finance_tracker.Util.DataConstants.USER_NOT_FOUND;
 
 @Slf4j
@@ -57,9 +54,16 @@ public class BudgetServiceImpl implements BudgetService {
             log.debug("У пользователя id={} нет бюджетов", userId);
         }
 
+        // Границы текущего месяца считаем один раз в Java, а не через
+        // YEAR()/MONTH() в SQL — так запрос не зависит от диалекта БД
+        // и от часового пояса сервера СУБД.
+        LocalDateTime monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+        LocalDateTime monthEnd = monthStart.plusMonths(1);
+
         List<BudgetDto> budgets = list.stream().map(budget -> {
             BudgetDto dto = budgetMapper.toDto(budget);
-            BigDecimal spent = transactionRepository.getCurrentMonthExpenseByCategory(dto.getCategoryId());
+            BigDecimal spent = transactionRepository.getCurrentMonthExpenseByCategory(
+                    dto.getCategoryId(), monthStart, monthEnd);
             dto.setCurrentSpending(spent == null ? BigDecimal.ZERO : spent);
             return dto;
         }).collect(Collectors.toList());

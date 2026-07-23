@@ -21,18 +21,24 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
  * Unit-тесты для {@link BudgetServiceImpl}.
+ *
+ * <p>{@code getCurrentMonthExpenseByCategory} теперь принимает явные границы
+ * месяца (LocalDateTime), а не вычисляет их через YEAR()/MONTH() в SQL —
+ * см. комментарий в {@link com.finance.finance_tracker.repository.TransactionRepository}.
  */
 @ExtendWith(MockitoExtension.class)
 class BudgetServiceImplTest {
@@ -84,7 +90,8 @@ class BudgetServiceImplTest {
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
             when(budgetRepository.findByUserWithCategory(user)).thenReturn(List.of(budget));
             when(budgetMapper.toDto(budget)).thenReturn(dto);
-            when(transactionRepository.getCurrentMonthExpenseByCategory(5L))
+            when(transactionRepository.getCurrentMonthExpenseByCategory(
+                    eq(5L), any(LocalDateTime.class), any(LocalDateTime.class)))
                     .thenReturn(new BigDecimal("1200.00"));
 
             List<BudgetDto> result = budgetService.getBudgetsByUserId(1L);
@@ -107,11 +114,44 @@ class BudgetServiceImplTest {
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
             when(budgetRepository.findByUserWithCategory(user)).thenReturn(List.of(budget));
             when(budgetMapper.toDto(budget)).thenReturn(dto);
-            when(transactionRepository.getCurrentMonthExpenseByCategory(5L)).thenReturn(null);
+            when(transactionRepository.getCurrentMonthExpenseByCategory(
+                    eq(5L), any(LocalDateTime.class), any(LocalDateTime.class)))
+                    .thenReturn(null);
 
             List<BudgetDto> result = budgetService.getBudgetsByUserId(1L);
 
             assertThat(result.get(0).getCurrentSpending()).isEqualByComparingTo(BigDecimal.ZERO);
+        }
+
+        @Test
+        @DisplayName("границы месяца — начало текущего месяца и начало следующего")
+        void getBudgetsByUserId_passesCurrentMonthBoundaries() {
+            Budget budget = new Budget();
+            budget.setId(1L);
+            budget.setCategory(category);
+            budget.setUser(user);
+
+            BudgetDto dto = new BudgetDto();
+            dto.setCategoryId(5L);
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(budgetRepository.findByUserWithCategory(user)).thenReturn(List.of(budget));
+            when(budgetMapper.toDto(budget)).thenReturn(dto);
+            when(transactionRepository.getCurrentMonthExpenseByCategory(
+                    any(), any(), any())).thenReturn(BigDecimal.ZERO);
+
+            budgetService.getBudgetsByUserId(1L);
+
+            ArgumentCaptor<LocalDateTime> startCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+            ArgumentCaptor<LocalDateTime> endCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+            verify(transactionRepository).getCurrentMonthExpenseByCategory(
+                    eq(5L), startCaptor.capture(), endCaptor.capture());
+
+            LocalDateTime start = startCaptor.getValue();
+            LocalDateTime end = endCaptor.getValue();
+            assertThat(start.getDayOfMonth()).isEqualTo(1);
+            assertThat(start.toLocalTime()).isEqualTo(java.time.LocalTime.MIDNIGHT);
+            assertThat(end).isEqualTo(start.plusMonths(1));
         }
 
         @Test
@@ -185,7 +225,6 @@ class BudgetServiceImplTest {
             budgetService.saveBudget(dto, 1L);
 
             assertThat(existing.getMonthlyLimit()).isEqualByComparingTo("2000.00");
-            // updates не должны сбрасывать текущие траты
             assertThat(existing.getCurrentSpending()).isEqualByComparingTo("400.00");
         }
 
