@@ -1,14 +1,10 @@
 # Стек мониторинга: Prometheus + Grafana.
-# Само Spring Boot приложение здесь НЕ запускается — предполагается, что
-# оно уже работает на хосте (например, через ./mvnw spring-boot:run) и
 # отдаёт метрики на http://localhost:8080/actuator/prometheus.
 #
-# Запуск:
 #   docker compose -f docker-compose.monitoring.yml up -d
 #
 # Grafana:   http://localhost:3000  (admin / admin, поменять при первом входе)
 # Prometheus: http://localhost:9090
-
 services:
   prometheus:
     image: prom/prometheus:v2.55.1
@@ -19,11 +15,8 @@ services:
       - prometheus-data:/prometheus
     ports:
       - "9090:9090"
-    # Нужно, чтобы Prometheus из контейнера видел приложение на хосте.
-    # На Docker Desktop (Mac/Windows) host.docker.internal работает "из коробки",
-    # на Linux нужен явный extra_hosts.
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    depends_on:
+      - app
 
   grafana:
     image: grafana/grafana:11.2.0

@@ -12,6 +12,7 @@ import com.finance.finance_tracker.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -271,22 +273,35 @@ public class AccountController {
      * @return редирект на {@code /accounts}
      */
     @PostMapping("/{id}/delete")
-    public String deleteAccount(@PathVariable Long id,
+    public Object deleteAccount(@PathVariable Long id,
                                 @AuthenticationPrincipal UserDetails userDetails,
+                                @RequestHeader(value = "Accept", required = false) String accept,
                                 RedirectAttributes redirectAttributes) {
+        boolean wantsJson = accept != null && accept.contains("application/json");
+
         try {
             AccountDto account = accountService.findById(id);
             Long currentUserId = SecurityUtil.getCurrentUserId();
             if (!account.getUserId().equals(currentUserId)) {
                 throw new AccessDeniedException("Нет доступа к этому счёту");
             }
-             account = accountService.findById(id);
+
+            String accountName = account.getName();
             accountService.deleteAccount(id);
-            redirectAttributes.addFlashAttribute("success",
-                    String.format("Счет '%s' удален", account.getName()));
+            String message = String.format("Счет '%s' удален", accountName);
+
+            if (wantsJson) {
+                return ResponseEntity.ok(Map.of("success", true, "message", message));
+            }
+            redirectAttributes.addFlashAttribute("success", message);
+            return "redirect:/accounts";
+
         } catch (Exception e) {
+            if (wantsJson) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+            }
             redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/accounts";
         }
-        return "redirect:/accounts";
     }
 }

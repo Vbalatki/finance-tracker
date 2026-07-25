@@ -38,7 +38,8 @@ public class SecurityConfig {
                                 "/register",
                                 "/css/**",
                                 "/js/**",
-                                "/actuator/**" ).permitAll()
+                                "/actuator/**",
+                                "/access-denied").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/audit/**").hasRole("ADMIN")
                         .requestMatchers(

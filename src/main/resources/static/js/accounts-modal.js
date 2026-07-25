@@ -43,27 +43,42 @@ class AccountModalManager {
         this.deleteModal.show();
     }
 
+    // Читаем CSRF-токен, который Thymeleaf положил в <meta> (см. layout/head.html).
+    // Без него POST-запрос через fetch() будет отклонён Spring Security как
+    // невалидный CSRF, что раньше приводило к невнятной ошибке через
+    // форвард на несуществующую страницу /access-denied.
+    getCsrfHeaders() {
+        const token = document.querySelector('meta[name="_csrf"]')?.content;
+        const header = document.querySelector('meta[name="_csrf_header"]')?.content;
+        return token && header ? { [header]: token } : {};
+    }
+
     // Подтверждение удаления
     async confirmDelete() {
         if (!this.accountToDelete) return;
 
         const accountId = this.accountToDelete.id;
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        const originalText = confirmBtn.innerHTML;
 
         try {
             // Показываем индикатор загрузки
-            const confirmBtn = document.getElementById('confirmDeleteBtn');
-            const originalText = confirmBtn.innerHTML;
             confirmBtn.innerHTML = `
                 <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
                 Удаление...
             `;
             confirmBtn.disabled = true;
 
-            // AJAX запрос на удаление
+            // AJAX запрос на удаление.
+            // 'Accept': 'application/json' — явно просим у контроллера JSON,
+            // а не HTML-редирект (контроллер поддерживает оба варианта в
+            // зависимости от этого заголовка).
             const response = await fetch(`/accounts/${accountId}/delete`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json',
+                    ...this.getCsrfHeaders()
                 }
             });
 
@@ -83,14 +98,15 @@ class AccountModalManager {
             this.removeAccountFromTable(accountId);
 
         } catch (error) {
-            // Восстанавливаем кнопку
-            const confirmBtn = document.getElementById('confirmDeleteBtn');
-            confirmBtn.innerHTML = originalText;
-            confirmBtn.disabled = false;
-
             // Показываем ошибку
             this.showToast(`Ошибка: ${error.message}`, 'danger');
             console.error('Delete error:', error);
+        } finally {
+            // Восстанавливаем кнопку в любом случае — раньше это делалось
+            // только в catch, и после успешного удаления кнопка модалки
+            // (которая тут же скрывается) оставалась в состоянии "Удаление...".
+            confirmBtn.innerHTML = originalText;
+            confirmBtn.disabled = false;
         }
     }
 

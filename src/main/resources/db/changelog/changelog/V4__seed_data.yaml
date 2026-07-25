@@ -21,7 +21,7 @@ databaseChangeLog:
                   value: ivan@example.com
               - column:
                   name: password
-                  value: "$2a$10$X5h5BzR1wvPq3wZ2Q5YzY.OwJkLmN8Q7PqR5sT8uVwXyZ3A4B6C7D8E9F0" # encoded 'password'
+                  value: "$2a$10$X5h5BzR1wvPq3wZ2Q5YzY.OwJkLmN8Q7PqR5sT8uVwXyZ3A4B6C7D8E9F0"
               - column:
                   name: active
                   valueBoolean: true

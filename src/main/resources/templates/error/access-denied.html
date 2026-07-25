@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Доступ запрещён - Финансовый трекер</title>
+    <div th:replace="~{layout/head :: head}"></div>
+</head>
+<body>
+<div th:replace="~{layout/header :: header}"></div>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <i class="bi bi-shield-lock display-1 text-danger"></i>
+            <h1 class="h3 mt-3">Доступ запрещён</h1>
+            <p class="text-muted">
+                У вас нет прав для просмотра этой страницы, либо действие
+                было отклонено по соображениям безопасности.
+            </p>
+            <a href="/dashboard" class="btn btn-primary mt-2">
+                <i class="bi bi-house"></i> На главную
+            </a>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{layout/footer :: footer}"></div>
+</body>
+</html>

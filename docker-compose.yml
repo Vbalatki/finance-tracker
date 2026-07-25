@@ -5,9 +5,9 @@ services:
     container_name: finance-tracker-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_NAME:-finance_tracker}
-      POSTGRES_USER: ${DB_USERNAME:-finance_tracker}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-finance_tracker}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -30,10 +30,10 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: ${DB_NAME:-finance_tracker}
-      DB_USERNAME: ${DB_USERNAME:-finance_tracker}
-      DB_PASSWORD: ${DB_PASSWORD:-finance_tracker}
-      CURRENCY_API_KEY: ${CURRENCY_API_KEY:-}
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      CURRENCY_API_KEY: ${CURRENCY_API_KEY}
     ports:
       - "8080:8080"
 
