@@ -136,3 +136,4 @@ springdoc:
 currencyapi:
   url: "https://v6.exchangerate-api.com/v6/"
   key: ${CURRENCY_API_KEY:}
+
