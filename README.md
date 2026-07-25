@@ -137,9 +137,7 @@ monitoring/              # конфигурация Prometheus/Grafana
 Список того, что осознанно не доведено до идеала на данный момент —
 чтобы не удивляться при код-ревью:
 
-- `AccountService.getTotalBalanceInCurrency` не выполняет реальную
-  конвертацию — возвращает то же, что и `getTotalBalance` без учёта
-  параметра `currency`.
+
 - `UserService.getUserTotalExpenseInRub` обращается к внешнему API
   конвертации валют даже для уже рублёвых сумм (в отличие от
   `getUserTotalIncomeInRub`, где есть короткий путь) — расхождение в
