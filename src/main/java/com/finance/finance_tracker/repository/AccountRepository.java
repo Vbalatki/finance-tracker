@@ -3,12 +3,15 @@ package com.finance.finance_tracker.repository;
 import com.finance.finance_tracker.entity.Account;
 import com.finance.finance_tracker.entity.Transaction;
 import com.finance.finance_tracker.entity.User;
+import com.finance.finance_tracker.entity.enums.Currency;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -23,8 +26,8 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     @Query("SELECT a FROM Account a WHERE a.user.id = :userId")
     List<Account> findByUserId(Long userId);
 
-    @Query("SELECT COALESCE(SUM(a.balance), 0) FROM Account a WHERE a.user.id = :userId")
-    BigDecimal getTotalBalanceByUserId(Long userId);
+    @Query("SELECT a.balance, a.currency FROM Account a WHERE a.user.id = :userId")
+    HashMap<BigDecimal, Currency> getTotalBalanceByUserId(Long userId);
 
 
 }

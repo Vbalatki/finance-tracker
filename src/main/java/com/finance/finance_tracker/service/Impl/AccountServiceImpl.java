@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -144,8 +145,27 @@ public class AccountServiceImpl implements AccountService {
             throw new EntityNotFoundException(USER_NOT_FOUND + ", id: " + userId);
         }
 
-        BigDecimal total = accountRepository.getTotalBalanceByUserId(userId);
-        return total != null ? total : BigDecimal.ZERO;
+        BigDecimal totalBalance = BigDecimal.ZERO;
+        HashMap<BigDecimal, Currency> map = accountRepository.getTotalBalanceByUserId(userId);
+        if (map.isEmpty()) return BigDecimal.ZERO;
+
+        for (BigDecimal balance : map.keySet()) {
+            if (balance == null || balance.compareTo(BigDecimal.ZERO) == 0) {
+                continue;
+            }
+            Currency currency = map.get(balance);
+
+            BigDecimal converted = BigDecimal.ZERO;
+            if (currency != Currency.RUB) {
+                converted = currencyApiService.convertCurrency(
+                        currency.name(),
+                        Currency.RUB.name(),
+                        balance
+                );
+            }
+            totalBalance = totalBalance.add(converted);
+        }
+        return totalBalance;
     }
 
     @Transactional(readOnly = true)
@@ -154,13 +174,11 @@ public class AccountServiceImpl implements AccountService {
             throw new InvalidDataException("Валюта для конвертации не указана");
         }
 
-        // Получаем все счета пользователя
         List<Account> accounts = accountRepository.findByUserId(userId);
         if (accounts.isEmpty()) {
             return BigDecimal.ZERO;
         }
 
-        // Суммируем балансы, конвертируя каждый в целевую валюту
         BigDecimal total = BigDecimal.ZERO;
         for (Account account : accounts) {
             BigDecimal balance = account.getBalance();
@@ -169,11 +187,10 @@ public class AccountServiceImpl implements AccountService {
             }
             Currency fromCurrency = account.getCurrency();
             if (fromCurrency == null) {
-                // Если валюта не указана, считаем, что это рубли (или логируем предупреждение)
                 log.warn("Account {} has no currency, treating as RUB", account.getId());
                 fromCurrency = Currency.RUB;
             }
-            // Конвертируем в целевую валюту (используем пакетный или одиночный метод)
+
             BigDecimal converted = currencyApiService.convertCurrency(
                     fromCurrency.name(),
                     currency.name(),
