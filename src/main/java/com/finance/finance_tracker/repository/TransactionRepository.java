@@ -25,13 +25,17 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     Optional<Transaction> findById(Long id);
 
     @Query("SELECT DISTINCT t FROM Transaction t " +
-            "JOIN t.account a " +
+            "JOIN FETCH t.account a " +
             "JOIN a.user u " +
+            "LEFT JOIN FETCH t.category " +
             "WHERE u.id = :userId " +
             "ORDER BY t.createdAt DESC")
     List<Transaction> findByUserId(Long userId);
 
-    @Query("SELECT t FROM Transaction t JOIN t.category c WHERE c.id = :categoryId")
+    @Query("SELECT t FROM Transaction t " +
+            "JOIN FETCH t.account " +
+            "LEFT JOIN FETCH t.category c " +
+            "WHERE c.id = :categoryId")
     List<Transaction> findByCategoryId(Long categoryId);
 
     @Query("SELECT t FROM Transaction t " +
@@ -40,7 +44,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "WHERE t.account.id = :accountId")
     List<Transaction> findByAccountId(Long accountId);
 
-    @Query("SELECT t FROM Transaction t WHERE t.account.user.id = :userId ORDER BY t.createdAt DESC")
+    @Query("SELECT t FROM Transaction t " +
+            "JOIN FETCH t.account " +
+            "LEFT JOIN FETCH t.category " +
+            "WHERE t.account.user.id = :userId ORDER BY t.createdAt DESC")
     List<Transaction> findRecentByUserId(@Param("userId") Long userId, Pageable pageable);
 
     default List<Transaction> findRecentByUserId(Long userId, int limit) {
@@ -63,15 +70,15 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("type") TransactionType type
     );
 
-    /**
-     * Сумма расходов по категории за произвольный период (обычно — текущий месяц,
-     * границы вычисляются в BudgetServiceImpl через {@code LocalDate.now()}).
-     *
-     * <p>Раньше здесь использовались функции {@code YEAR()}/{@code MONTH()},
-     * специфичные для MySQL — на PostgreSQL таких JPQL-функций нет. Заменено на
-     * сравнение диапазона дат, что работает одинаково на любой СУБД и вдобавок
-     * не зависит от часового пояса сервера БД.
-     */
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t " +
+            "WHERE t.category.id = :categoryId " +
+            "AND t.type = com.finance.finance_tracker.entity.enums.TransactionType.EXPENSE " +
+            "AND t.createdAt >= :monthStart AND t.createdAt < :monthEnd")
+    BigDecimal getCurrentMonthExpenseByCategory(
+            @Param("categoryId") Long categoryId,
+            @Param("monthStart") LocalDateTime monthStart,
+            @Param("monthEnd") LocalDateTime monthEnd);
+
     @Query("SELECT t.amount, a.currency FROM Transaction t " +
             "JOIN t.account a " +
             "WHERE t.category.id = :categoryId " +

@@ -38,14 +38,14 @@ public class Category {
     @Column(name = "name", nullable = false, length = LENGTH_255)
     private String name;
 
-    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "category")
     private List<Transaction> transactions = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToOne(mappedBy = "category", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToOne(mappedBy = "category", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY, orphanRemoval = true)
     private Budget budget;
 
     @Override

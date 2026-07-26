@@ -19,12 +19,6 @@ import org.springframework.security.core.GrantedAuthority;
 @AllArgsConstructor
 public class Role implements GrantedAuthority {
     @Id
-    // Было GenerationType.AUTO: на MySQL это молча резолвилось в обычный
-    // auto-increment, но на PostgreSQL Hibernate выбирает для AUTO
-    // SEQUENCE-стратегию и ищет отдельный объект-последовательность в БД,
-    // которого Liquibase не создавал — приложение стартовало бы нормально,
-    // но падало бы именно в момент создания первой роли. IDENTITY работает
-    // одинаково предсказуемо на обеих СУБД и соответствует остальным сущностям.
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     long id;
 

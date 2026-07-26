@@ -10,6 +10,7 @@ import com.finance.finance_tracker.exception.InvalidAmountException;
 import com.finance.finance_tracker.exception.InvalidDataException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.LazyInitializationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -28,7 +29,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException e, HttpServletRequest request) {
-        log.error("Access denied: {}", e.getMessage(), e);
+        log.warn("Access denied: {}", e.getMessage(), e);
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.FORBIDDEN.value(),
                 "Access Denied",
@@ -41,7 +42,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleEntityNotFoundException(EntityNotFoundException e, HttpServletRequest request) {
-        log.error("Entity not found: {}", e.getMessage(), e);
+        log.warn("Entity not found: {}", e.getMessage(), e);
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.NOT_FOUND.value(),
                 "Not Found",
@@ -54,7 +55,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidDataException.class)
     public ResponseEntity<ErrorResponse> handleInvalidDataException(InvalidDataException e, HttpServletRequest request) {
-        log.error("Invalid data: {}", e.getMessage(), e);
+        log.warn("Invalid data: {}", e.getMessage(), e);
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 "Bad Request",
@@ -67,7 +68,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidAmountException.class)
     public ResponseEntity<ErrorResponse> handleInvalidAmountException(InvalidAmountException e, HttpServletRequest request) {
-        log.error("Invalid amount: {}", e.getMessage(), e);
+        log.warn("Invalid amount: {}", e.getMessage(), e);
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 "Bad Request",
@@ -80,7 +81,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DuplicateEntityException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateEntityException(DuplicateEntityException e, HttpServletRequest request) {
-        log.error("Duplicate entity: {}", e.getMessage(), e);
+        log.warn("Duplicate entity: {}", e.getMessage(), e);
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.CONFLICT.value(),
                 "Conflict",
@@ -93,7 +94,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e, HttpServletRequest request) {
-        log.error("Illegal argument: {}", e.getMessage(), e);
+        log.warn("Illegal argument: {}", e.getMessage(), e);
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 "Bad Request",
@@ -106,7 +107,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InsufficientFundsException.class)
     public ResponseEntity<ErrorResponse> handleInsufficientFundsException(InsufficientFundsException e, HttpServletRequest request) {
-        log.error("Insufficient funds: {}", e.getMessage(), e);
+        log.warn("Insufficient funds: {}", e.getMessage(), e);
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 "Bad Request",
@@ -117,6 +118,34 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
+    /**
+     * ВРЕМЕННЫЙ хэндлер на время миграции связей entity на FetchType.LAZY.
+     * Без него LazyInitializationException проваливалась бы в
+     * handleGenericException и превращалась в немой 500 без единой зацепки —
+     * пришлось бы искать причину по логам вручную, гадая, где именно
+     * персистентный контекст был закрыт раньше, чем прочитали lazy-поле.
+     *
+     * Лог всегда на уровне ERROR с полным стектрейсом — это сигнал "здесь
+     * забыли @Transactional или JOIN FETCH", а не рядовая ошибка пользователя.
+     *
+     * TODO: удалить этот хэндлер (пусть падает в handleGenericException как
+     * обычно), когда будет уверенность, что миграция на LAZY закрыта
+     * полностью и такие места больше не всплывают.
+     */
+    @ExceptionHandler(LazyInitializationException.class)
+    public ResponseEntity<ErrorResponse> handleLazyInitializationException(LazyInitializationException e, HttpServletRequest request) {
+        log.warn("LazyInitializationException на {} — забыли @Transactional или JOIN FETCH: {}",
+                request.getRequestURI(), e.getMessage(), e);
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Internal Server Error",
+                "Произошла внутренняя ошибка сервера",
+                request.getRequestURI(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex, HttpServletRequest request) {
         Map<String, String> errors = new HashMap<>();
@@ -125,7 +154,7 @@ public class GlobalExceptionHandler {
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
-        log.error("Validation error: {}", errors);
+        log.warn("Validation error: {}", errors);
 
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
@@ -153,7 +182,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception e, HttpServletRequest request) {
-        log.error("Unexpected error: {}", e.getMessage(), e);
+        log.warn("Unexpected error: {}", e.getMessage(), e);
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Internal Server Error",

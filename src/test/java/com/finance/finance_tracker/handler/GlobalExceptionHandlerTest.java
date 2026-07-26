@@ -8,6 +8,7 @@ import com.finance.finance_tracker.exception.InsufficientFundsException;
 import com.finance.finance_tracker.exception.InvalidAmountException;
 import com.finance.finance_tracker.exception.InvalidDataException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.hibernate.LazyInitializationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -133,6 +134,17 @@ class GlobalExceptionHandlerTest {
     void handleGenericException_returnsInternalServerErrorWithGenericMessage() {
         ResponseEntity<ErrorResponse> response =
                 handler.handleGenericException(new RuntimeException("что-то пошло не так"), request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+        assertThat(response.getBody().getMessage()).isEqualTo("Произошла внутренняя ошибка сервера");
+    }
+
+    @Test
+    @DisplayName("LazyInitializationException -> 500 INTERNAL_SERVER_ERROR без утечки деталей Hibernate")
+    void handleLazyInitializationException_returnsInternalServerError() {
+        ResponseEntity<ErrorResponse> response =
+                handler.handleLazyInitializationException(
+                        new LazyInitializationException("failed to lazily initialize a collection"), request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(response.getBody().getMessage()).isEqualTo("Произошла внутренняя ошибка сервера");

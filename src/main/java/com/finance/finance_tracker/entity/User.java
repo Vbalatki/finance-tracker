@@ -16,7 +16,10 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.SQLDelete;
@@ -32,13 +35,15 @@ import static com.finance.finance_tracker.Util.DataConstants.LENGTH_255;
 
 @Entity
 @Table(name = "users", schema = "finance_tracker")
-@SQLDelete(sql = "UPDATE users SET active = false WHERE id = ?")        // При delete вызывается UPDATE
-@Where(clause = "active = true")                                        // Автоматически добавляется WHERE ко всем запросам
-@FilterDef(name = "activeFilter", defaultCondition = "active = true")   //
-@Filter(name = "activeFilter")                                          // Для enable/disable фильтра
-@Data
+@SQLDelete(sql = "UPDATE users SET active = false WHERE id = ?")
+@Where(clause = "active = true")
+@FilterDef(name = "activeFilter", defaultCondition = "active = true")
+@Filter(name = "activeFilter")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"accounts", "roles"})
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -65,10 +70,23 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Account> accounts = new ArrayList<>();
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_roles",
             schema = "finance_tracker",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User)) return false;
+        User user = (User) o;
+        return id != null && id.equals(user.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
