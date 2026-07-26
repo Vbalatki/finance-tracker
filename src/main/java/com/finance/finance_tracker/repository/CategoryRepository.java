@@ -17,6 +17,8 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     @Query("SELECT c FROM Category c ORDER BY c.id ASC")
     List<Category> findAllOrderById();
 
+    List<Category> findByUserIdOrderByIdAsc(Long userId);
+
     List<Category> findByUserId(Long userId);
 
     Boolean existsByNameAndUserId(String name, Long userId);

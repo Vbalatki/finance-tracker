@@ -81,10 +81,10 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CategoryDto> getAllCategories() {
+    public List<CategoryDto> getAllCategoriesByUserId(Long userId) {
         log.debug("Запрос всех категорий");
 
-        List<Category> categories = categoryRepository.findAllOrderById();
+        List<Category> categories = categoryRepository.findByUserIdOrderByIdAsc(userId);
 
         log.debug("Найдено категорий: {}", categories.size());
 

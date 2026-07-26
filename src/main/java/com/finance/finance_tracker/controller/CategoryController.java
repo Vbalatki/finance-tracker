@@ -4,6 +4,7 @@ import com.finance.finance_tracker.DTO.CategoryDto;
 import com.finance.finance_tracker.DTO.UserDto;
 import com.finance.finance_tracker.service.CategoryService;
 import com.finance.finance_tracker.service.UserService;
+import com.finance.finance_tracker.Util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -43,8 +44,9 @@ public class CategoryController {
      * @return {@code "categories/list"}
      */
     @GetMapping
-    public String categoriesPage(Model model) {
-        List<CategoryDto> categories = categoryService.getAllCategories();
+    public String categoriesPage(Model model, @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        List<CategoryDto> categories = categoryService.getAllCategoriesByUserId(userId);
         model.addAttribute("categories", categories);
         return "categories/list";
     }

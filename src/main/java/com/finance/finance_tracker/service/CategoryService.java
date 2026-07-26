@@ -43,7 +43,7 @@ public interface CategoryService {
      *
      * @return список всех категорий, отсортированный по id
      */
-    List<CategoryDto> getAllCategories();
+    List<CategoryDto> getAllCategoriesByUserId(Long userId);
 
     /**
      * Переименовывает категорию.
