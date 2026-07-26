@@ -104,7 +104,7 @@ public class TransactionController {
         model.addAttribute("totalExpense", totalExpense);
         model.addAttribute("totalBalance", balance);
         model.addAttribute("accounts", allAccounts);
-        model.addAttribute("categories", categoryService.getAllCategories());
+        model.addAttribute("categories", categoryService.getAllCategoriesByUserId(userId));
         model.addAttribute("selectedAccountId", accountId);
         model.addAttribute("selectedCategoryId", categoryId);
 
@@ -126,7 +126,7 @@ public class TransactionController {
         Long userId = SecurityUtil.getCurrentUserId();
 
         List<AccountDto> accounts = accountService.getUserAccounts(userId);
-        List<CategoryDto> categories = categoryService.getAllCategories();
+        List<CategoryDto> categories = categoryService.getAllCategoriesByUserId(userId);
 
         TransactionDto dto = new TransactionDto();
         if (accountId != null) {
@@ -155,11 +155,11 @@ public class TransactionController {
                                     BindingResult result,
                                     RedirectAttributes redirectAttributes,
                                     Model model) {
+        Long userId = SecurityUtil.getCurrentUserId();
         if (result.hasErrors()) {
             System.out.println("Validation errors: " + result.getAllErrors());
-            Long userId = SecurityUtil.getCurrentUserId();
             model.addAttribute("accounts", accountService.getUserAccounts(userId));
-            model.addAttribute("categories", categoryService.getAllCategories());
+            model.addAttribute("categories", categoryService.getAllCategoriesByUserId(userId));
             model.addAttribute("transactionTypes", TransactionType.values());
             return "transactions/create";
         }

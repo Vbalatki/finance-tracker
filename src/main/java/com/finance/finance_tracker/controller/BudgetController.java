@@ -58,8 +58,10 @@ public class BudgetController {
      * @return {@code "budgets/form"}
      */
     @GetMapping("/create")
-    public String showCreateForm(@RequestParam(required = false) Long categoryId, Model model) {
-        List<CategoryDto> categories = categoryService.getAllCategories();
+    public String showCreateForm(@RequestParam(required = false) Long categoryId,
+                                 Model model) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        List<CategoryDto> categories = categoryService.getAllCategoriesByUserId(userId);
         BudgetDto budgetDto = new BudgetDto();
         if (categoryId != null) {
             budgetDto.setCategoryId(categoryId);
