@@ -13,6 +13,7 @@ import com.finance.finance_tracker.mapper.AccountMapper;
 import com.finance.finance_tracker.repository.AccountRepository;
 import com.finance.finance_tracker.repository.TransactionRepository;
 import com.finance.finance_tracker.repository.UserRepository;
+import com.finance.finance_tracker.service.CurrencyApiService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -50,6 +51,8 @@ class AccountServiceImplTest {
     private UserRepository userRepository;
     @Mock
     private AccountMapper accountMapper;
+    @Mock
+    private CurrencyApiService currencyApiService;
 
     @InjectMocks
     private AccountServiceImpl accountService;
@@ -300,10 +303,10 @@ class AccountServiceImplTest {
         }
 
         @Test
-        @DisplayName("getTotalBalance возвращает 0, если сумма из БД равна null")
-        void getTotalBalance_null_returnsZero() {
+        @DisplayName("getTotalBalance возвращает 0, если у пользователя нет счетов")
+        void getTotalBalance_noAccounts_returnsZero() {
             when(userRepository.existsById(1L)).thenReturn(true);
-            when(accountRepository.getTotalBalanceByUserId(1L)).thenReturn(null);
+            when(accountRepository.findByUserId(1L)).thenReturn(List.of());
 
             assertThat(accountService.getTotalBalance(1L)).isEqualByComparingTo(BigDecimal.ZERO);
         }
@@ -314,6 +317,27 @@ class AccountServiceImplTest {
             when(userRepository.existsById(99L)).thenReturn(false);
 
             assertThrows(EntityNotFoundException.class, () -> accountService.getTotalBalance(99L));
+        }
+
+        @Test
+        @DisplayName("getTotalBalance суммирует счета в разных валютах с конвертацией в рубли")
+        void getTotalBalance_multipleCurrencies_convertsAndSums() {
+            Account rubAccount = new Account();
+            rubAccount.setBalance(new BigDecimal("100.00"));
+            rubAccount.setCurrency(Currency.RUB);
+
+            Account usdAccount = new Account();
+            usdAccount.setBalance(new BigDecimal("100.00"));
+            usdAccount.setCurrency(Currency.USD);
+
+            when(userRepository.existsById(1L)).thenReturn(true);
+            when(accountRepository.findByUserId(1L)).thenReturn(List.of(rubAccount, usdAccount));
+            when(currencyApiService.convertCurrency("USD", "RUB", new BigDecimal("100.00")))
+                    .thenReturn(new BigDecimal("9000.00"));
+
+            BigDecimal result = accountService.getTotalBalance(1L);
+
+            assertThat(result).isEqualByComparingTo("9100.00");
         }
     }
 

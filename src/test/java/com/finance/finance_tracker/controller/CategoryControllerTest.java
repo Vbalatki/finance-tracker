@@ -74,7 +74,7 @@ class CategoryControllerTest {
     @Test
     @DisplayName("GET /categories возвращает список всех категорий")
     void categoriesPage_returnsListView() throws Exception {
-        when(categoryService.getAllCategories()).thenReturn(List.of(new CategoryDto()));
+        when(categoryService.getAllCategoriesByUserId(1L)).thenReturn(List.of(new CategoryDto()));
 
         mockMvc.perform(get("/categories"))
                 .andExpect(status().isOk())

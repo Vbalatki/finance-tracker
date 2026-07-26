@@ -97,7 +97,7 @@ class BudgetControllerTest {
     @Test
     @DisplayName("GET /budgets/create возвращает форму создания")
     void showCreateForm_returnsFormView() throws Exception {
-        when(categoryService.getAllCategories()).thenReturn(List.of());
+        when(categoryService.getAllCategoriesByUserId(1L)).thenReturn(List.of());
 
         mockMvc.perform(get("/budgets/create"))
                 .andExpect(status().isOk())

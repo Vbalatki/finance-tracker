@@ -4,12 +4,14 @@ import com.finance.finance_tracker.DTO.BudgetDto;
 import com.finance.finance_tracker.entity.Budget;
 import com.finance.finance_tracker.entity.Category;
 import com.finance.finance_tracker.entity.User;
+import com.finance.finance_tracker.entity.enums.Currency;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
 import com.finance.finance_tracker.mapper.BudgetMapper;
 import com.finance.finance_tracker.repository.BudgetRepository;
 import com.finance.finance_tracker.repository.CategoryRepository;
 import com.finance.finance_tracker.repository.TransactionRepository;
 import com.finance.finance_tracker.repository.UserRepository;
+import com.finance.finance_tracker.service.CurrencyApiService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -22,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,6 +56,8 @@ class BudgetServiceImplTest {
     private TransactionRepository transactionRepository;
     @Mock
     private BudgetMapper budgetMapper;
+    @Mock
+    private CurrencyApiService currencyApiService;
 
     @InjectMocks
     private BudgetServiceImpl budgetService;
@@ -87,22 +92,34 @@ class BudgetServiceImplTest {
             BudgetDto dto = new BudgetDto();
             dto.setCategoryId(5L);
 
+            List<Object[]> rows = List.of(
+                    new Object[]{new BigDecimal("500.00"), Currency.USD},
+                    new Object[]{new BigDecimal("200.00"), Currency.RUB}
+            );
+
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
             when(budgetRepository.findByUserWithCategory(user)).thenReturn(List.of(budget));
             when(budgetMapper.toDto(budget)).thenReturn(dto);
-            when(transactionRepository.getCurrentMonthExpenseByCategory(
+            when(transactionRepository.findExpensesByCategoryAndMonth(
                     eq(5L), any(LocalDateTime.class), any(LocalDateTime.class)))
-                    .thenReturn(new BigDecimal("1200.00"));
+                    .thenReturn(rows);
+
+            // Мокаем конвертацию: для USD возвращаем 500 * 90 = 45000, для RUB просто 200
+            when(currencyApiService.convertCurrency(eq("USD"), eq("RUB"), eq(new BigDecimal("500.00"))))
+                    .thenReturn(new BigDecimal("45000.00"));
+            when(currencyApiService.convertCurrency(eq("RUB"), eq("RUB"), eq(new BigDecimal("200.00"))))
+                    .thenReturn(new BigDecimal("200.00"));
 
             List<BudgetDto> result = budgetService.getBudgetsByUserId(1L);
 
             assertThat(result).hasSize(1);
-            assertThat(result.get(0).getCurrentSpending()).isEqualByComparingTo("1200.00");
+            // Ожидаем сумму 45000 + 200 = 45200
+            assertThat(result.get(0).getCurrentSpending()).isEqualByComparingTo("45200.00");
         }
 
         @Test
-        @DisplayName("если трат за месяц нет (null) — подставляет ноль")
-        void getBudgetsByUserId_nullSpending_defaultsToZero() {
+        @DisplayName("если транзакций за месяц нет — подставляет ноль")
+        void getBudgetsByUserId_noTransactions_defaultsToZero() {
             Budget budget = new Budget();
             budget.setId(1L);
             budget.setCategory(category);
@@ -114,9 +131,9 @@ class BudgetServiceImplTest {
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
             when(budgetRepository.findByUserWithCategory(user)).thenReturn(List.of(budget));
             when(budgetMapper.toDto(budget)).thenReturn(dto);
-            when(transactionRepository.getCurrentMonthExpenseByCategory(
+            when(transactionRepository.findExpensesByCategoryAndMonth(
                     eq(5L), any(LocalDateTime.class), any(LocalDateTime.class)))
-                    .thenReturn(null);
+                    .thenReturn(Collections.emptyList());
 
             List<BudgetDto> result = budgetService.getBudgetsByUserId(1L);
 
@@ -137,14 +154,16 @@ class BudgetServiceImplTest {
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
             when(budgetRepository.findByUserWithCategory(user)).thenReturn(List.of(budget));
             when(budgetMapper.toDto(budget)).thenReturn(dto);
-            when(transactionRepository.getCurrentMonthExpenseByCategory(
-                    any(), any(), any())).thenReturn(BigDecimal.ZERO);
+            // Возвращаем пустой список, чтобы не падать на конвертации
+            when(transactionRepository.findExpensesByCategoryAndMonth(
+                    any(Long.class), any(LocalDateTime.class), any(LocalDateTime.class)))
+                    .thenReturn(Collections.emptyList());
 
             budgetService.getBudgetsByUserId(1L);
 
             ArgumentCaptor<LocalDateTime> startCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
             ArgumentCaptor<LocalDateTime> endCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
-            verify(transactionRepository).getCurrentMonthExpenseByCategory(
+            verify(transactionRepository).findExpensesByCategoryAndMonth(
                     eq(5L), startCaptor.capture(), endCaptor.capture());
 
             LocalDateTime start = startCaptor.getValue();

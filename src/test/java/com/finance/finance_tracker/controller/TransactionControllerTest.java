@@ -102,7 +102,7 @@ class TransactionControllerTest {
         when(userService.getUserTotalBalanceInRub(List.of())).thenReturn(BigDecimal.ZERO);
         when(userService.getUserTotalIncomeInRub(List.of())).thenReturn(BigDecimal.ZERO);
         when(userService.getUserTotalExpenseInRub(List.of())).thenReturn(BigDecimal.ZERO);
-        when(categoryService.getAllCategories()).thenReturn(List.of());
+        when(categoryService.getAllCategoriesByUserId(1L)).thenReturn(List.of());
 
         mockMvc.perform(get("/transactions"))
                 .andExpect(status().isOk())
@@ -113,7 +113,7 @@ class TransactionControllerTest {
     @DisplayName("GET /transactions/create возвращает форму создания")
     void createTransactionPage_returnsCreateView() throws Exception {
         when(accountService.getUserAccounts(1L)).thenReturn(List.of());
-        when(categoryService.getAllCategories()).thenReturn(List.of());
+        when(categoryService.getAllCategoriesByUserId(1L)).thenReturn(List.of());
 
         mockMvc.perform(get("/transactions/create"))
                 .andExpect(status().isOk())
@@ -137,7 +137,7 @@ class TransactionControllerTest {
     @DisplayName("POST /transactions без суммы возвращает форму с ошибками")
     void createTransaction_blankAmount_returnsCreateView() throws Exception {
         when(accountService.getUserAccounts(1L)).thenReturn(List.of());
-        when(categoryService.getAllCategories()).thenReturn(List.of());
+        when(categoryService.getAllCategoriesByUserId(1L)).thenReturn(List.of());
 
         mockMvc.perform(post("/transactions")
                         .param("amount", "")

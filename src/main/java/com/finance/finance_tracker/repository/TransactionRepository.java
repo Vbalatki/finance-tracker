@@ -1,6 +1,7 @@
 package com.finance.finance_tracker.repository;
 
 import com.finance.finance_tracker.entity.Transaction;
+import com.finance.finance_tracker.entity.enums.Currency;
 import com.finance.finance_tracker.entity.enums.TransactionType;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -70,11 +72,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
      * сравнение диапазона дат, что работает одинаково на любой СУБД и вдобавок
      * не зависит от часового пояса сервера БД.
      */
-    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t " +
+    @Query("SELECT t.amount, a.currency FROM Transaction t " +
+            "JOIN t.account a " +
             "WHERE t.category.id = :categoryId " +
             "AND t.type = com.finance.finance_tracker.entity.enums.TransactionType.EXPENSE " +
             "AND t.createdAt >= :monthStart AND t.createdAt < :monthEnd")
-    BigDecimal getCurrentMonthExpenseByCategory(
+    List<Object[]> findExpensesByCategoryAndMonth(
             @Param("categoryId") Long categoryId,
             @Param("monthStart") LocalDateTime monthStart,
             @Param("monthEnd") LocalDateTime monthEnd);

@@ -140,7 +140,7 @@ class CategoryServiceImplTest {
     }
 
     @Nested
-    @DisplayName("getCategoryById / getAllCategories")
+    @DisplayName("getCategoryById / getAllCategoriesByUserId")
     class GetCategories {
 
         @Test
@@ -162,11 +162,11 @@ class CategoryServiceImplTest {
 
         @Test
         @DisplayName("возвращает все категории (без фильтра по пользователю)")
-        void getAllCategories_returnsAll() {
-            when(categoryRepository.findAllOrderById()).thenReturn(List.of(category));
+        void getAllCategoriesByUserId_returnsAll() {
+            when(categoryRepository.findByUserIdOrderByIdAsc(1L)).thenReturn(List.of(category));
             when(categoryMapper.toDto(category)).thenReturn(categoryDto);
 
-            List<CategoryDto> result = categoryService.getAllCategories();
+            List<CategoryDto> result = categoryService.getAllCategoriesByUserId(1L);
 
             assertThat(result).containsExactly(categoryDto);
         }

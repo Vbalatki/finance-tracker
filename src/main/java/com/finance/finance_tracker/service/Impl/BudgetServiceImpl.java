@@ -2,6 +2,7 @@ package com.finance.finance_tracker.service.Impl;
 
 import com.finance.finance_tracker.DTO.BudgetDto;
 import com.finance.finance_tracker.entity.User;
+import com.finance.finance_tracker.entity.enums.Currency;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
 import com.finance.finance_tracker.mapper.BudgetMapper;
 import com.finance.finance_tracker.entity.Budget;
@@ -11,6 +12,7 @@ import com.finance.finance_tracker.repository.CategoryRepository;
 import com.finance.finance_tracker.repository.TransactionRepository;
 import com.finance.finance_tracker.repository.UserRepository;
 import com.finance.finance_tracker.service.BudgetService;
+import com.finance.finance_tracker.service.CurrencyApiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -36,6 +38,7 @@ public class BudgetServiceImpl implements BudgetService {
     private final CategoryRepository categoryRepository;
     private final TransactionRepository transactionRepository;
     private final BudgetMapper budgetMapper;
+    private final CurrencyApiService currencyApiService;
 
     @Override
     @Transactional(readOnly = true)
@@ -54,17 +57,23 @@ public class BudgetServiceImpl implements BudgetService {
             log.debug("У пользователя id={} нет бюджетов", userId);
         }
 
-        // Границы текущего месяца считаем один раз в Java, а не через
-        // YEAR()/MONTH() в SQL — так запрос не зависит от диалекта БД
-        // и от часового пояса сервера СУБД.
+        // Границы текущего месяца считаем один раз в Java
         LocalDateTime monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay();
         LocalDateTime monthEnd = monthStart.plusMonths(1);
 
         List<BudgetDto> budgets = list.stream().map(budget -> {
             BudgetDto dto = budgetMapper.toDto(budget);
-            BigDecimal spent = transactionRepository.getCurrentMonthExpenseByCategory(
-                    dto.getCategoryId(), monthStart, monthEnd);
-            dto.setCurrentSpending(spent == null ? BigDecimal.ZERO : spent);
+            List<Object[]> rows = transactionRepository.findExpensesByCategoryAndMonth( // запрос транзакций
+                    dto.getCategoryId(), monthStart, monthEnd);                         // с их карренси
+            BigDecimal spent = BigDecimal.ZERO;
+            for (Object[] row : rows) {
+                BigDecimal amount = (BigDecimal) row[0];
+                Currency currency = (Currency) row[1];
+                spent = spent.add(currencyApiService.convertCurrency(
+                        currency.name(), Currency.RUB.name(), amount));          // convert by currency
+            }
+
+            dto.setCurrentSpending(spent == null ? BigDecimal.ZERO : spent);     //
             return dto;
         }).collect(Collectors.toList());
 

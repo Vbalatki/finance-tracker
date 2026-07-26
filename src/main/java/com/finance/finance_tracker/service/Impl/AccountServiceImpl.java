@@ -145,25 +145,26 @@ public class AccountServiceImpl implements AccountService {
             throw new EntityNotFoundException(USER_NOT_FOUND + ", id: " + userId);
         }
 
-        BigDecimal totalBalance = BigDecimal.ZERO;
-        HashMap<BigDecimal, Currency> map = accountRepository.getTotalBalanceByUserId(userId);
-        if (map.isEmpty()) return BigDecimal.ZERO;
+        List<Account> accounts = accountRepository.findByUserId(userId);
+        if (accounts.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
 
-        for (BigDecimal balance : map.keySet()) {
+        BigDecimal totalBalance = BigDecimal.ZERO;
+        for (Account account : accounts) {
+            BigDecimal balance = account.getBalance();
             if (balance == null || balance.compareTo(BigDecimal.ZERO) == 0) {
                 continue;
             }
-            Currency currency = map.get(balance);
 
-            BigDecimal converted = BigDecimal.ZERO;
-            if (currency != Currency.RUB) {
-                converted = currencyApiService.convertCurrency(
-                        currency.name(),
-                        Currency.RUB.name(),
-                        balance
-                );
+            Currency currency = account.getCurrency();
+            if (currency == null || currency == Currency.RUB) {
+                totalBalance = totalBalance.add(balance);
+            } else {
+                BigDecimal converted = currencyApiService.convertCurrency(
+                        currency.name(), Currency.RUB.name(), balance);
+                totalBalance = totalBalance.add(converted);
             }
-            totalBalance = totalBalance.add(converted);
         }
         return totalBalance;
     }
