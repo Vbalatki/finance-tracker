@@ -1,5 +1,6 @@
 package com.finance.finance_tracker.handler;
 
+import com.finance.finance_tracker.entity.Account;
 import com.finance.finance_tracker.entity.error.ErrorResponse;
 import com.finance.finance_tracker.exception.AccessDeniedException;
 import com.finance.finance_tracker.exception.DuplicateEntityException;
@@ -18,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -148,5 +150,17 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(response.getBody().getMessage()).isEqualTo("Произошла внутренняя ошибка сервера");
+    }
+
+    @Test
+    @DisplayName("ObjectOptimisticLockingFailureException -> 409 CONFLICT с понятным сообщением")
+    void handleOptimisticLockingFailure_returnsConflict() {
+        ResponseEntity<ErrorResponse> response =
+                handler.handleOptimisticLockingFailureException(
+                        new ObjectOptimisticLockingFailureException(Account.class, 1L), request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody().getMessage())
+                .isEqualTo("Счёт был изменён параллельным запросом. Обновите страницу и попробуйте снова.");
     }
 }

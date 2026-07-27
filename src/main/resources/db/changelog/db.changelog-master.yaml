@@ -9,3 +9,5 @@ databaseChangeLog:
       file: db/changelog/changelog/V3__add_indexes.yaml
   - include:
       file: db/changelog/changelog/V4__seed_data.yaml
+  - include:
+      file: db/changelog/changelog/V5__add_account_version.yaml

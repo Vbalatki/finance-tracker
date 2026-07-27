@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 19
+      author: dmitriy-sidorov
+      comment: >
+        Добавляет колонку version для optimistic locking на accounts —
+        защита от потери одного из двух параллельных обновлений баланса
+        (deposit/withdraw/saveTransaction).
+      changes:
+        - addColumn:
+            schemaName: finance_tracker
+            tableName: accounts
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false

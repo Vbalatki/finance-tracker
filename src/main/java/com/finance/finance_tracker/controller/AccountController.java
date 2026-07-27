@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -226,6 +227,9 @@ public class AccountController {
             redirectAttributes.addFlashAttribute("success",
                     String.format("Счет пополнен на %s",
                             currencyFormatter.formatAmount(amount, Currency.RUB)));
+        } catch (ObjectOptimisticLockingFailureException e) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Счёт был изменён параллельным запросом. Обновите страницу и попробуйте снова.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
@@ -257,6 +261,9 @@ public class AccountController {
             redirectAttributes.addFlashAttribute("success",
                     String.format("Со счета снято %s",
                             currencyFormatter.formatAmount(amount, Currency.RUB)));
+        } catch (ObjectOptimisticLockingFailureException e) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Счёт был изменён параллельным запросом. Обновите страницу и попробуйте снова.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }

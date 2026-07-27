@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.LazyInitializationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -192,4 +193,19 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ErrorResponse> handleOptimisticLockingFailureException(
+            ObjectOptimisticLockingFailureException e, HttpServletRequest request) {
+        log.warn("Optimistic locking conflict on {}: {}", request.getRequestURI(), e.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                "Счёт был изменён параллельным запросом. Обновите страницу и попробуйте снова.",
+                request.getRequestURI(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
+
 }

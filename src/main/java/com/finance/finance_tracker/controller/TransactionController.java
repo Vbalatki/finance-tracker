@@ -12,6 +12,7 @@ import com.finance.finance_tracker.service.TransactionService;
 import com.finance.finance_tracker.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -168,6 +169,10 @@ public class TransactionController {
             transactionService.saveTransaction(dto);
             redirectAttributes.addFlashAttribute("success", "Транзакция успешно добавлена!");
             return "redirect:/transactions";
+        } catch (ObjectOptimisticLockingFailureException e) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Счёт был изменён параллельным запросом. Обновите страницу и попробуйте снова.");
+            return "redirect:/transactions/create";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Ошибка: " + e.getMessage());
             return "redirect:/transactions/create";
@@ -222,6 +227,9 @@ public class TransactionController {
         try {
             transactionService.updateTransaction(dto);
             redirectAttributes.addFlashAttribute("success", "Транзакция обновлена");
+        } catch (ObjectOptimisticLockingFailureException e) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Счёт был изменён параллельным запросом. Обновите страницу и попробуйте снова.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
@@ -252,6 +260,9 @@ public class TransactionController {
             if (accountId != null) {
                 return "redirect:/accounts/" + accountId;
             }
+        } catch (ObjectOptimisticLockingFailureException e) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Счёт был изменён параллельным запросом. Обновите страницу и попробуйте снова.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
