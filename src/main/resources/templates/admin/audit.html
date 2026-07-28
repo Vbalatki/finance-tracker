@@ -29,13 +29,13 @@
                     </thead>
                     <tbody>
                     <tr th:each="log : ${logs}">
-                        <td> th:text="${#temporals.format(log.createdAt, 'dd.MM.yyyy HH:mm:ss')}"/></td>
-                        <td> th:text="${log.username}"/> (<span th:text="${log.userId}"/>)</td>
+                        <td th:text="${#temporals.format(log.createdAt, 'dd.MM.yyyy HH:mm:ss')}"></td>
+                        <td th:text="|${log.username} (${log.userId})|"></td>
                         <td><span class="badge" th:class="${log.action == 'CREATE' ? 'bg-success' : (log.action == 'UPDATE' ? 'bg-warning' : 'bg-danger')}"
                                   th:text="${log.action}"></span></td>
-                        <td th:text="${log.entityType}"/></td>
-                        <td th:text="${log.entityId}"/></td>
-                        <td style="word-break: break-word; max-width: 400px;" th:text="${log.details}"/></td>
+                        <td th:text="${log.entityType}"></td>
+                        <td th:text="${log.entityId}"></td>
+                        <td style="word-break: break-word; max-width: 400px;" th:text="${log.details}"></td>
                     </tr>
                     </tbody>
                 </table>

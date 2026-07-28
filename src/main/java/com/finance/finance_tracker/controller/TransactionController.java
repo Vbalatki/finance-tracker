@@ -12,6 +12,7 @@ import com.finance.finance_tracker.service.TransactionService;
 import com.finance.finance_tracker.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -41,6 +42,7 @@ import java.util.stream.Collectors;
  * <p>Доступ к чужим транзакциям запрещается проверкой владельца счёта,
  * к которому привязана транзакция.
  */
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class TransactionController {
@@ -158,7 +160,7 @@ public class TransactionController {
                                     Model model) {
         Long userId = SecurityUtil.getCurrentUserId();
         if (result.hasErrors()) {
-            System.out.println("Validation errors: " + result.getAllErrors());
+            log.debug("Ошибки валидации транзакции: {}", result.getAllErrors());
             model.addAttribute("accounts", accountService.getUserAccounts(userId));
             model.addAttribute("categories", categoryService.getAllCategoriesByUserId(userId));
             model.addAttribute("transactionTypes", TransactionType.values());

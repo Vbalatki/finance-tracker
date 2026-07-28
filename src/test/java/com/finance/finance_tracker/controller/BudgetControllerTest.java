@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -125,15 +126,18 @@ class BudgetControllerTest {
     }
 
     @Test
-    @DisplayName("POST /budgets без обязательных полей возвращает форму с ошибками")
-    void saveBudget_missingRequiredFields_returnsFormView() throws Exception {
-        // Внимание: контроллер при ошибках валидации НЕ подкладывает "categories"
-        // обратно в модель (в отличие от showCreateForm), поэтому реальный
-        // Thymeleaf-рендеринг budgets/form.html в этом случае сломается —
-        // отдельный баг в BudgetController.saveBudget(), стаб категорий здесь не нужен.
+    @DisplayName("POST /budgets без обязательных полей возвращает форму с ошибками и подкладывает categories в модель")
+    void saveBudget_missingRequiredFields_returnsFormViewWithCategories() throws Exception {
+        // Раньше контроллер при ошибках валидации НЕ подкладывал "categories"
+        // обратно в модель (в отличие от showCreateForm) — реальный Thymeleaf
+        // рендеринг budgets/form.html в этом случае падал. Починено: теперь
+        // явно проверяем, что categories в модели есть.
+        when(categoryService.getAllCategoriesByUserId(1L)).thenReturn(List.of());
+
         mockMvc.perform(post("/budgets").param("monthlyLimit", ""))
                 .andExpect(status().isOk())
-                .andExpect(view().name("budgets/form"));
+                .andExpect(view().name("budgets/form"))
+                .andExpect(model().attributeExists("categories"));
     }
 
     @Test

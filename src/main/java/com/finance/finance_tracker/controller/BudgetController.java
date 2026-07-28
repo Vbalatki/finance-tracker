@@ -7,6 +7,7 @@ import com.finance.finance_tracker.service.BudgetService;
 import com.finance.finance_tracker.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -25,6 +26,7 @@ import java.util.List;
 /**
  * Thymeleaf-контроллер для страниц управления месячными бюджетами по категориям.
  */
+@Slf4j
 @Controller
 @RequestMapping("/budgets")
 @RequiredArgsConstructor
@@ -86,7 +88,11 @@ public class BudgetController {
                              RedirectAttributes redirectAttributes,
                              Model model) {
         if (result.hasErrors()) {
-            result.getAllErrors().forEach(error -> System.out.println(error.getDefaultMessage()));
+            if (log.isDebugEnabled()) {
+                result.getAllErrors().forEach(error -> log.debug("Ошибка валидации бюджета: {}", error.getDefaultMessage()));
+            }
+            Long userId = SecurityUtil.getCurrentUserId();
+            model.addAttribute("categories", categoryService.getAllCategoriesByUserId(userId));
             return "budgets/form";
         }
         try {

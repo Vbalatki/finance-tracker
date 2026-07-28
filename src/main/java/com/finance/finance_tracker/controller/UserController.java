@@ -72,7 +72,7 @@ public class UserController {
      * @param result             результат валидации
      * @param userDetails        текущий пользователь
      * @param redirectAttributes атрибуты для flash-сообщений
-     * @return редирект на {@code /users/profile} при успехе, иначе {@code "users/edit"}
+     * @return редирект на {@code /profile} при успехе, иначе {@code "users/edit"}
      */
     @PostMapping("/edit")
     public String updateProfile(
@@ -89,7 +89,7 @@ public class UserController {
             UserDto currentUser = userService.getUserByEmail(userDetails.getUsername());
             UserDto updatedUser = userService.updateUser(currentUser.getId(), dto);
             redirectAttributes.addFlashAttribute("success", "Профиль успешно обновлен");
-            return "redirect:/users/profile";
+            return "redirect:/profile";
         } catch (Exception e) {
             result.rejectValue("email", "error.user", e.getMessage());
             return "users/edit";
@@ -116,7 +116,7 @@ public class UserController {
      * @param userDetails        текущий пользователь
      * @param model              модель представления (при повторном рендере формы)
      * @param redirectAttributes атрибуты для flash-сообщений
-     * @return редирект на {@code /users/profile} при успехе, иначе {@code "users/change-password"}
+     * @return редирект на {@code /profile} при успехе, иначе {@code "users/change-password"}
      */
     @PostMapping("/change-password")
     public String changePassword(
@@ -137,7 +137,7 @@ public class UserController {
             UserDto user = userService.getUserByEmail(userDetails.getUsername());
             userService.changePassword(user.getId(), currentPassword, newPassword);
             redirectAttributes.addFlashAttribute("success", "Пароль успешно изменен");
-            return "redirect:/users/profile";
+            return "redirect:/profile";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
             return "users/change-password";

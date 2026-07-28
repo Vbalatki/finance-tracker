@@ -17,7 +17,6 @@ import org.springframework.stereotype.Component;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.concurrent.CompletableFuture;
 
 @Aspect
 @Component
@@ -66,7 +65,6 @@ public class AuditAspect {
         Throwable exception = null;
         long start = System.currentTimeMillis();
 
-        // Получаем данные пользователя ДО асинхронного вызова (в текущем потоке)
         Long userId = SecurityUtil.getCurrentUserId();
         String username = SecurityUtil.getCurrentUsername();
 
@@ -78,26 +76,19 @@ public class AuditAspect {
             throw t;
         } finally {
             long duration = System.currentTimeMillis() - start;
-            final Object finalResult = result;
-            final Throwable finalException = exception;
-            final Long finalUserId = userId;
-            final String finalUsername = username;
+            String action = determineAction(methodName);
+            String entityType = determineEntityType(joinPoint.getTarget().getClass());
+            Object entityId = extractEntityId(args, action, result);
+            String details = buildDetails(action, entityType, entityId, args, result, exception, duration);
 
-            CompletableFuture.runAsync(() -> {
-                String action = determineAction(methodName);
-                String entityType = determineEntityType(joinPoint.getTarget().getClass());
-                Object entityId = extractEntityId(args, action, finalResult);
-                String details = buildDetails(action, entityType, entityId, args, finalResult, finalException, duration);
-
-                auditService.log(
-                        finalUserId,
-                        finalUsername,
-                        action,
-                        entityType,
-                        entityId instanceof Long ? (Long) entityId : null,
-                        details
-                );
-            });
+            auditService.log(
+                    userId,
+                    username,
+                    action,
+                    entityType,
+                    entityId instanceof Long ? (Long) entityId : null,
+                    details
+            );
         }
     }
 

@@ -3,6 +3,7 @@ package com.finance.finance_tracker.DTO;
 import com.finance.finance_tracker.entity.enums.Currency;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -17,6 +18,7 @@ public class AccountDto {
     private String name;
 
     @NotNull(message = "Balance cannot be null")
+    @PositiveOrZero
     private BigDecimal balance;
 
     @NotNull(message = "Currency cannot be null")
