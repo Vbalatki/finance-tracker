@@ -282,7 +282,7 @@ class AccountServiceImplTest {
     }
 
     @Nested
-    @DisplayName("findById / getTotalBalance")
+    @DisplayName("findById")
     class FindAndBalance {
 
         @Test
@@ -300,44 +300,6 @@ class AccountServiceImplTest {
             when(accountRepository.findById(404L)).thenReturn(Optional.empty());
 
             assertThrows(EntityNotFoundException.class, () -> accountService.findById(404L));
-        }
-
-        @Test
-        @DisplayName("getTotalBalance возвращает 0, если у пользователя нет счетов")
-        void getTotalBalance_noAccounts_returnsZero() {
-            when(userRepository.existsById(1L)).thenReturn(true);
-            when(accountRepository.findByUserId(1L)).thenReturn(List.of());
-
-            assertThat(accountService.getTotalBalance(1L)).isEqualByComparingTo(BigDecimal.ZERO);
-        }
-
-        @Test
-        @DisplayName("getTotalBalance бросает EntityNotFoundException для несуществующего пользователя")
-        void getTotalBalance_userNotFound_throws() {
-            when(userRepository.existsById(99L)).thenReturn(false);
-
-            assertThrows(EntityNotFoundException.class, () -> accountService.getTotalBalance(99L));
-        }
-
-        @Test
-        @DisplayName("getTotalBalance суммирует счета в разных валютах с конвертацией в рубли")
-        void getTotalBalance_multipleCurrencies_convertsAndSums() {
-            Account rubAccount = new Account();
-            rubAccount.setBalance(new BigDecimal("100.00"));
-            rubAccount.setCurrency(Currency.RUB);
-
-            Account usdAccount = new Account();
-            usdAccount.setBalance(new BigDecimal("100.00"));
-            usdAccount.setCurrency(Currency.USD);
-
-            when(userRepository.existsById(1L)).thenReturn(true);
-            when(accountRepository.findByUserId(1L)).thenReturn(List.of(rubAccount, usdAccount));
-            when(currencyApiService.convertCurrency("USD", "RUB", new BigDecimal("100.00")))
-                    .thenReturn(new BigDecimal("9000.00"));
-
-            BigDecimal result = accountService.getTotalBalance(1L);
-
-            assertThat(result).isEqualByComparingTo("9100.00");
         }
     }
 

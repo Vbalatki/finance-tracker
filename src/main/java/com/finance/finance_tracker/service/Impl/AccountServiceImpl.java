@@ -1,7 +1,6 @@
 package com.finance.finance_tracker.service.Impl;
 
 import com.finance.finance_tracker.DTO.AccountDto;
-import com.finance.finance_tracker.DTO.UserDto;
 import com.finance.finance_tracker.entity.enums.Currency;
 import com.finance.finance_tracker.exception.DuplicateEntityException;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
@@ -140,36 +139,6 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Transactional(readOnly = true)
-    public BigDecimal getTotalBalance(Long userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new EntityNotFoundException(USER_NOT_FOUND + ", id: " + userId);
-        }
-
-        List<Account> accounts = accountRepository.findByUserId(userId);
-        if (accounts.isEmpty()) {
-            return BigDecimal.ZERO;
-        }
-
-        BigDecimal totalBalance = BigDecimal.ZERO;
-        for (Account account : accounts) {
-            BigDecimal balance = account.getBalance();
-            if (balance == null || balance.compareTo(BigDecimal.ZERO) == 0) {
-                continue;
-            }
-
-            Currency currency = account.getCurrency();
-            if (currency == null || currency == Currency.RUB) {
-                totalBalance = totalBalance.add(balance);
-            } else {
-                BigDecimal converted = currencyApiService.convertCurrency(
-                        currency.name(), Currency.RUB.name(), balance);
-                totalBalance = totalBalance.add(converted);
-            }
-        }
-        return totalBalance;
-    }
-
-    @Transactional(readOnly = true)
     public BigDecimal getTotalBalanceInCurrency(Long userId, Currency currency) {
         if (currency == null) {
             throw new InvalidDataException("Валюта для конвертации не указана");
@@ -186,17 +155,17 @@ public class AccountServiceImpl implements AccountService {
             if (balance == null || balance.compareTo(BigDecimal.ZERO) == 0) {
                 continue;
             }
+
             Currency fromCurrency = account.getCurrency();
             if (fromCurrency == null) {
                 log.warn("Account {} has no currency, treating as RUB", account.getId());
                 fromCurrency = Currency.RUB;
             }
 
-            BigDecimal converted = currencyApiService.convertCurrency(
-                    fromCurrency.name(),
-                    currency.name(),
-                    balance
-            );
+
+            BigDecimal converted = fromCurrency == currency
+                    ? balance
+                    : currencyApiService.convertCurrency(fromCurrency.name(), currency.name(), balance);
             total = total.add(converted);
         }
         return total;

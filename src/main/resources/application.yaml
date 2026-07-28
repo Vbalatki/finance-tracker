@@ -106,6 +106,12 @@ trace: false
 
 # ======= ПРОВЕРКА ЗДОРОВЬЯ / МЕТРИКИ =======
 management:
+  server:
+    # Отдельный порт, НЕ публикуемый в docker-compose.yml наружу —
+    # снимает вопрос аутентификации для /actuator/** как класс: снаружи
+    # порт физически недостижим, внутри Docker-сети его видит только
+    # Prometheus (см. monitoring/prometheus/prometheus.yml).
+    port: 9091
   endpoints:
     web:
       exposure:

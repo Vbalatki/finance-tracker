@@ -20,7 +20,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     Transaction save(Transaction transaction);
 
-    boolean existsByAccountId(Long id);
 
     Optional<Transaction> findById(Long id);
 
@@ -60,9 +59,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     void deleteByAccountId(Long accountId);
 
-    @Query("DELETE FROM Transaction t WHERE t.account.user.id = :userId AND t.category.id = :categoryId")
-    void deleteByUserIdAndCategoryId(@Param("userId") Long userId, @Param("categoryId") Long categoryId);
-
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t " +
             "WHERE t.account.id = :accountId AND t.type = :type")
     Optional<BigDecimal> sumAmountByUserIdAndType(
@@ -70,14 +66,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("type") TransactionType type
     );
 
-    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t " +
-            "WHERE t.category.id = :categoryId " +
-            "AND t.type = com.finance.finance_tracker.entity.enums.TransactionType.EXPENSE " +
-            "AND t.createdAt >= :monthStart AND t.createdAt < :monthEnd")
-    BigDecimal getCurrentMonthExpenseByCategory(
-            @Param("categoryId") Long categoryId,
-            @Param("monthStart") LocalDateTime monthStart,
-            @Param("monthEnd") LocalDateTime monthEnd);
 
     @Query("SELECT t.amount, a.currency FROM Transaction t " +
             "JOIN t.account a " +

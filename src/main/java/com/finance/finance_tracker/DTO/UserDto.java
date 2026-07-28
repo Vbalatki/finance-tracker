@@ -1,7 +1,5 @@
 package com.finance.finance_tracker.DTO;
 
-import com.finance.finance_tracker.entity.Account;
-import com.finance.finance_tracker.entity.Category;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -9,7 +7,6 @@ import org.antlr.v4.runtime.misc.NotNull;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Email;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Set;
 
 @Data
@@ -38,10 +35,6 @@ public class UserDto {
     private String password;
 
     private boolean active = true;
-
-    private List<Account> accounts;
-
-    private List<Category> categories;
 
     private Set<RoleDto> roles;
 }

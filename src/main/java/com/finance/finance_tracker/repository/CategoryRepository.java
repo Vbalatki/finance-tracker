@@ -14,8 +14,6 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     Optional<Category> findById(Long id);
 
-    @Query("SELECT c FROM Category c ORDER BY c.id ASC")
-    List<Category> findAllOrderById();
 
     List<Category> findByUserIdOrderByIdAsc(Long userId);
 

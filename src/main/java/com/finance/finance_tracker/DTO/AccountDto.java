@@ -1,6 +1,5 @@
 package com.finance.finance_tracker.DTO;
 
-import com.finance.finance_tracker.entity.Transaction;
 import com.finance.finance_tracker.entity.enums.Currency;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -8,8 +7,6 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 public class AccountDto {
@@ -27,6 +24,4 @@ public class AccountDto {
 
     @NotNull(message = "UserId cannot be null")
     private Long userId;
-
-    private List<Transaction> transactions = new ArrayList<>();
 }

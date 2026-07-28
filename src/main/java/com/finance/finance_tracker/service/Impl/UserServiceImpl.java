@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -64,6 +65,10 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.toEntity(dto);
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setActive(true);
+
+        Role defaultRole = roleRepository.findByName("ROLE_USER")
+                .orElseThrow(() -> new EntityNotFoundException("Дефолтная роль пользователя не найдена"));
+        user.setRoles(new HashSet<>(Set.of(defaultRole)));
 
         User savedUser = userRepository.save(user);
         log.info("Зарегистрирован новый пользователь: id={}, email={}", savedUser.getId(), savedUser.getEmail());

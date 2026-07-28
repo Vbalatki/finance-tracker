@@ -21,8 +21,6 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
 
     Optional<Budget> findByUserAndCategory(User user, Category category);
 
-    Boolean existsByUserAndCategory(User user, Category category);
-
     @Query("SELECT b FROM Budget b JOIN FETCH b.category WHERE b.user = :user")
     List<Budget> findByUserWithCategory(@Param("user") User user);
 

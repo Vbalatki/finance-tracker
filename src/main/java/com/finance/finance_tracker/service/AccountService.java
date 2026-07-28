@@ -73,21 +73,9 @@ public interface AccountService {
      */
     void deleteAccount(Long id);
 
-    /**
-     * Возвращает суммарный баланс всех счетов пользователя (без пересчёта валют).
-     *
-     * @param userId id пользователя
-     * @return суммарный баланс, 0 если счетов нет
-     * @throws com.finance.finance_tracker.exception.EntityNotFoundException если пользователь не найден
-     */
-    BigDecimal getTotalBalance(Long userId);
 
     /**
      * Возвращает суммарный баланс всех счетов пользователя.
-     *
-     * <p><b>Внимание:</b> на текущий момент параметр {@code currency} не
-     * используется — метод фактически возвращает тот же результат, что и
-     * {@link #getTotalBalance(Long)}, без конвертации в указанную валюту.
      *
      * @param userId   id пользователя
      * @param currency целевая валюта (пока не влияет на результат)

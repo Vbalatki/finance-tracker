@@ -29,6 +29,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -175,6 +176,95 @@ class AccountControllerTest {
 
         mockMvc.perform(get("/accounts/20"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET /accounts/{id}/edit для своего счёта возвращает страницу редактирования")
+    void editAccountPage_ownAccount_returnsEditView() throws Exception {
+        AccountDto acc = new AccountDto();
+        acc.setId(10L);
+        acc.setUserId(1L);
+        acc.setCurrency(Currency.RUB);
+        acc.setBalance(BigDecimal.TEN);
+
+        when(accountService.findById(10L)).thenReturn(acc);
+
+        mockMvc.perform(get("/accounts/10/edit"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("accounts/edit"));
+    }
+
+    @Test
+    @DisplayName("GET /accounts/{id}/edit для чужого счёта возвращает 403")
+    void editAccountPage_otherUsersAccount_returnsForbidden() throws Exception {
+        AccountDto acc = new AccountDto();
+        acc.setId(20L);
+        acc.setUserId(999L);
+
+        when(accountService.findById(20L)).thenReturn(acc);
+
+        mockMvc.perform(get("/accounts/20/edit"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("POST /accounts/{id}/edit для своего счёта обновляет и редиректит")
+    void updateAccount_ownAccount_success() throws Exception {
+        AccountDto acc = new AccountDto();
+        acc.setId(10L);
+        acc.setUserId(1L);
+
+        when(accountService.findById(10L)).thenReturn(acc);
+
+        mockMvc.perform(post("/accounts/10/edit")
+                        .param("name", "Новое имя")
+                        .param("currency", "USD")
+                        .param("balance", "500.00")
+                        .param("userId", "1"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/accounts/10"))
+                .andExpect(flash().attributeExists("success"));
+
+        verify(accountService).updateAccount(eq(10L), any(AccountDto.class));
+    }
+
+    @Test
+    @DisplayName("POST /accounts/{id}/edit для чужого счёта возвращает 403 и не обновляет")
+    void updateAccount_otherUsersAccount_returnsForbidden() throws Exception {
+        AccountDto acc = new AccountDto();
+        acc.setId(10L);
+        acc.setUserId(999L);
+
+        when(accountService.findById(10L)).thenReturn(acc);
+
+        mockMvc.perform(post("/accounts/10/edit")
+                        .param("name", "Новое имя")
+                        .param("currency", "USD")
+                        .param("balance", "500.00")
+                        .param("userId", "999"))
+                .andExpect(status().isForbidden());
+
+        verify(accountService, never()).updateAccount(any(), any());
+    }
+
+    @Test
+    @DisplayName("POST /accounts/{id}/edit без имени возвращает форму с ошибками валидации")
+    void updateAccount_blankName_returnsEditView() throws Exception {
+        AccountDto acc = new AccountDto();
+        acc.setId(10L);
+        acc.setUserId(1L);
+
+        when(accountService.findById(10L)).thenReturn(acc);
+
+        mockMvc.perform(post("/accounts/10/edit")
+                        .param("name", "")
+                        .param("currency", "USD")
+                        .param("balance", "500.00")
+                        .param("userId", "1"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("accounts/edit"));
+
+        verify(accountService, never()).updateAccount(any(), any());
     }
 
     @Test

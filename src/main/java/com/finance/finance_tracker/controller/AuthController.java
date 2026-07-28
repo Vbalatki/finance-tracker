@@ -4,6 +4,8 @@ import com.finance.finance_tracker.DTO.UserDto;
 import com.finance.finance_tracker.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -28,7 +30,11 @@ public class AuthController {
      * @return {@code "auth/login"}
      */
     @GetMapping("/login")
-    public String loginPage() {
+    public String loginPage(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails != null) {
+            return "redirect:/dashboard";
+        }
+
         return "auth/login";
     }
 
@@ -56,7 +62,12 @@ public class AuthController {
     @PostMapping("/register")
     public String register(@ModelAttribute("userDto") @Valid UserDto dto,
                            BindingResult result,
+                           @AuthenticationPrincipal UserDetails userDetails,
                            RedirectAttributes redirectAttributes) {
+        if (userDetails != null) {
+            return "redirect:/dashboard";
+        }
+
         if (result.hasErrors()) {
             return "auth/register";
         }

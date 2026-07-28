@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -94,17 +95,37 @@ class UserServiceImplTest {
     class RegisterUser {
 
         @Test
-        @DisplayName("создаёт пользователя с закодированным паролем и active=true")
+        @DisplayName("создаёт пользователя с закодированным паролем, active=true и ролью ROLE_USER по умолчанию")
         void registerUser_success() {
+            Role userRole = new Role();
+            userRole.setId(2L);
+            userRole.setName("ROLE_USER");
+
             when(userRepository.existsByEmail("ivan@example.com")).thenReturn(false);
             when(userMapper.toEntity(userDto)).thenReturn(user);
             when(passwordEncoder.encode("password123")).thenReturn("encoded");
+            when(roleRepository.findByName("ROLE_USER")).thenReturn(Optional.of(userRole));
             when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
             when(userMapper.toDto(any(User.class))).thenReturn(userDto);
 
             userService.registerUser(userDto);
 
-            verify(userRepository).save(argThat(u -> "encoded".equals(u.getPassword()) && u.isActive()));
+            verify(userRepository).save(argThat(u ->
+                    "encoded".equals(u.getPassword())
+                            && u.isActive()
+                            && u.getRoles().contains(userRole)));
+        }
+
+        @Test
+        @DisplayName("бросает EntityNotFoundException, если стандартная роль ROLE_USER не найдена в БД")
+        void registerUser_defaultRoleMissing_throws() {
+            when(userRepository.existsByEmail("ivan@example.com")).thenReturn(false);
+            when(userMapper.toEntity(userDto)).thenReturn(user);
+            when(passwordEncoder.encode("password123")).thenReturn("encoded");
+            when(roleRepository.findByName("ROLE_USER")).thenReturn(Optional.empty());
+
+            assertThrows(EntityNotFoundException.class, () -> userService.registerUser(userDto));
+            verify(userRepository, never()).save(any());
         }
 
         @Test
@@ -390,8 +411,11 @@ class UserServiceImplTest {
             t.setAmount(new BigDecimal("10.00"));
             t.setAccountCurrency(Currency.USD);
 
-            when(currencyApiService.convertCurrency("USD", "RUB", BigDecimal.ONE))
-                    .thenReturn(new BigDecimal("90.00"));
+            when(currencyApiService.convertCurrency(eq("USD"), eq("RUB"), any(BigDecimal.class)))
+                    .thenAnswer(invocation -> {
+                        BigDecimal amount = invocation.getArgument(2);
+                        return amount.multiply(new BigDecimal("90.00"));
+                    });
 
             BigDecimal result = userService.getUserTotalIncomeInRub(List.of(t));
 
@@ -413,19 +437,17 @@ class UserServiceImplTest {
         }
 
         @Test
-        @DisplayName("если валюта транзакции null — считает её рублёвой")
+        @DisplayName("если валюта транзакции null — считает её рублёвой (короткий путь)")
         void getUserTotalExpenseInRub_nullCurrency_treatsAsRub() {
             TransactionDto t = new TransactionDto();
             t.setType(TransactionType.EXPENSE);
             t.setAmount(new BigDecimal("50.00"));
             t.setAccountCurrency(null);
 
-            when(currencyApiService.convertCurrency("RUB", "RUB", new BigDecimal("50.00")))
-                    .thenReturn(new BigDecimal("50.00"));
-
             BigDecimal result = userService.getUserTotalExpenseInRub(List.of(t));
 
             assertThat(result).isEqualByComparingTo("50.00");
+            verifyNoInteractions(currencyApiService);
         }
 
         @Test

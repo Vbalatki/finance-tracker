@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Регистрация - Финансовый трекер</title>
+    <div th:replace="~{layout/head :: head}"></div>
+</head>
+<body class="bg-light">
+
+<div class="container">
+    <div class="row justify-content-center align-items-center py-5">
+        <div class="col-md-6 col-lg-5">
+            <div class="text-center mb-4">
+                <i class="bi bi-person-plus display-4 text-primary"></i>
+                <h1 class="h3 mt-2 mb-0">Создать аккаунт</h1>
+                <p class="text-muted">Начните управлять своими финансами</p>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+
+                    <form th:action="@{/register}" th:object="${userDto}" method="post">
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label">Имя</label>
+                                <input type="text" class="form-control" id="name"
+                                       th:field="*{name}"
+                                       th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"
+                                       required>
+                                <div th:if="${#fields.hasErrors('name')}" class="invalid-feedback">
+                                    <span th:errors="*{name}"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="surname" class="form-label">Фамилия</label>
+                                <input type="text" class="form-control" id="surname"
+                                       th:field="*{surname}"
+                                       th:classappend="${#fields.hasErrors('surname')} ? 'is-invalid' : ''"
+                                       required>
+                                <div th:if="${#fields.hasErrors('surname')}" class="invalid-feedback">
+                                    <span th:errors="*{surname}"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="birthday" class="form-label">Дата рождения</label>
+                            <input type="date" class="form-control" id="birthday"
+                                   th:field="*{birthday}"
+                                   th:classappend="${#fields.hasErrors('birthday')} ? 'is-invalid' : ''"
+                                   required>
+                            <div th:if="${#fields.hasErrors('birthday')}" class="invalid-feedback">
+                                <span th:errors="*{birthday}"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email"
+                                   th:field="*{email}"
+                                   th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''"
+                                   placeholder="you@example.com" required>
+                            <div th:if="${#fields.hasErrors('email')}" class="invalid-feedback">
+                                <span th:errors="*{email}"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="password" class="form-label">Пароль</label>
+                            <input type="password" class="form-control" id="password"
+                                   th:field="*{password}"
+                                   th:classappend="${#fields.hasErrors('password')} ? 'is-invalid' : ''"
+                                   placeholder="Минимум 8 символов" required>
+                            <div th:if="${#fields.hasErrors('password')}" class="invalid-feedback">
+                                <span th:errors="*{password}"></span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2">
+                            <i class="bi bi-check-circle"></i> Зарегистрироваться
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+
+            <p class="text-center text-muted mt-3 mb-0">
+                Уже есть аккаунт? <a th:href="@{/login}">Войти</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
