@@ -247,29 +247,24 @@ public class UserServiceImpl implements UserService {
 
     @Transactional(readOnly = true)
     public BigDecimal getUserTotalIncomeInRub(List<TransactionDto> transactions) {
-        if (transactions == null || transactions.isEmpty()) {
-            return BigDecimal.ZERO;
-        }
-        BigDecimal total = BigDecimal.ZERO;
-        for (TransactionDto t : transactions) {
-            if (t.getType() == TransactionType.INCOME) {
-                Currency currency = t.getAccountCurrency();
-                total = total.add(convertToRub(t.getAmount(), currency));
-            }
-        }
-        log.debug("Общий доход в рублях: {}", total);
-        return total;
+        return getUserTotalIncomeOrExpenseInRub(transactions, TransactionType.INCOME);
     }
 
     @Transactional(readOnly = true)
     public BigDecimal getUserTotalExpenseInRub(List<TransactionDto> transactions) {
+        return getUserTotalIncomeOrExpenseInRub(transactions, TransactionType.EXPENSE);
+    }
+
+
+    private BigDecimal getUserTotalIncomeOrExpenseInRub(List<TransactionDto> transactions,
+                                                       TransactionType type) {
         if (transactions == null || transactions.isEmpty()) {
             return BigDecimal.ZERO;
         }
 
         BigDecimal total = BigDecimal.ZERO;
         for (TransactionDto t : transactions) {
-            if (t.getType() != TransactionType.EXPENSE) {
+            if (t.getType() != type) {
                 continue;
             }
 
@@ -279,11 +274,9 @@ public class UserServiceImpl implements UserService {
                 currency = Currency.RUB;
             }
 
-            BigDecimal amountInRub = currencyApiService.convertCurrency(
-                    currency.name(),
-                    "RUB",
-                    t.getAmount()
-            );
+            BigDecimal amountInRub = currency == Currency.RUB
+                    ? t.getAmount()
+                    : currencyApiService.convertCurrency(currency.name(), "RUB", t.getAmount());
 
             total = total.add(amountInRub);
         }

@@ -399,20 +399,17 @@ class UserServiceImplTest {
         }
 
         @Test
-        @DisplayName("НЕСОГЛАСОВАННОСТЬ: для расхода в рублях API конвертации вызывается всё равно")
-        void getUserTotalExpenseInRub_rubCurrency_stillCallsConversionApi() {
+        @DisplayName("ИСПРАВЛЕНО: для расхода в рублях НЕ вызывает конвертацию (короткий путь), как и для дохода")
+        void getUserTotalExpenseInRub_rubCurrency_doesNotCallConversionApi() {
             TransactionDto t = new TransactionDto();
             t.setType(TransactionType.EXPENSE);
             t.setAmount(new BigDecimal("100.00"));
             t.setAccountCurrency(Currency.RUB);
 
-            when(currencyApiService.convertCurrency("RUB", "RUB", new BigDecimal("100.00")))
-                    .thenReturn(new BigDecimal("100.00"));
-
             BigDecimal result = userService.getUserTotalExpenseInRub(List.of(t));
 
             assertThat(result).isEqualByComparingTo("100.00");
-            verify(currencyApiService).convertCurrency("RUB", "RUB", new BigDecimal("100.00"));
+            verifyNoInteractions(currencyApiService);
         }
 
         @Test
