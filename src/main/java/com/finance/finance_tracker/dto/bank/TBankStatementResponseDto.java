@@ -9,7 +9,7 @@ import java.util.List;
 public class TBankStatementResponseDto {
 
     @JsonProperty("operations")
-    private List<com.finance.finance_tracker.DTO.TBankOperationDto> operations;
+    private List<TBankOperationDto> operations;
 
     @JsonProperty("balances")
     private TBankBalancesDto balances;
@@ -17,8 +17,8 @@ public class TBankStatementResponseDto {
     @JsonProperty("nextCursor")
     private String nextCursor;
 
-    public List<com.finance.finance_tracker.DTO.TBankOperationDto> getOperations() { return operations; }
-    public void setOperations(List<com.finance.finance_tracker.DTO.TBankOperationDto> operations) { this.operations = operations; }
+    public List<TBankOperationDto> getOperations() { return operations; }
+    public void setOperations(List<TBankOperationDto> operations) { this.operations = operations; }
     public TBankBalancesDto getBalances() { return balances; }
     public void setBalances(TBankBalancesDto balances) { this.balances = balances; }
     public String getNextCursor() { return nextCursor; }
