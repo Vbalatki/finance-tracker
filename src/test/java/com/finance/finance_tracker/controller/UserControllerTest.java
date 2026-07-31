@@ -1,7 +1,7 @@
 package com.finance.finance_tracker.controller;
 
-import com.finance.finance_tracker.DTO.AccountDto;
-import com.finance.finance_tracker.DTO.UserDto;
+import com.finance.finance_tracker.dto.AccountDto;
+import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.entity.SecurityUser;
 import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.exception.InvalidDataException;
@@ -95,7 +95,7 @@ class UserControllerTest {
     void editProfilePage_returnsEditView() throws Exception {
         when(userService.getUserByEmail("user@example.com")).thenReturn(currentUserDto);
 
-        mockMvc.perform(get("/edit"))
+        mockMvc.perform(get("/profile/edit"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("users/edit"));
     }
@@ -106,20 +106,20 @@ class UserControllerTest {
         when(userService.getUserByEmail("user@example.com")).thenReturn(currentUserDto);
         when(userService.updateUser(anyLong(), any(UserDto.class))).thenReturn(currentUserDto);
 
-        mockMvc.perform(post("/edit")
+        mockMvc.perform(post("/profile/edit")
                         .param("name", "Иван")
                         .param("surname", "Иванов")
                         .param("birthday", "1990-01-01")
                         .param("email", "user@example.com")
                         .param("password", "password123"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/users/profile"));
+                .andExpect(redirectedUrl("/profile"));
     }
 
     @Test
     @DisplayName("POST /edit с некорректным email возвращает форму с ошибками")
     void updateProfile_invalidEmail_returnsEditView() throws Exception {
-        mockMvc.perform(post("/edit")
+        mockMvc.perform(post("/profile/edit")
                         .param("name", "Иван")
                         .param("surname", "Иванов")
                         .param("birthday", "1990-01-01")
@@ -134,7 +134,7 @@ class UserControllerTest {
     @Test
     @DisplayName("GET /change-password возвращает страницу смены пароля")
     void changePasswordPage_returnsView() throws Exception {
-        mockMvc.perform(get("/change-password"))
+        mockMvc.perform(get("/profile/change-password"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("users/change-password"));
     }
@@ -144,12 +144,12 @@ class UserControllerTest {
     void changePassword_success_redirects() throws Exception {
         when(userService.getUserByEmail("user@example.com")).thenReturn(currentUserDto);
 
-        mockMvc.perform(post("/change-password")
+        mockMvc.perform(post("/profile/change-password")
                         .param("currentPassword", "oldPass")
                         .param("newPassword", "newPassword123")
                         .param("confirmPassword", "newPassword123"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/users/profile"));
+                .andExpect(redirectedUrl("/profile"));
 
         verify(userService).changePassword(1L, "oldPass", "newPassword123");
     }
@@ -157,7 +157,7 @@ class UserControllerTest {
     @Test
     @DisplayName("POST /change-password с несовпадающим подтверждением возвращает форму с ошибкой")
     void changePassword_mismatchedConfirmation_returnsViewWithError() throws Exception {
-        mockMvc.perform(post("/change-password")
+        mockMvc.perform(post("/profile/change-password")
                         .param("currentPassword", "oldPass")
                         .param("newPassword", "newPassword123")
                         .param("confirmPassword", "different"))
@@ -174,7 +174,7 @@ class UserControllerTest {
         doThrow(new InvalidDataException("Текущий пароль введён неверно"))
                 .when(userService).changePassword(1L, "wrongPass", "newPassword123");
 
-        mockMvc.perform(post("/change-password")
+        mockMvc.perform(post("/profile/change-password")
                         .param("currentPassword", "wrongPass")
                         .param("newPassword", "newPassword123")
                         .param("confirmPassword", "newPassword123"))

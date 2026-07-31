@@ -1,4 +1,4 @@
-package com.finance.finance_tracker.Util;
+package com.finance.finance_tracker.util;
 
 import org.springframework.stereotype.Component;
 

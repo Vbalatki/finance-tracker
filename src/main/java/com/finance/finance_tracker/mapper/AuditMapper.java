@@ -1,6 +1,6 @@
 package com.finance.finance_tracker.mapper;
 
-import com.finance.finance_tracker.DTO.AuditDto;
+import com.finance.finance_tracker.dto.AuditDto;
 import com.finance.finance_tracker.entity.Audit;
 import org.mapstruct.Mapper;
 

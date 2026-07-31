@@ -1,9 +1,9 @@
-package com.finance.finance_tracker.DTO;
+package com.finance.finance_tracker.dto;
 
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
-import org.antlr.v4.runtime.misc.NotNull;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Email;
 import java.time.LocalDate;

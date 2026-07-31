@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.finance.finance_tracker.Util.DataConstants.LENGTH_255;
+import static com.finance.finance_tracker.util.DataConstants.LENGTH_255;
 
 @Data
 @Entity

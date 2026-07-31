@@ -1,6 +1,6 @@
 package com.finance.finance_tracker.service.Impl;
 
-import com.finance.finance_tracker.DTO.AccountDto;
+import com.finance.finance_tracker.dto.AccountDto;
 import com.finance.finance_tracker.entity.Account;
 import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.entity.enums.Currency;

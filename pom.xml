@@ -56,7 +56,7 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- ========== MAPSTRUCT (ДЛЯ МАППИНГА DTO <-> ENTITY) ========== -->
+		<!-- ========== MAPSTRUCT (ДЛЯ МАППИНГА dto <-> ENTITY) ========== -->
 		<!-- ОБЯЗАТЕЛЬНО для мапперов AccountMapper, UserMapper и т.д. -->
 		<dependency>
 			<groupId>org.mapstruct</groupId>

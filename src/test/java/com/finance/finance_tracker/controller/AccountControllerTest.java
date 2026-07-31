@@ -1,7 +1,7 @@
 package com.finance.finance_tracker.controller;
 
-import com.finance.finance_tracker.DTO.AccountDto;
-import com.finance.finance_tracker.Util.CurrencyFormatter;
+import com.finance.finance_tracker.dto.AccountDto;
+import com.finance.finance_tracker.util.CurrencyFormatter;
 import com.finance.finance_tracker.entity.SecurityUser;
 import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.entity.enums.Currency;

@@ -1,7 +1,6 @@
 package com.finance.finance_tracker.service.Impl;
 
-import com.finance.finance_tracker.DTO.AccountDto;
-import com.finance.finance_tracker.DTO.TransactionDto;
+import com.finance.finance_tracker.dto.TransactionDto;
 import com.finance.finance_tracker.entity.Account;
 import com.finance.finance_tracker.entity.Category;
 import com.finance.finance_tracker.entity.Transaction;
@@ -25,11 +24,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static com.finance.finance_tracker.Util.DataConstants.ACCOUNT_ID_REQUIRED;
-import static com.finance.finance_tracker.Util.DataConstants.ACCOUNT_NOT_FOUND;
-import static com.finance.finance_tracker.Util.DataConstants.CATEGORY_NOT_FOUND;
-import static com.finance.finance_tracker.Util.DataConstants.INVALID_AMOUNT;
-import static com.finance.finance_tracker.Util.DataConstants.TRANSACTION_NOT_FOUND;
+import static com.finance.finance_tracker.util.DataConstants.ACCOUNT_ID_REQUIRED;
+import static com.finance.finance_tracker.util.DataConstants.ACCOUNT_NOT_FOUND;
+import static com.finance.finance_tracker.util.DataConstants.CATEGORY_NOT_FOUND;
+import static com.finance.finance_tracker.util.DataConstants.INVALID_AMOUNT;
+import static com.finance.finance_tracker.util.DataConstants.TRANSACTION_NOT_FOUND;
 
 @Slf4j
 @Service

@@ -16,17 +16,16 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.finance.finance_tracker.Util.DataConstants.LENGTH_255;
+import static com.finance.finance_tracker.util.DataConstants.LENGTH_255;
 
 @Getter
 @Setter
@@ -47,6 +46,15 @@ public class Account {
 
     @Enumerated(EnumType.STRING)
     private Currency currency;
+
+    @Column(name = "bank_code", length = 32)
+    private String bankCode;                 // null для счетов, созданных вручную
+
+    @Column(name = "external_account_number", length = 64)
+    private String externalAccountNumber;    // null для счетов, созданных вручную
+
+    @Column(name = "last_synced_at")
+    private LocalDateTime lastSyncedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

@@ -76,4 +76,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("categoryId") Long categoryId,
             @Param("monthStart") LocalDateTime monthStart,
             @Param("monthEnd") LocalDateTime monthEnd);
+
+
+    boolean existsByExternalSourceAndExternalId(String externalSource, String externalId);
 }

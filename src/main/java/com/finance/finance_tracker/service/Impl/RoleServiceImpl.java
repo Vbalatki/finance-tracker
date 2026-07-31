@@ -1,6 +1,6 @@
 package com.finance.finance_tracker.service.Impl;
 
-import com.finance.finance_tracker.DTO.RoleDto;
+import com.finance.finance_tracker.dto.RoleDto;
 import com.finance.finance_tracker.entity.Role;
 import com.finance.finance_tracker.exception.DuplicateEntityException;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
@@ -16,14 +16,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.finance.finance_tracker.Util.DataConstants.CANNOT_DELETE_DEFAULT_ROLE;
-import static com.finance.finance_tracker.Util.DataConstants.CANNOT_MODIFY_DEFAULT_ROLE;
-import static com.finance.finance_tracker.Util.DataConstants.DEFAULT_ROLE_ADMIN;
-import static com.finance.finance_tracker.Util.DataConstants.DEFAULT_ROLE_USER;
-import static com.finance.finance_tracker.Util.DataConstants.ROLE_ALREADY_EXISTS;
-import static com.finance.finance_tracker.Util.DataConstants.ROLE_NAME_BLANK;
-import static com.finance.finance_tracker.Util.DataConstants.ROLE_NOT_FOUND;
-import static com.finance.finance_tracker.Util.DataConstants.ROLE_PREFIX;
+import static com.finance.finance_tracker.util.DataConstants.CANNOT_DELETE_DEFAULT_ROLE;
+import static com.finance.finance_tracker.util.DataConstants.CANNOT_MODIFY_DEFAULT_ROLE;
+import static com.finance.finance_tracker.util.DataConstants.DEFAULT_ROLE_ADMIN;
+import static com.finance.finance_tracker.util.DataConstants.DEFAULT_ROLE_USER;
+import static com.finance.finance_tracker.util.DataConstants.ROLE_ALREADY_EXISTS;
+import static com.finance.finance_tracker.util.DataConstants.ROLE_NAME_BLANK;
+import static com.finance.finance_tracker.util.DataConstants.ROLE_NOT_FOUND;
+import static com.finance.finance_tracker.util.DataConstants.ROLE_PREFIX;
 
 @Slf4j
 @Service

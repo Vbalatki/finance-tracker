@@ -1,7 +1,7 @@
 package com.finance.finance_tracker.controller;
 
-import com.finance.finance_tracker.DTO.CategoryDto;
-import com.finance.finance_tracker.DTO.UserDto;
+import com.finance.finance_tracker.dto.CategoryDto;
+import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.entity.SecurityUser;
 import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.exception.DuplicateEntityException;

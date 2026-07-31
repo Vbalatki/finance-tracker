@@ -1,4 +1,4 @@
-package com.finance.finance_tracker.DTO;
+package com.finance.finance_tracker.dto;
 
 import com.finance.finance_tracker.entity.enums.Currency;
 import com.finance.finance_tracker.entity.enums.TransactionType;

@@ -1,8 +1,8 @@
 package com.finance.finance_tracker.service.Impl;
 
-import com.finance.finance_tracker.DTO.AccountDto;
-import com.finance.finance_tracker.DTO.TransactionDto;
-import com.finance.finance_tracker.DTO.UserDto;
+import com.finance.finance_tracker.dto.AccountDto;
+import com.finance.finance_tracker.dto.TransactionDto;
+import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.entity.Account;
 import com.finance.finance_tracker.entity.Role;
 import com.finance.finance_tracker.entity.User;
@@ -30,13 +30,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.finance.finance_tracker.Util.DataConstants.ACCOUNT_NAME_EXISTS;
-import static com.finance.finance_tracker.Util.DataConstants.EMAIL_ALREADY_EXISTS;
-import static com.finance.finance_tracker.Util.DataConstants.INCORRECT_CURRENT_PASSWORD;
-import static com.finance.finance_tracker.Util.DataConstants.MIN_PASSWORD_LENGTH;
-import static com.finance.finance_tracker.Util.DataConstants.PASSWORD_TOO_SHORT;
-import static com.finance.finance_tracker.Util.DataConstants.ROLE_NOT_FOUND;
-import static com.finance.finance_tracker.Util.DataConstants.USER_NOT_FOUND;
+import static com.finance.finance_tracker.util.DataConstants.ACCOUNT_NAME_EXISTS;
+import static com.finance.finance_tracker.util.DataConstants.EMAIL_ALREADY_EXISTS;
+import static com.finance.finance_tracker.util.DataConstants.INCORRECT_CURRENT_PASSWORD;
+import static com.finance.finance_tracker.util.DataConstants.MIN_PASSWORD_LENGTH;
+import static com.finance.finance_tracker.util.DataConstants.PASSWORD_TOO_SHORT;
+import static com.finance.finance_tracker.util.DataConstants.ROLE_NOT_FOUND;
+import static com.finance.finance_tracker.util.DataConstants.USER_NOT_FOUND;
 
 @Slf4j
 @Service

@@ -1,8 +1,8 @@
 package com.finance.finance_tracker.controller;
 
-import com.finance.finance_tracker.DTO.AuditDto;
-import com.finance.finance_tracker.DTO.RoleDto;
-import com.finance.finance_tracker.DTO.UserDto;
+import com.finance.finance_tracker.dto.AuditDto;
+import com.finance.finance_tracker.dto.RoleDto;
+import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.service.AuditService;
 import com.finance.finance_tracker.service.RoleService;
 import com.finance.finance_tracker.service.UserService;

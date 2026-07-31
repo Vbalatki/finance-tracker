@@ -11,3 +11,5 @@ databaseChangeLog:
       file: db/changelog/changelog/V4__seed_data.yaml
   - include:
       file: db/changelog/changelog/V5__add_account_version.yaml
+  - include:
+      file: db/changelog/changelog/V6__add_bank_integration.yaml

@@ -1,6 +1,6 @@
 package com.finance.finance_tracker.service;
 
-import com.finance.finance_tracker.DTO.CategoryDto;
+import com.finance.finance_tracker.dto.CategoryDto;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ public interface CategoryService {
      * Возвращает категорию по id.
      *
      * @param id id категории
-     * @return DTO категории
+     * @return dto категории
      * @throws com.finance.finance_tracker.exception.EntityNotFoundException если категория не найдена
      */
     CategoryDto getCategoryById(Long id);

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Профиль - Финансовый трекер</title>
+    <div th:replace="~{layout/head :: head}"></div>
+</head>
+<body>
+<div th:replace="~{layout/header :: header}"></div>
+
+<div class="container mt-4">
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle"></i> <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle"></i> <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="row">
+        <!-- Карточка профиля -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-person-circle display-1 text-primary"></i>
+                    <h4 class="mt-3 mb-0" th:if="${user != null}"
+                        th:text="${user.name} + ' ' + ${user.surname}">Имя Фамилия</h4>
+                    <p class="text-muted" th:if="${user != null}" th:text="${user.email}">email@example.com</p>
+                    <p class="text-muted small" th:if="${user != null and user.birthday != null}">
+                        Дата рождения: <span th:text="${#temporals.format(user.birthday, 'dd.MM.yyyy')}"></span>
+                    </p>
+
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="/profile/edit" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> Редактировать профиль
+                        </a>
+                        <a href="/profile/change-password" class="btn btn-outline-secondary">
+                            <i class="bi bi-key"></i> Сменить пароль
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Счета пользователя -->
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-wallet2"></i> Мои счета</h5>
+                    <a href="/accounts" class="btn btn-sm btn-outline-primary">Все счета</a>
+                </div>
+                <div class="card-body p-0">
+                    <div th:if="${accounts != null and !accounts.isEmpty()}" class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                            <tr>
+                                <th>Название</th>
+                                <th>Баланс</th>
+                                <th>Валюта</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="account : ${accounts}">
+                                <td>
+                                    <a th:href="@{/accounts/{id}(id=${account.id})}" th:text="${account.name}"
+                                       class="text-decoration-none"></a>
+                                </td>
+                                <td th:text="${#numbers.formatDecimal(account.balance, 1, 'COMMA', 2, 'POINT')}"></td>
+                                <td th:text="${account.currency}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div th:if="${accounts == null or accounts.isEmpty()}" class="text-center py-5">
+                        <p class="text-muted mb-3">Счетов пока нет</p>
+                        <a href="/accounts/create" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Создать первый счёт
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{layout/footer :: footer}"></div>
+</body>
+</html>

@@ -1,9 +1,9 @@
 package com.finance.finance_tracker.controller;
 
-import com.finance.finance_tracker.DTO.AccountDto;
-import com.finance.finance_tracker.DTO.TransactionDto;
-import com.finance.finance_tracker.Util.CurrencyFormatter;
-import com.finance.finance_tracker.Util.SecurityUtil;
+import com.finance.finance_tracker.dto.AccountDto;
+import com.finance.finance_tracker.dto.TransactionDto;
+import com.finance.finance_tracker.util.CurrencyFormatter;
+import com.finance.finance_tracker.util.SecurityUtil;
 import com.finance.finance_tracker.entity.enums.Currency;
 import com.finance.finance_tracker.exception.AccessDeniedException;
 import com.finance.finance_tracker.service.AccountService;
@@ -161,7 +161,7 @@ public class AccountController {
     /**
      * Обрабатывает отправку формы редактирования счёта. Баланс этим методом
      * не меняется — {@code dto.getBalance()} передаётся скрытым полем
-     * только для прохождения {@code @NotNull}-валидации DTO, сам сервис
+     * только для прохождения {@code @NotNull}-валидации dto, сам сервис
      * {@link AccountService#updateAccount(Long, AccountDto)} его не читает.
      * Для изменения баланса есть отдельные {@code deposit}/{@code withdraw}.
      *

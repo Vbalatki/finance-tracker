@@ -1,9 +1,9 @@
 package com.finance.finance_tracker.controller;
 
-import com.finance.finance_tracker.DTO.AccountDto;
-import com.finance.finance_tracker.DTO.CategoryDto;
-import com.finance.finance_tracker.DTO.TransactionDto;
-import com.finance.finance_tracker.Util.SecurityUtil;
+import com.finance.finance_tracker.dto.AccountDto;
+import com.finance.finance_tracker.dto.CategoryDto;
+import com.finance.finance_tracker.dto.TransactionDto;
+import com.finance.finance_tracker.util.SecurityUtil;
 import com.finance.finance_tracker.entity.enums.TransactionType;
 import com.finance.finance_tracker.exception.AccessDeniedException;
 import com.finance.finance_tracker.service.AccountService;
@@ -186,7 +186,7 @@ public class TransactionController {
      * окна редактирования (вызывается через {@code fetch} из клиентского JS).
      *
      * @param id id транзакции
-     * @return DTO транзакции
+     * @return dto транзакции
      * @throws AccessDeniedException если транзакция привязана к чужому счёту
      */
     @GetMapping("transactions/{id}/edit")

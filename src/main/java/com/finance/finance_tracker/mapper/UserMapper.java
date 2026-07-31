@@ -1,7 +1,7 @@
 package com.finance.finance_tracker.mapper;
 
 
-import com.finance.finance_tracker.DTO.UserDto;
+import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

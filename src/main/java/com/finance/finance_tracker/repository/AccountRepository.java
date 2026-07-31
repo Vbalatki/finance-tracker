@@ -26,6 +26,6 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     @Query("SELECT a FROM Account a WHERE a.user.id = :userId")
     List<Account> findByUserId(Long userId);
 
-
+    boolean existsByBankCodeAndExternalAccountNumber(String bankCode, String externalAccountNumber);
 
 }

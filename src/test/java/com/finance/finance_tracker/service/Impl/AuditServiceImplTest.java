@@ -1,6 +1,6 @@
 package com.finance.finance_tracker.service.Impl;
 
-import com.finance.finance_tracker.DTO.AuditDto;
+import com.finance.finance_tracker.dto.AuditDto;
 import com.finance.finance_tracker.entity.Audit;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
 import com.finance.finance_tracker.exception.InvalidDataException;

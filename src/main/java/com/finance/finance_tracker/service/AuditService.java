@@ -1,6 +1,6 @@
 package com.finance.finance_tracker.service;
 
-import com.finance.finance_tracker.DTO.AuditDto;
+import com.finance.finance_tracker.dto.AuditDto;
 import org.springframework.data.domain.Page;
 
 import java.util.List;

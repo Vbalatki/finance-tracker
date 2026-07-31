@@ -1,9 +1,8 @@
-package com.finance.finance_tracker.Util;
+package com.finance.finance_tracker.util;
 
 import com.finance.finance_tracker.entity.SecurityUser;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 @Component

@@ -1,4 +1,4 @@
-package com.finance.finance_tracker.DTO;
+package com.finance.finance_tracker.dto;
 
 import lombok.Data;
 

@@ -1,6 +1,6 @@
 package com.finance.finance_tracker.service.Impl;
 
-import com.finance.finance_tracker.DTO.BudgetDto;
+import com.finance.finance_tracker.dto.BudgetDto;
 import com.finance.finance_tracker.entity.Budget;
 import com.finance.finance_tracker.entity.Category;
 import com.finance.finance_tracker.entity.User;
@@ -24,7 +24,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 

@@ -1,7 +1,7 @@
 package com.finance.finance_tracker.service.Impl;
 
 
-import com.finance.finance_tracker.DTO.ExchangeRateResponseDto;
+import com.finance.finance_tracker.dto.ExchangeRateResponseDto;
 import com.finance.finance_tracker.entity.enums.Currency;
 import com.finance.finance_tracker.service.CurrencyApiService;
 import lombok.RequiredArgsConstructor;

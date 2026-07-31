@@ -1,6 +1,6 @@
 package com.finance.finance_tracker.service;
 
-import com.finance.finance_tracker.DTO.RoleDto;
+import com.finance.finance_tracker.dto.RoleDto;
 
 import java.util.List;
 
@@ -42,7 +42,7 @@ public interface RoleService {
      * Возвращает роль по id.
      *
      * @param id id роли
-     * @return DTO роли
+     * @return dto роли
      * @throws com.finance.finance_tracker.exception.EntityNotFoundException если роль не найдена
      */
     RoleDto findById(Long id);

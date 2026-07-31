@@ -1,10 +1,10 @@
 package com.finance.finance_tracker.controller;
 
-import com.finance.finance_tracker.DTO.CategoryDto;
-import com.finance.finance_tracker.DTO.UserDto;
+import com.finance.finance_tracker.dto.CategoryDto;
+import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.service.CategoryService;
 import com.finance.finance_tracker.service.UserService;
-import com.finance.finance_tracker.Util.SecurityUtil;
+import com.finance.finance_tracker.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

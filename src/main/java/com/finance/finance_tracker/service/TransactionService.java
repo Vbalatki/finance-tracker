@@ -1,6 +1,6 @@
 package com.finance.finance_tracker.service;
 
-import com.finance.finance_tracker.DTO.TransactionDto;
+import com.finance.finance_tracker.dto.TransactionDto;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -15,7 +15,7 @@ public interface TransactionService {
      * Возвращает транзакцию по id.
      *
      * @param id id транзакции
-     * @return DTO транзакции
+     * @return dto транзакции
      * @throws com.finance.finance_tracker.exception.EntityNotFoundException если транзакция не найдена
      */
     TransactionDto findById(Long id);
@@ -48,7 +48,7 @@ public interface TransactionService {
      * Возвращает транзакцию по id. Функционально идентичен {@link #findById(Long)}.
      *
      * @param id id транзакции
-     * @return DTO транзакции
+     * @return dto транзакции
      * @throws com.finance.finance_tracker.exception.EntityNotFoundException если транзакция не найдена
      */
     TransactionDto getTransactionById(Long id);

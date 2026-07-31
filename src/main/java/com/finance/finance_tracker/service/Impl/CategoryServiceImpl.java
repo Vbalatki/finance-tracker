@@ -1,6 +1,6 @@
 package com.finance.finance_tracker.service.Impl;
 
-import com.finance.finance_tracker.DTO.CategoryDto;
+import com.finance.finance_tracker.dto.CategoryDto;
 import com.finance.finance_tracker.exception.DuplicateEntityException;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
 import com.finance.finance_tracker.exception.InvalidDataException;
@@ -18,11 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.finance.finance_tracker.Util.DataConstants.CANNOT_DELETE_CATEGORY;
-import static com.finance.finance_tracker.Util.DataConstants.CATEGORY_NAME_BLANK;
-import static com.finance.finance_tracker.Util.DataConstants.CATEGORY_NAME_EXISTS;
-import static com.finance.finance_tracker.Util.DataConstants.CATEGORY_NOT_FOUND;
-import static com.finance.finance_tracker.Util.DataConstants.USER_NOT_FOUND;
+import static com.finance.finance_tracker.util.DataConstants.CANNOT_DELETE_CATEGORY;
+import static com.finance.finance_tracker.util.DataConstants.CATEGORY_NAME_BLANK;
+import static com.finance.finance_tracker.util.DataConstants.CATEGORY_NAME_EXISTS;
+import static com.finance.finance_tracker.util.DataConstants.CATEGORY_NOT_FOUND;
+import static com.finance.finance_tracker.util.DataConstants.USER_NOT_FOUND;
 
 @Slf4j
 @Service

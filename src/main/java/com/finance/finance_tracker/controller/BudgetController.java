@@ -1,8 +1,8 @@
 package com.finance.finance_tracker.controller;
 
-import com.finance.finance_tracker.DTO.BudgetDto;
-import com.finance.finance_tracker.DTO.CategoryDto;
-import com.finance.finance_tracker.Util.SecurityUtil;
+import com.finance.finance_tracker.dto.BudgetDto;
+import com.finance.finance_tracker.dto.CategoryDto;
+import com.finance.finance_tracker.util.SecurityUtil;
 import com.finance.finance_tracker.service.BudgetService;
 import com.finance.finance_tracker.service.CategoryService;
 import jakarta.validation.Valid;

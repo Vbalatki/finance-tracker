@@ -1,0 +1,87 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20
+      author: dmitriy-sidorov
+      comment: >
+        Таблица связки внутреннего Account с внешним банковским счётом (T-Bank и т.д.)
+      changes:
+        - createTable:
+            schemaName: finance_tracker
+            tableName: bank_account_links
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: account_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: bank_code
+                  type: VARCHAR(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: external_account_number
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_synced_at
+                  type: TIMESTAMP
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+
+        - addForeignKeyConstraint:
+            baseTableSchemaName: finance_tracker
+            baseTableName: bank_account_links
+            baseColumnNames: account_id
+            referencedTableSchemaName: finance_tracker
+            referencedTableName: accounts
+            referencedColumnNames: id
+            constraintName: fk_bank_account_links_account
+            onDelete: CASCADE
+            onUpdate: CASCADE
+
+        - addUniqueConstraint:
+            schemaName: finance_tracker
+            tableName: bank_account_links
+            columnNames: account_id
+            constraintName: uk_bank_account_links_account
+
+        - addUniqueConstraint:
+            schemaName: finance_tracker
+            tableName: bank_account_links
+            columnNames: bank_code, external_account_number
+            constraintName: uk_bank_account_links_bank_external_account
+
+  - changeSet:
+      id: 21
+      author: dmitriy-sidorov
+      comment: >
+        Добавляет external_source/external_id в transactions для
+        дедупликации при повторном импорте банковских операций.
+      changes:
+        - addColumn:
+            schemaName: finance_tracker
+            tableName: transactions
+            columns:
+              - column:
+                  name: external_source
+                  type: VARCHAR(32)
+              - column:
+                  name: external_id
+                  type: VARCHAR(128)
+
+        - addUniqueConstraint:
+            schemaName: finance_tracker
+            tableName: transactions
+            columnNames: external_source, external_id
+            constraintName: uk_transactions_external_source_id

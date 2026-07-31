@@ -1,6 +1,6 @@
 package com.finance.finance_tracker.service.Impl;
 
-import com.finance.finance_tracker.DTO.AccountDto;
+import com.finance.finance_tracker.dto.AccountDto;
 import com.finance.finance_tracker.entity.enums.Currency;
 import com.finance.finance_tracker.exception.DuplicateEntityException;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
@@ -21,15 +21,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.finance.finance_tracker.Util.DataConstants.USER_NOT_FOUND;
-import static com.finance.finance_tracker.Util.DataConstants.ACCOUNT_NAME_EXISTS;
-import static com.finance.finance_tracker.Util.DataConstants.ACCOUNT_NOT_FOUND;
-import static com.finance.finance_tracker.Util.DataConstants.INSUFFICIENT_FUNDS;
-import static com.finance.finance_tracker.Util.DataConstants.INVALID_AMOUNT;
+import static com.finance.finance_tracker.util.DataConstants.USER_NOT_FOUND;
+import static com.finance.finance_tracker.util.DataConstants.ACCOUNT_NAME_EXISTS;
+import static com.finance.finance_tracker.util.DataConstants.ACCOUNT_NOT_FOUND;
+import static com.finance.finance_tracker.util.DataConstants.INSUFFICIENT_FUNDS;
+import static com.finance.finance_tracker.util.DataConstants.INVALID_AMOUNT;
 
 @Slf4j
 @Service

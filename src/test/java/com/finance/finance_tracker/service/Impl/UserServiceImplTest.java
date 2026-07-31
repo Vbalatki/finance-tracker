@@ -1,8 +1,8 @@
 package com.finance.finance_tracker.service.Impl;
 
-import com.finance.finance_tracker.DTO.AccountDto;
-import com.finance.finance_tracker.DTO.TransactionDto;
-import com.finance.finance_tracker.DTO.UserDto;
+import com.finance.finance_tracker.dto.AccountDto;
+import com.finance.finance_tracker.dto.TransactionDto;
+import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.entity.Account;
 import com.finance.finance_tracker.entity.Role;
 import com.finance.finance_tracker.entity.User;

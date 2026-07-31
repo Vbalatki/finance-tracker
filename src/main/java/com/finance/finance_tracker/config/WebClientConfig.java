@@ -25,4 +25,17 @@ public class WebClientConfig {
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .build();
     }
+
+    @Bean
+    public WebClient tbankWebClient(TBankProperties properties) {
+        HttpClient httpClient = HttpClient.create()
+                .responseTimeout(Duration.ofSeconds(5))
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000);
+
+        return WebClient.builder()
+                .baseUrl(properties.url())
+                .defaultHeader("Authorization", "Bearer " + properties.token())
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .build();
+    }
 }

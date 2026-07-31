@@ -1,6 +1,6 @@
 package com.finance.finance_tracker.service.Impl;
 
-import com.finance.finance_tracker.DTO.RoleDto;
+import com.finance.finance_tracker.dto.RoleDto;
 import com.finance.finance_tracker.entity.Role;
 import com.finance.finance_tracker.exception.DuplicateEntityException;
 import com.finance.finance_tracker.exception.EntityNotFoundException;

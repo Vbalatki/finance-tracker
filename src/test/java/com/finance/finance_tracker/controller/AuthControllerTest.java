@@ -1,6 +1,6 @@
 package com.finance.finance_tracker.controller;
 
-import com.finance.finance_tracker.DTO.UserDto;
+import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.exception.DuplicateEntityException;
 import com.finance.finance_tracker.service.UserService;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,7 +1,6 @@
-package com.finance.finance_tracker.DTO;
+package com.finance.finance_tracker.dto;
 
 
-import com.finance.finance_tracker.entity.User;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

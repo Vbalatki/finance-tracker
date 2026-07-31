@@ -1,6 +1,6 @@
 package com.finance.finance_tracker.service.Impl;
 
-import com.finance.finance_tracker.DTO.AuditDto;
+import com.finance.finance_tracker.dto.AuditDto;
 import com.finance.finance_tracker.entity.Audit;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
 import com.finance.finance_tracker.exception.InvalidDataException;
@@ -13,15 +13,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.finance.finance_tracker.Util.DataConstants.AUDIT_NOT_FOUND;
-import static com.finance.finance_tracker.Util.DataConstants.DEFAULT_SORT_FIELD;
+import static com.finance.finance_tracker.util.DataConstants.AUDIT_NOT_FOUND;
+import static com.finance.finance_tracker.util.DataConstants.DEFAULT_SORT_FIELD;
 
 @Slf4j
 @Service

@@ -1,6 +1,6 @@
 package com.finance.finance_tracker.service;
 
-import com.finance.finance_tracker.DTO.BudgetDto;
+import com.finance.finance_tracker.dto.BudgetDto;
 
 import java.util.List;
 

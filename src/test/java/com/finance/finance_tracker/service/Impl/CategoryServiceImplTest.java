@@ -1,6 +1,6 @@
 package com.finance.finance_tracker.service.Impl;
 
-import com.finance.finance_tracker.DTO.CategoryDto;
+import com.finance.finance_tracker.dto.CategoryDto;
 import com.finance.finance_tracker.entity.Category;
 import com.finance.finance_tracker.entity.Transaction;
 import com.finance.finance_tracker.entity.User;

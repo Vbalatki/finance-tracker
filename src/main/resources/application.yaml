@@ -138,6 +138,11 @@ springdoc:
   paths-to-match: /api/**
   packages-to-scan: com.finance.finance_tracker.controller
 
+tbank:
+  url: "https://business.tbank.ru"
+  token: ${TBANK_API_TOKEN:}
+
+
 # ======= Внешний API курсов валют =======
 currencyapi:
   url: "https://v6.exchangerate-api.com/v6/"

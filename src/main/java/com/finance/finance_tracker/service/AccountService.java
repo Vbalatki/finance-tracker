@@ -1,7 +1,7 @@
 package com.finance.finance_tracker.service;
 
 
-import com.finance.finance_tracker.DTO.AccountDto;
+import com.finance.finance_tracker.dto.AccountDto;
 import com.finance.finance_tracker.entity.enums.Currency;
 
 import java.math.BigDecimal;
@@ -17,7 +17,7 @@ public interface AccountService {
      * Возвращает счёт по идентификатору.
      *
      * @param id id счёта
-     * @return DTO счёта
+     * @return dto счёта
      * @throws com.finance.finance_tracker.exception.EntityNotFoundException если счёт не найден
      */
     AccountDto findById(Long id);

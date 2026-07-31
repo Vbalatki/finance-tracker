@@ -1,6 +1,6 @@
 package com.finance.finance_tracker.controller;
 
-import com.finance.finance_tracker.DTO.*;
+import com.finance.finance_tracker.dto.*;
 import com.finance.finance_tracker.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

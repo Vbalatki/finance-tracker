@@ -1,6 +1,6 @@
 package com.finance.finance_tracker.service.Impl;
 
-import com.finance.finance_tracker.DTO.BudgetDto;
+import com.finance.finance_tracker.dto.BudgetDto;
 import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.entity.enums.Currency;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
@@ -25,9 +25,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.finance.finance_tracker.Util.DataConstants.BUDGET_NOT_FOUND;
-import static com.finance.finance_tracker.Util.DataConstants.CATEGORY_NOT_FOUND;
-import static com.finance.finance_tracker.Util.DataConstants.USER_NOT_FOUND;
+import static com.finance.finance_tracker.util.DataConstants.BUDGET_NOT_FOUND;
+import static com.finance.finance_tracker.util.DataConstants.CATEGORY_NOT_FOUND;
+import static com.finance.finance_tracker.util.DataConstants.USER_NOT_FOUND;
 
 @Slf4j
 @Service

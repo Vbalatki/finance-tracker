@@ -1,8 +1,8 @@
 package com.finance.finance_tracker.service;
 
-import com.finance.finance_tracker.DTO.AccountDto;
-import com.finance.finance_tracker.DTO.TransactionDto;
-import com.finance.finance_tracker.DTO.UserDto;
+import com.finance.finance_tracker.dto.AccountDto;
+import com.finance.finance_tracker.dto.TransactionDto;
+import com.finance.finance_tracker.dto.UserDto;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -30,7 +30,7 @@ public interface UserService {
      * Возвращает пользователя по id.
      *
      * @param id id пользователя
-     * @return DTO пользователя
+     * @return dto пользователя
      * @throws com.finance.finance_tracker.exception.EntityNotFoundException если пользователь не найден
      */
     UserDto getUserById(Long id);
@@ -102,7 +102,7 @@ public interface UserService {
      * Возвращает пользователя по email.
      *
      * @param email email пользователя
-     * @return DTO пользователя
+     * @return dto пользователя
      * @throws com.finance.finance_tracker.exception.EntityNotFoundException если пользователь не найден
      */
     UserDto getUserByEmail(String email);

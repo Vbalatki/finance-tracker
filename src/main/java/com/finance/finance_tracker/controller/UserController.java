@@ -1,7 +1,7 @@
 package com.finance.finance_tracker.controller;
 
 
-import com.finance.finance_tracker.DTO.UserDto;
+import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.service.Impl.UserDetailsServiceImpl;
 import com.finance.finance_tracker.service.UserService;
 import jakarta.validation.Valid;
@@ -13,6 +13,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -23,6 +24,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  * {@code @AuthenticationPrincipal}).
  */
 @Controller
+@RequestMapping("/profile")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
@@ -36,7 +38,7 @@ public class UserController {
      * @param userDetails текущий пользователь
      * @return {@code "users/profile"}
      */
-    @GetMapping("/profile")
+    @GetMapping
     public String userProfile(Model model,
                               @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
         if (userDetails != null) {
