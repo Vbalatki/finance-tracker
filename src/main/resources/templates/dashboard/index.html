@@ -39,23 +39,22 @@
     </div>
   </div>
 
-  <!-- Общий баланс -->
-  <div class="card mb-4">
-    <div class="card-header bg-success text-white">
-      <h5 class="mb-0">Общий баланс</h5>
+    <!-- Общий баланс -->
+    <div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #198754, #20c997);">
+        <div class="card-body text-white text-center py-4">
+            <div class="mb-2">
+                <i class="bi bi-wallet2" style="font-size: 2rem; opacity: 0.9;"></i>
+            </div>
+            <h6 class="text-uppercase mb-1" style="opacity: 0.85; letter-spacing: 0.05em;">Общий баланс</h6>
+            <h1 class="mb-0 fw-bold">
+      <span th:if="${totalBalance != null}"
+            th:text="${#numbers.formatDecimal(totalBalance, 1, 'COMMA', 2, 'POINT') + ' ₽'}">
+          0,00 ₽
+      </span>
+                <span th:unless="${totalBalance != null}">0,00 ₽</span>
+            </h1>
+        </div>
     </div>
-    <div class="card-body">
-      <h2 class="text-center">
-                    <span th:if="${totalBalance != null}"
-                          th:text="${#numbers.formatDecimal(totalBalance, 0, 'COMMA', 2, 'POINT') + ' ₽'}">
-                        0 ₽
-                    </span>
-        <span th:unless="${totalBalance != null}">
-                        0 ₽
-                    </span>
-      </h2>
-    </div>
-  </div>
 
     <!-- Счета -->
     <div class="card mb-4">
@@ -192,7 +191,9 @@
                         <span th:if="${transaction.type.name() == 'EXPENSE'}">-</span>
 
                         <!-- Сумма -->
-                        <span th:text="${#numbers.formatDecimal(transaction.amount, 0, 'COMMA', 2, 'POINT')}">
+                        <span th:text="${#numbers.formatDecimal(transaction.amount, 1, 'COMMA', 2, 'POINT')}">
+    0,00
+</span>
             0
                     </span>
 
