@@ -2,6 +2,7 @@ package com.finance.finance_tracker.controller;
 
 import com.finance.finance_tracker.dto.AccountDto;
 import com.finance.finance_tracker.dto.TransactionDto;
+import com.finance.finance_tracker.service.BankImportService;
 import com.finance.finance_tracker.util.CurrencyFormatter;
 import com.finance.finance_tracker.util.SecurityUtil;
 import com.finance.finance_tracker.entity.enums.Currency;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -40,6 +42,7 @@ public class AccountController {
     private final AccountService accountService;
     private final TransactionService transactionService;
     private final CurrencyFormatter currencyFormatter;
+    private final BankImportService bankImportService;
 
     @GetMapping
     public String accountsPage(Model model,
@@ -204,7 +207,50 @@ public class AccountController {
             return "accounts/edit";
         }
     }
+    /**
+     * Запускает синхронизацию транзакций привязанного к банку счёта за
+     * последние 30 дней. Период пока фиксированный — выбор диапазона
+     * в UI не реализован, этого достаточно для первой рабочей версии.
+     *
+     * @throws AccessDeniedException если счёт принадлежит другому пользователю
+     */
+    @PostMapping("/{id}/sync")
+    public String syncWithBank(@PathVariable Long id,
+                               @AuthenticationPrincipal UserDetails userDetails,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            AccountDto account = accountService.findById(id);
+            Long currentUserId = SecurityUtil.getCurrentUserId();
+            if (!account.getUserId().equals(currentUserId)) {
+                throw new AccessDeniedException("Нет доступа к этому счёту");
+            }
 
+            LocalDateTime to = LocalDateTime.now();
+            LocalDateTime from = to.minusDays(30);
+            int imported = bankImportService.syncTransactions(id, from, to);
+
+            redirectAttributes.addFlashAttribute("success",
+                    imported > 0
+                            ? "Импортировано новых операций: " + imported
+                            : "Новых операций нет — всё уже синхронизировано");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/accounts/" + id;
+    }
+
+    /**
+     * Пополняет счёт на указанную сумму. Ошибки (включая попытку доступа
+     * к чужому счёту) не приводят к HTTP-ошибке — они перехватываются и
+     * отображаются как flash-сообщение после редиректа.
+     *
+     * @param id                 id счёта
+     * @param amount             сумма пополнения, минимум 0.01
+     * @param userDetails        текущий пользователь
+     * @param redirectAttributes атрибуты для flash-сообщений
+     * @return редирект на {@code /accounts/{id}}
+     * @throws com.finance.finance_tracker.exception.AccessDeniedException если счёт принадлежит другому пользователю (перехватывается внутри метода, наружу не пробрасывается)
+     */
     @PostMapping("/{id}/deposit")
     public String deposit(@PathVariable Long id,
                           @RequestParam @DecimalMin(value = "0.01", message = "Сумма должна быть больше 0") BigDecimal amount,
@@ -226,6 +272,18 @@ public class AccountController {
         return "redirect:/accounts/" + id;
     }
 
+    /**
+     * Снимает средства со счёта. Ошибки (недостаточно средств, чужой счёт
+     * и т.д.) перехватываются и отображаются как flash-сообщение.
+     *
+     * @param id                 id счёта
+     * @param amount             сумма снятия, минимум 0.01
+     * @param userDetails        текущий пользователь
+     * @param redirectAttributes атрибуты для flash-сообщений
+     * @return редирект на {@code /accounts/{id}}
+     * @throws com.finance.finance_tracker.exception.InsufficientFundsException если на счёте недостаточно средств (перехватывается внутри метода)
+     * @throws com.finance.finance_tracker.exception.AccessDeniedException если счёт принадлежит другому пользователю (перехватывается внутри метода)
+     */
     @PostMapping("/{id}/withdraw")
     public String withdraw(@PathVariable Long id,
                            @RequestParam @DecimalMin(value = "0.01", message = "Сумма должна быть больше 0") BigDecimal amount,
@@ -247,6 +305,22 @@ public class AccountController {
         return "redirect:/accounts/" + id;
     }
 
+    /**
+     * Удаляет счёт вместе со всеми его транзакциями. Поддерживает два
+     * режима ответа в зависимости от заголовка {@code Accept}: обычный
+     * редирект с flash-сообщением для формы, либо JSON
+     * ({@code {"success": ..., "message"/"error": ...}}) для AJAX-вызовов
+     * (см. {@code accounts-modal.js}). Ошибки не приводят к HTTP-ошибке
+     * ни в одном из режимов — перехватываются и превращаются в
+     * соответствующий формат ответа.
+     *
+     * @param id                 id счёта
+     * @param userDetails        текущий пользователь
+     * @param accept             заголовок {@code Accept} запроса; {@code "application/json"} переключает в JSON-режим
+     * @param redirectAttributes атрибуты для flash-сообщений (используются только в HTML-режиме)
+     * @return редирект на {@code /accounts} (HTML-режим) либо {@link org.springframework.http.ResponseEntity} с JSON-телом (AJAX-режим)
+     * @throws com.finance.finance_tracker.exception.AccessDeniedException если счёт принадлежит другому пользователю (перехватывается внутри метода)
+     */
     @PostMapping("/{id}/delete")
     public Object deleteAccount(@PathVariable Long id,
                                 @AuthenticationPrincipal UserDetails userDetails,

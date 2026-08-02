@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 public class AccountDto {
@@ -26,4 +27,8 @@ public class AccountDto {
 
     @NotNull(message = "UserId cannot be null")
     private Long userId;
+
+    private String bankCode;
+    private String externalAccountNumber;
+    private LocalDateTime lastSyncedAt;
 }

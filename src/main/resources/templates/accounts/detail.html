@@ -123,6 +123,29 @@
 
         <!-- Боковая панель -->
         <div class="col-md-4">
+            <!-- Синхронизация с банком (только для привязанных счетов) -->
+            <div class="card mb-4" th:if="${account.bankCode != null}">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-bank"></i> Синхронизация с банком</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <span class="badge bg-primary" th:text="${account.bankCode}"></span>
+                    </p>
+                    <p class="text-muted small mb-3">
+            <span th:if="${account.lastSyncedAt != null}">
+                Последняя синхронизация: <span th:text="${#temporals.format(account.lastSyncedAt, 'dd.MM.yyyy HH:mm')}"></span>
+            </span>
+                        <span th:unless="${account.lastSyncedAt != null}">Ещё не синхронизировалось</span>
+                    </p>
+                    <form th:action="@{/accounts/{id}/sync(id=${account.id})}" method="post">
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-arrow-repeat"></i> Синхронизировать (за 30 дней)
+                        </button>
+                    </form>
+                </div>
+            </div>
+
             <!-- Быстрые операции -->
             <div class="card mb-4">
                 <div class="card-header">

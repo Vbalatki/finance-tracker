@@ -1,6 +1,7 @@
 package com.finance.finance_tracker.controller;
 
 import com.finance.finance_tracker.dto.AccountDto;
+import com.finance.finance_tracker.service.BankImportService;
 import com.finance.finance_tracker.util.CurrencyFormatter;
 import com.finance.finance_tracker.entity.SecurityUser;
 import com.finance.finance_tracker.entity.User;
@@ -58,6 +59,8 @@ class AccountControllerTest {
     private AccountService accountService;
     @Mock
     private TransactionService transactionService;
+    @Mock
+    private BankImportService bankImportService;
 
     private MockMvc mockMvc;
 
@@ -65,7 +68,7 @@ class AccountControllerTest {
     void setUp() {
         CurrencyFormatter currencyFormatter = new CurrencyFormatter();
         AccountController controller =
-                new AccountController(userService, accountService, transactionService, currencyFormatter);
+                new AccountController(userService, accountService, transactionService, currencyFormatter, bankImportService);
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
