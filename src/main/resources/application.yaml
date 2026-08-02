@@ -6,7 +6,7 @@ spring:
   application:
     name: finance-tracker
 
-  # ======= НАСТРОЙКИ PostgreSQL =======
+  # ======= PostgreSQL =======
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:finance_tracker}
     username: ${DB_USERNAME}
@@ -16,28 +16,21 @@ spring:
     hikari:
       connection-timeout: 30000
       maximum-pool-size: 10
-      minimum-idle: 5
+      minimum-idle: 2
       idle-timeout: 600000
       max-lifetime: 1800000
       connection-test-query: SELECT 1
 
-  # ======= НАСТРОЙКИ LIQUIBASE =======
+  # ======= LIQUIBASE =======
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
-    # default-schema — куда попадают таблицы приложения (совпадает со
-    # schema = "finance_tracker" в @Table у сущностей).
-    # liquibase-schema — где Liquibase хранит свои служебные таблицы
-    # DATABASECHANGELOG/DATABASECHANGELOGLOCK; оставляем в public, так как
-    # эта схема гарантированно существует ещё до первого запуска Liquibase
-    # (сама finance_tracker создаётся первым же changeset'ом V0).
     default-schema: finance_tracker
     liquibase-schema: public
 
-  # ======= НАСТРОЙКИ JPA/HIBERNATE =======
+  # ======= JPA/HIBERNATE =======
   jpa:
     hibernate:
-      # схема создаётся Liquibase, Hibernate её не трогает
       ddl-auto: validate
     properties:
       hibernate:
@@ -52,7 +45,7 @@ spring:
     show-sql: true
     open-in-view: false
 
-  # ======= НАСТРОЙКИ THYMELEAF =======
+  # ======= THYMELEAF =======
   thymeleaf:
     cache: false
     prefix: classpath:/templates/
@@ -88,8 +81,6 @@ server:
     connection-timeout: 5000
 
 # ======= КОНФИГУРАЦИЯ ЛОГИРОВАНИЯ =======
-# Уровни DEBUG/TRACE уместны локально, но не в контейнере/проде —
-# при необходимости переопределите через application-prod.yaml
 logging:
   level:
     org.springframework.security: INFO
@@ -107,10 +98,6 @@ trace: false
 # ======= ПРОВЕРКА ЗДОРОВЬЯ / МЕТРИКИ =======
 management:
   server:
-    # Отдельный порт, НЕ публикуемый в docker-compose.yml наружу —
-    # снимает вопрос аутентификации для /actuator/** как класс: снаружи
-    # порт физически недостижим, внутри Docker-сети его видит только
-    # Prometheus (см. monitoring/prometheus/prometheus.yml).
     port: 9091
   endpoints:
     web:
