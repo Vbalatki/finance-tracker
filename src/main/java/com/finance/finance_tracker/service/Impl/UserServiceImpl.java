@@ -241,9 +241,10 @@ public class UserServiceImpl implements UserService {
         for (AccountDto dto : accounts) {
             BigDecimal balance = dto.getBalance();
             Currency currency = dto.getCurrency();
-            BigDecimal rubAmount = currencyApiService.convertCurrency(
-                    currency.name(), "RUB", balance
-            );
+            BigDecimal rubAmount = currency == Currency.RUB
+                                    ? balance
+                                    : currencyApiService
+                                        .convertCurrency(currency.name(), "RUB", balance);
             totalInRub = totalInRub.add(rubAmount);
         }
         log.debug("Общий баланс в рублях: {}", totalInRub);

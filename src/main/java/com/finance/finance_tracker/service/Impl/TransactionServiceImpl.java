@@ -154,10 +154,7 @@ public class TransactionServiceImpl implements TransactionService {
                 })
                 : null;
 
-        Transaction transaction = new Transaction();
-        transaction.setAmount(dto.getAmount());
-        transaction.setType(dto.getType());
-        transaction.setDescription(dto.getDescription());
+        Transaction transaction = transactionMapper.toEntity(dto);
         transaction.setCreatedAt(LocalDateTime.now());
         transaction.setAccount(account);
         transaction.setCategory(category);

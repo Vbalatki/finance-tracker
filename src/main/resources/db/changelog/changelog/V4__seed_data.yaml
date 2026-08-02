@@ -21,7 +21,7 @@ databaseChangeLog:
                   value: ivan@example.com
               - column:
                   name: password
-                  value: "$2a$10$X5h5BzR1wvPq3wZ2Q5YzY.OwJkLmN8Q7PqR5sT8uVwXyZ3A4B6C7D8E9F0"
+                  value: "$2a$10$ZMF5MsB9EO3UCHWXLtcLUur9LuqEUhmTxFCdKC.leTLxHCi4EhYg6"
               - column:
                   name: active
                   valueBoolean: true
@@ -44,7 +44,7 @@ databaseChangeLog:
                   value: maria@example.com
               - column:
                   name: password
-                  value: "$2a$10$X5h5BzR1wvPq3wZ2Q5YzY.OwJkLmN8Q7PqR5sT8uVwXyZ3A4B6C7D8E9F0"
+                  value: "$2a$10$ZMF5MsB9EO3UCHWXLtcLUur9LuqEUhmTxFCdKC.leTLxHCi4EhYg6"
               - column:
                   name: active
                   valueBoolean: true

@@ -11,6 +11,7 @@ public interface TransactionMapper {
     @Mapping(target = "accountId", source = "account.id")
     @Mapping(target = "accountName", source = "account.name")
     @Mapping(target = "categoryName", source = "category.name")
+    @Mapping(source = "type", target = "type")
     @Mapping(source = "account.currency", target = "accountCurrency")
     @Mapping(source = "category.id", target = "categoryId")
     TransactionDto toDto(Transaction transaction);
