@@ -122,7 +122,8 @@ public class CategoryController {
                                  @RequestParam String name,
                                  RedirectAttributes redirectAttributes) {
         try {
-            categoryService.updateCategory(id, name);
+            Long currentUserId = SecurityUtil.getCurrentUserId();
+            categoryService.updateCategory(id, name, currentUserId);
             redirectAttributes.addFlashAttribute("success", "Категория обновлена");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -142,7 +143,8 @@ public class CategoryController {
     public String deleteCategory(@PathVariable Long id,
                                  RedirectAttributes redirectAttributes) {
         try {
-            categoryService.deleteCategory(id);
+            Long currentUserId = SecurityUtil.getCurrentUserId();
+            categoryService.deleteCategory(id, currentUserId);
             redirectAttributes.addFlashAttribute("success", "Категория удалена");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());

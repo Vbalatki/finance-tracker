@@ -1,6 +1,5 @@
 package com.finance.finance_tracker.dto;
 
-
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -17,4 +16,7 @@ public class CategoryDto {
     private int transactionsCount;
 
     private Long userId;
+
+    // true для стандартных категорий — видны всем, недоступны для редактирования/удаления.
+    private boolean defaultCategory;
 }

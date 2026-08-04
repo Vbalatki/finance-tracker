@@ -1,0 +1,86 @@
+databaseChangeLog:
+  - changeSet:
+      id: 22
+      author: dmitriy-sidorov
+      comment: >
+        Разрешает NULL в categories.user_id — категория с user_id = NULL
+        считается стандартной: видна всем пользователям на чтение,
+        не может быть изменена/удалена через обычный CRUD.
+      changes:
+        - dropNotNullConstraint:
+            schemaName: finance_tracker
+            tableName: categories
+            columnName: user_id
+            columnDataType: BIGINT
+
+  - changeSet:
+      id: 23
+      author: dmitriy-sidorov
+      comment: >
+        Уникальность имени среди стандартных категорий. Обычный
+        UNIQUE(name, user_id) не подходит — Postgres не считает два NULL
+        равными, так что compound-constraint не поймал бы дубликат двух
+        стандартных категорий с одинаковым именем.
+      changes:
+        - sql:
+            sql: >
+              CREATE UNIQUE INDEX uk_categories_default_name
+              ON finance_tracker.categories (name)
+              WHERE user_id IS NULL;
+            dbms: postgresql
+
+  - changeSet:
+      id: 24
+      author: dmitriy-sidorov
+      comment: Стандартные категории, доступные всем пользователям.
+      changes:
+        - insert:
+            schemaName: finance_tracker
+            tableName: categories
+            columns:
+              - column: {name: name, value: Продукты}
+        - insert:
+            schemaName: finance_tracker
+            tableName: categories
+            columns:
+              - column: {name: name, value: Транспорт}
+        - insert:
+            schemaName: finance_tracker
+            tableName: categories
+            columns:
+              - column: {name: name, value: Жильё и ЖКХ}
+        - insert:
+            schemaName: finance_tracker
+            tableName: categories
+            columns:
+              - column: {name: name, value: Здоровье}
+        - insert:
+            schemaName: finance_tracker
+            tableName: categories
+            columns:
+              - column: {name: name, value: Развлечения}
+        - insert:
+            schemaName: finance_tracker
+            tableName: categories
+            columns:
+              - column: {name: name, value: Одежда}
+        - insert:
+            schemaName: finance_tracker
+            tableName: categories
+            columns:
+              - column: {name: name, value: Подписки}
+        - insert:
+            schemaName: finance_tracker
+            tableName: categories
+            columns:
+              - column: {name: name, value: Образование}
+        - insert:
+            schemaName: finance_tracker
+            tableName: categories
+            columns:
+              - column: {name: name, value: Зарплата}
+        - insert:
+            schemaName: finance_tracker
+            tableName: categories
+            columns:
+              - column: {name: name, value: Прочее}

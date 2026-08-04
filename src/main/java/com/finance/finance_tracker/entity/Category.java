@@ -12,6 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,7 +27,7 @@ import static com.finance.finance_tracker.util.DataConstants.LENGTH_255;
 @Entity
 @Table(name = "categories", schema = "finance_tracker",
         uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"name", "user_id"})})
+                @UniqueConstraint(columnNames = {"name", "user_id"})})
 @NoArgsConstructor
 @AllArgsConstructor
 public class Category {
@@ -38,15 +39,20 @@ public class Category {
     @Column(name = "name", nullable = false, length = LENGTH_255)
     private String name;
 
-    @OneToMany(mappedBy = "category")
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     private List<Transaction> transactions = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
-    @OneToOne(mappedBy = "category", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToOne(mappedBy = "category", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private Budget budget;
+
+    @Transient
+    public boolean isDefaultCategory() {
+        return user == null;
+    }
 
     @Override
     public boolean equals(Object o) {

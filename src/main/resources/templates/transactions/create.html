@@ -147,6 +147,15 @@
     if (symbolSpan) symbolSpan.innerText = currencySymbol;
   }
 
+  const categorySelect = document.getElementById('categoryId');
+  if (categorySelect && typeof Choices !== 'undefined') {
+    new Choices(categorySelect, {
+      searchEnabled: true,
+      itemSelectText: '',
+      shouldSort: false
+    });
+  }
+
   function getCurrencySymbol(currencyCode) {
     switch(currencyCode) {
       case 'RUB': return '₽';

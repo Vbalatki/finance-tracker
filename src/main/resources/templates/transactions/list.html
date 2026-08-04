@@ -331,7 +331,15 @@
         // ========== РЕДАКТИРОВАНИЕ ТРАНЗАКЦИИ ==========
         const editModal = document.getElementById('transactionEditModal');
         const editForm = document.getElementById('editTransactionForm');
-
+        let editCategoryChoices;
+        const editCategorySelect = document.getElementById('editCategoryId');
+        if (editCategorySelect && typeof Choices !== 'undefined') {
+            editCategoryChoices = new Choices(editCategorySelect, {
+                searchEnabled: true,
+                itemSelectText: '',
+                shouldSort: false
+            });
+        }
         if (editModal && editForm) {
             editModal.addEventListener('show.bs.modal', function(event) {
                 const button = event.relatedTarget;
@@ -356,7 +364,11 @@
                         document.getElementById('editType').value = data.type;
                         document.getElementById('editAmount').value = data.amount;
                         document.getElementById('editAccountId').value = data.accountId;
-                        document.getElementById('editCategoryId').value = data.categoryId || '';
+                        if (editCategoryChoices) {
+                            editCategoryChoices.setChoiceByValue(String(data.categoryId || ''));
+                        } else {
+                            document.getElementById('editCategoryId').value = data.categoryId || '';
+                        }
                         document.getElementById('editDescription').value = data.description || '';
                     })
                     .catch(error => console.error('Ошибка загрузки транзакции:', error));

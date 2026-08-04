@@ -51,6 +51,8 @@ docker compose up -d --build
 | `ivan@example.com` | `password` | Администратор |
 | `maria@example.com` | `password` | Пользователь |
 
+Тестовый счет для песочницы ТБанк - 40702810510000710417 
+
 > **Порт 5432 занят чем-то ещё?** Частая проблема на Windows — нативно установленный Postgres-сервис перехватывает `127.0.0.1:5432` раньше, чем Docker успевает пробросить порт контейнера, из-за чего Liquibase падает с ошибкой авторизации, даже если креды в `.env` верные. Проверьте `netstat -ano | findstr :5432` (Windows) — если listener не один, либо остановите нативную службу, либо разведите порты (например, `5433:5432` в `docker-compose.yml` + `DB_PORT=5433` в `.env`).
 
 > **"Error response from daemon: network ... not found" при запуске compose с несколькими `-f`?** Осиротевшая Docker-сеть от предыдущего неполного `down` или смешивания разных вариантов запуска (`docker compose up -d postgres` отдельно, потом полный стек с `-f`). Чинится через `docker compose -f docker-compose.yml -f docker-compose.monitoring.yml down`, при необходимости — `docker network prune -f`, и запуск заново. Держите одну и ту же команду запуска постоянно, не чередуйте варианты без промежуточного `down`.

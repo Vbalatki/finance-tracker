@@ -1,6 +1,7 @@
 package com.finance.finance_tracker.service.Impl;
 
 import com.finance.finance_tracker.dto.CategoryDto;
+import com.finance.finance_tracker.exception.AccessDeniedException;
 import com.finance.finance_tracker.exception.DuplicateEntityException;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
 import com.finance.finance_tracker.exception.InvalidDataException;
@@ -19,6 +20,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.finance.finance_tracker.util.DataConstants.CANNOT_DELETE_CATEGORY;
+import static com.finance.finance_tracker.util.DataConstants.CANNOT_DELETE_DEFAULT_CATEGORY;
+import static com.finance.finance_tracker.util.DataConstants.CANNOT_MODIFY_DEFAULT_CATEGORY;
 import static com.finance.finance_tracker.util.DataConstants.CATEGORY_NAME_BLANK;
 import static com.finance.finance_tracker.util.DataConstants.CATEGORY_NAME_EXISTS;
 import static com.finance.finance_tracker.util.DataConstants.CATEGORY_NOT_FOUND;
@@ -32,7 +35,6 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
     private final UserRepository userRepository;
-
 
     @Override
     @Transactional
@@ -49,7 +51,7 @@ public class CategoryServiceImpl implements CategoryService {
                     return new EntityNotFoundException(USER_NOT_FOUND + ", id: " + dto.getUserId());
                 });
 
-        if (categoryRepository.existsByNameAndUserId(dto.getName(), dto.getUserId())) {
+        if (categoryRepository.existsByNameVisibleToUser(dto.getName(), dto.getUserId())) {
             log.warn("Попытка создать дубликат категории: name={}, userId={}", dto.getName(), dto.getUserId());
             throw new DuplicateEntityException(CATEGORY_NAME_EXISTS + ": " + dto.getName());
         }
@@ -82,9 +84,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional(readOnly = true)
     public List<CategoryDto> getAllCategoriesByUserId(Long userId) {
-        log.debug("Запрос всех категорий");
+        log.debug("Запрос категорий, видимых пользователю: userId={}", userId);
 
-        List<Category> categories = categoryRepository.findByUserIdOrderByIdAsc(userId);
+        List<Category> categories = categoryRepository.findVisibleToUserOrderByIdAsc(userId);
 
         log.debug("Найдено категорий: {}", categories.size());
 
@@ -95,8 +97,8 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
-    public void updateCategory(Long id, String name) {
-        log.debug("Обновление категории: id={}, newName={}", id, name);
+    public void updateCategory(Long id, String name, Long currentUserId) {
+        log.debug("Обновление категории: id={}, newName={}, currentUserId={}", id, name, currentUserId);
 
         if (name == null || name.isBlank()) {
             throw new InvalidDataException(CATEGORY_NAME_BLANK);
@@ -108,9 +110,24 @@ public class CategoryServiceImpl implements CategoryService {
                     return new EntityNotFoundException(CATEGORY_NOT_FOUND + ", id: " + id);
                 });
 
+        // Стандартную категорию проверяем ДО владения — иначе
+        // category.getUser().getId() ниже бросил бы NullPointerException.
+        if (category.isDefaultCategory()) {
+            log.warn("Попытка изменить стандартную категорию: id={}, name={}", id, category.getName());
+            throw new InvalidDataException(CANNOT_MODIFY_DEFAULT_CATEGORY);
+        }
+
+        // ИСПРАВЛЕНО: раньше здесь не было проверки владения — любой
+        // аутентифицированный пользователь мог переименовать чужую
+        // категорию по id (IDOR).
+        if (!category.getUser().getId().equals(currentUserId)) {
+            log.warn("Попытка изменить чужую категорию: id={}, currentUserId={}, ownerId={}",
+                    id, currentUserId, category.getUser().getId());
+            throw new AccessDeniedException("Нет доступа к этой категории");
+        }
+
         if (!category.getName().equals(name)) {
-            Long userId = category.getUser().getId();
-            if (categoryRepository.existsByNameAndUserId(name, userId)) {
+            if (categoryRepository.existsByNameVisibleToUser(name, currentUserId)) {
                 log.warn("Попытка обновить категорию на уже существующее имя: id={}, name={}", id, name);
                 throw new DuplicateEntityException(CATEGORY_NAME_EXISTS + ": " + name);
             }
@@ -123,15 +140,27 @@ public class CategoryServiceImpl implements CategoryService {
         log.info("Обновлена категория: id={}, oldName={}, newName={}", id, oldName, name);
     }
 
+    @Override
     @Transactional
-    public void deleteCategory(Long id) {
-        log.debug("Удаление категории: id={}", id);
+    public void deleteCategory(Long id, Long currentUserId) {
+        log.debug("Удаление категории: id={}, currentUserId={}", id, currentUserId);
 
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> {
                     log.error("Категория не найдена при удалении: id={}", id);
                     return new EntityNotFoundException(CATEGORY_NOT_FOUND + ", id: " + id);
                 });
+
+        if (category.isDefaultCategory()) {
+            log.warn("Попытка удалить стандартную категорию: id={}, name={}", id, category.getName());
+            throw new InvalidDataException(CANNOT_DELETE_DEFAULT_CATEGORY);
+        }
+
+        if (!category.getUser().getId().equals(currentUserId)) {
+            log.warn("Попытка удалить чужую категорию: id={}, currentUserId={}, ownerId={}",
+                    id, currentUserId, category.getUser().getId());
+            throw new AccessDeniedException("Нет доступа к этой категории");
+        }
 
         if (category.getTransactions() != null && !category.getTransactions().isEmpty()) {
             log.warn("Попытка удалить категорию с транзакциями: id={}, transactionsCount={}",

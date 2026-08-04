@@ -43,5 +43,18 @@
 </div>
 
 <div th:replace="~{layout/footer :: footer}"></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const categorySelect = document.getElementById('categoryId');
+        if (categorySelect && typeof Choices !== 'undefined') {
+            new Choices(categorySelect, {
+                searchEnabled: true,
+                itemSelectText: '',
+                shouldSort: false
+            });
+        }
+    });
+</script>
 </body>
 </html>

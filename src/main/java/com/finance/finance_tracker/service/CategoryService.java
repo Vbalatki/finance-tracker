@@ -5,63 +5,60 @@ import com.finance.finance_tracker.dto.CategoryDto;
 import java.util.List;
 
 /**
- * Управление категориями транзакций (например, "Продукты", "Транспорт").
- * Имя категории уникально в пределах одного пользователя.
+ * Управление категориями транзакций. Категория либо стандартная
+ * (доступна всем пользователям на чтение, неизменяема), либо
+ * пользовательская (принадлежит конкретному пользователю, полный CRUD
+ * для владельца). Имя категории уникально в пределах видимости
+ * пользователя (свои + стандартные), не только среди своих.
  */
 public interface CategoryService {
 
     /**
-     * Создаёт новую категорию.
+     * Создаёт новую пользовательскую категорию.
      *
      * @param dto данные категории, {@code dto.userId} обязателен
      * @return созданная категория
      * @throws com.finance.finance_tracker.exception.InvalidDataException если имя пустое
      * @throws com.finance.finance_tracker.exception.EntityNotFoundException если пользователь не найден
-     * @throws com.finance.finance_tracker.exception.DuplicateEntityException если у пользователя уже есть категория с таким именем
+     * @throws com.finance.finance_tracker.exception.DuplicateEntityException если имя уже занято своей или стандартной категорией
      */
     CategoryDto saveCategory(CategoryDto dto);
 
     /**
      * Возвращает категорию по id.
      *
-     * @param id id категории
-     * @return dto категории
      * @throws com.finance.finance_tracker.exception.EntityNotFoundException если категория не найдена
      */
     CategoryDto getCategoryById(Long id);
 
     /**
-     * Возвращает все категории системы, без фильтрации по пользователю.
-     *
-     * <p><b>Внимание:</b> этот метод отдаёт категории всех пользователей,
-     * а не только текущего — при использовании в контроллерах, доступных
-     * рядовому пользователю, это приводит к утечке чужих категорий в UI.
-     * В {@link com.finance.finance_tracker.service.Impl.CategoryServiceImpl}
-     * есть метод {@code getUserCategories(Long)} для категорий конкретного
-     * пользователя, но он не объявлен в этом интерфейсе и в контроллерах
-     * сейчас не используется.
-     *
-     * @return список всех категорий, отсортированный по id
+     * Возвращает категории, видимые пользователю: его собственные плюс
+     * все стандартные.
      */
     List<CategoryDto> getAllCategoriesByUserId(Long userId);
 
     /**
-     * Переименовывает категорию.
+     * Переименовывает пользовательскую категорию.
      *
-     * @param id   id категории
-     * @param name новое имя
-     * @throws com.finance.finance_tracker.exception.InvalidDataException если имя пустое
+     * @param id            id категории
+     * @param name          новое имя
+     * @param currentUserId id текущего аутентифицированного пользователя — проверяется владение
+     * @throws com.finance.finance_tracker.exception.InvalidDataException если имя пустое или категория стандартная
+     * @throws com.finance.finance_tracker.exception.AccessDeniedException если категория принадлежит другому пользователю
      * @throws com.finance.finance_tracker.exception.EntityNotFoundException если категория не найдена
-     * @throws com.finance.finance_tracker.exception.DuplicateEntityException если новое имя уже занято другой категорией того же пользователя
+     * @throws com.finance.finance_tracker.exception.DuplicateEntityException если новое имя уже занято
      */
-    void updateCategory(Long id, String name);
+    void updateCategory(Long id, String name, Long currentUserId);
 
     /**
-     * Удаляет категорию. Категорию с уже привязанными транзакциями удалить нельзя.
+     * Удаляет пользовательскую категорию. Категорию с уже привязанными
+     * транзакциями или стандартную категорию удалить нельзя.
      *
-     * @param id id категории
+     * @param id            id категории
+     * @param currentUserId id текущего аутентифицированного пользователя — проверяется владение
+     * @throws com.finance.finance_tracker.exception.InvalidDataException если категория стандартная или есть связанные транзакции
+     * @throws com.finance.finance_tracker.exception.AccessDeniedException если категория принадлежит другому пользователю
      * @throws com.finance.finance_tracker.exception.EntityNotFoundException если категория не найдена
-     * @throws com.finance.finance_tracker.exception.InvalidDataException если у категории есть связанные транзакции
      */
-    void deleteCategory(Long id);
+    void deleteCategory(Long id, Long currentUserId);
 }

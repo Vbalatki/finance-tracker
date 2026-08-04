@@ -34,4 +34,6 @@ public class DataConstants {
     public static final String INCORRECT_CURRENT_PASSWORD = "Текущий пароль введён неверно";
     public static final String PASSWORD_TOO_SHORT = "Пароль должен содержать минимум 8 символов";
     public static final String MIN_PASSWORD_LENGTH = "8";
+    public static final String CANNOT_MODIFY_DEFAULT_CATEGORY = "Нельзя изменить стандартную категорию";
+    public static final String CANNOT_DELETE_DEFAULT_CATEGORY = "Нельзя удалить стандартную категорию";
 }

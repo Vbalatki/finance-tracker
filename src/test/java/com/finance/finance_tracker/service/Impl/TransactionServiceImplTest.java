@@ -78,6 +78,14 @@ class TransactionServiceImplTest {
         @DisplayName("поступление увеличивает баланс счёта")
         void saveTransaction_income_increasesBalance() {
             when(accountRepository.findById(10L)).thenReturn(Optional.of(account));
+            when(transactionMapper.toEntity(any(TransactionDto.class))).thenAnswer(inv -> {
+                TransactionDto d = inv.getArgument(0);
+                Transaction t = new Transaction();
+                t.setAmount(d.getAmount());
+                t.setType(d.getType());
+                t.setDescription(d.getDescription());
+                return t;
+            });
             when(transactionRepository.save(any(Transaction.class)))
                     .thenAnswer(inv -> inv.getArgument(0));
             when(transactionMapper.toDto(any(Transaction.class))).thenReturn(transactionDto);
@@ -93,6 +101,14 @@ class TransactionServiceImplTest {
         void saveTransaction_expense_decreasesBalance() {
             transactionDto.setType(TransactionType.EXPENSE);
             when(accountRepository.findById(10L)).thenReturn(Optional.of(account));
+            when(transactionMapper.toEntity(any(TransactionDto.class))).thenAnswer(inv -> {
+                TransactionDto d = inv.getArgument(0);
+                Transaction t = new Transaction();
+                t.setAmount(d.getAmount());
+                t.setType(d.getType());
+                t.setDescription(d.getDescription());
+                return t;
+            });
             when(transactionRepository.save(any(Transaction.class)))
                     .thenAnswer(inv -> inv.getArgument(0));
             when(transactionMapper.toDto(any(Transaction.class))).thenReturn(transactionDto);
@@ -112,6 +128,14 @@ class TransactionServiceImplTest {
 
             when(accountRepository.findById(10L)).thenReturn(Optional.of(account));
             when(categoryRepository.findById(5L)).thenReturn(Optional.of(category));
+            when(transactionMapper.toEntity(any(TransactionDto.class))).thenAnswer(inv -> {
+                TransactionDto d = inv.getArgument(0);
+                Transaction t = new Transaction();
+                t.setAmount(d.getAmount());
+                t.setType(d.getType());
+                t.setDescription(d.getDescription());
+                return t;
+            });
             when(transactionRepository.save(any(Transaction.class))).thenAnswer(inv -> {
                 Transaction t = inv.getArgument(0);
                 assertThat(t.getCategory()).isEqualTo(category);

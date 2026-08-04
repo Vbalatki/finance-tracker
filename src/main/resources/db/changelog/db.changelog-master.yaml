@@ -13,3 +13,5 @@ databaseChangeLog:
       file: db/changelog/changelog/V5__add_account_version.yaml
   - include:
       file: db/changelog/changelog/V6__add_bank_integration.yaml
+  - include:
+      file: db/changelog/changelog/V7__default_categories.yaml

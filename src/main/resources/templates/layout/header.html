@@ -55,7 +55,13 @@
                         <ul class="dropdown-menu dropdown-menu-end" th:if="${auth != null and auth.authenticated}">
                             <li><a class="dropdown-item" href="/profile"><i class="bi bi-person"></i> Профиль</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right"></i> Выход</a></li>
+                            <li>
+                                <form th:action="@{/logout}" method="post" class="d-inline">
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="bi bi-box-arrow-right"></i> Выход
+                                    </button>
+                                </form>
+                            </li>
                         </ul>
                     </li>
                 </ul>

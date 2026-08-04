@@ -149,14 +149,14 @@ class CategoryControllerTest {
                 .andExpect(redirectedUrl("/categories"))
                 .andExpect(flash().attributeExists("success"));
 
-        verify(categoryService).updateCategory(5L, "Новое имя");
+        verify(categoryService).updateCategory(5L, "Новое имя", 1L);
     }
 
     @Test
     @DisplayName("POST /categories/{id}/edit при ошибке сервиса пишет flash-ошибку")
     void updateCategory_serviceThrows_setsFlashError() throws Exception {
         doThrow(new RuntimeException("Категория не найдена"))
-                .when(categoryService).updateCategory(404L, "Имя");
+                .when(categoryService).updateCategory(404L, "Имя", 1L);
 
         mockMvc.perform(post("/categories/404/edit").param("name", "Имя"))
                 .andExpect(status().is3xxRedirection())
@@ -171,14 +171,14 @@ class CategoryControllerTest {
                 .andExpect(redirectedUrl("/categories"))
                 .andExpect(flash().attributeExists("success"));
 
-        verify(categoryService).deleteCategory(5L);
+        verify(categoryService).deleteCategory(5L, 1L);
     }
 
     @Test
     @DisplayName("POST /categories/{id}/delete при наличии транзакций пишет flash-ошибку")
     void deleteCategory_hasTransactions_setsFlashError() throws Exception {
         doThrow(new RuntimeException("Невозможно удалить категорию"))
-                .when(categoryService).deleteCategory(5L);
+                .when(categoryService).deleteCategory(5L, 1L);
 
         mockMvc.perform(post("/categories/5/delete"))
                 .andExpect(status().is3xxRedirection())

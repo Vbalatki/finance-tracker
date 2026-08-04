@@ -4,6 +4,7 @@ import com.finance.finance_tracker.dto.CategoryDto;
 import com.finance.finance_tracker.entity.Category;
 import com.finance.finance_tracker.entity.Transaction;
 import com.finance.finance_tracker.entity.User;
+import com.finance.finance_tracker.exception.AccessDeniedException;
 import com.finance.finance_tracker.exception.DuplicateEntityException;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
 import com.finance.finance_tracker.exception.InvalidDataException;
@@ -30,9 +31,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * Unit-тесты для {@link CategoryServiceImpl}.
- */
 @ExtendWith(MockitoExtension.class)
 class CategoryServiceImplTest {
 
@@ -70,17 +68,16 @@ class CategoryServiceImplTest {
     class SaveCategory {
 
         @Test
-        @DisplayName("создаёт категорию, когда имя уникально для пользователя")
+        @DisplayName("создаёт категорию, когда имя уникально среди своих и стандартных")
         void saveCategory_success() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(categoryRepository.existsByNameAndUserId("Продукты", 1L)).thenReturn(false);
+            when(categoryRepository.existsByNameVisibleToUser("Продукты", 1L)).thenReturn(false);
             when(categoryRepository.save(any(Category.class))).thenReturn(category);
             when(categoryMapper.toDto(category)).thenReturn(categoryDto);
 
             CategoryDto result = categoryService.saveCategory(categoryDto);
 
             assertThat(result).isEqualTo(categoryDto);
-
             ArgumentCaptor<Category> captor = ArgumentCaptor.forClass(Category.class);
             verify(categoryRepository).save(captor.capture());
             assertThat(captor.getValue().getName()).isEqualTo("Продукты");
@@ -92,7 +89,7 @@ class CategoryServiceImplTest {
         void saveCategory_trimsName() {
             categoryDto.setName("  Продукты  ");
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(categoryRepository.existsByNameAndUserId("  Продукты  ", 1L)).thenReturn(false);
+            when(categoryRepository.existsByNameVisibleToUser("  Продукты  ", 1L)).thenReturn(false);
             when(categoryRepository.save(any(Category.class))).thenReturn(category);
             when(categoryMapper.toDto(category)).thenReturn(categoryDto);
 
@@ -129,10 +126,10 @@ class CategoryServiceImplTest {
         }
 
         @Test
-        @DisplayName("бросает DuplicateEntityException, если категория с таким именем уже есть")
+        @DisplayName("бросает DuplicateEntityException, если имя уже занято (своей или стандартной категорией)")
         void saveCategory_duplicate_throws() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(categoryRepository.existsByNameAndUserId("Продукты", 1L)).thenReturn(true);
+            when(categoryRepository.existsByNameVisibleToUser("Продукты", 1L)).thenReturn(true);
 
             assertThrows(DuplicateEntityException.class, () -> categoryService.saveCategory(categoryDto));
             verify(categoryRepository, never()).save(any());
@@ -140,35 +137,27 @@ class CategoryServiceImplTest {
     }
 
     @Nested
-    @DisplayName("getCategoryById / getAllCategoriesByUserId")
-    class GetCategories {
+    @DisplayName("getAllCategoriesByUserId")
+    class GetAllCategoriesByUserId {
 
         @Test
-        @DisplayName("возвращает категорию по id")
-        void getCategoryById_success() {
-            when(categoryRepository.findById(5L)).thenReturn(Optional.of(category));
+        @DisplayName("возвращает и собственные, и стандартные категории")
+        void getAllCategoriesByUserId_returnsOwnAndDefault() {
+            Category defaultCategory = new Category();
+            defaultCategory.setId(1L);
+            defaultCategory.setName("Транспорт");
+            // user не установлен -> null -> стандартная
+
+            when(categoryRepository.findVisibleToUserOrderByIdAsc(1L))
+                    .thenReturn(List.of(category, defaultCategory));
             when(categoryMapper.toDto(category)).thenReturn(categoryDto);
-
-            assertThat(categoryService.getCategoryById(5L)).isEqualTo(categoryDto);
-        }
-
-        @Test
-        @DisplayName("бросает EntityNotFoundException, если категория не найдена")
-        void getCategoryById_notFound_throws() {
-            when(categoryRepository.findById(404L)).thenReturn(Optional.empty());
-
-            assertThrows(EntityNotFoundException.class, () -> categoryService.getCategoryById(404L));
-        }
-
-        @Test
-        @DisplayName("возвращает все категории (без фильтра по пользователю)")
-        void getAllCategoriesByUserId_returnsAll() {
-            when(categoryRepository.findByUserIdOrderByIdAsc(1L)).thenReturn(List.of(category));
-            when(categoryMapper.toDto(category)).thenReturn(categoryDto);
+            CategoryDto defaultDto = new CategoryDto();
+            defaultDto.setDefaultCategory(true);
+            when(categoryMapper.toDto(defaultCategory)).thenReturn(defaultDto);
 
             List<CategoryDto> result = categoryService.getAllCategoriesByUserId(1L);
 
-            assertThat(result).containsExactly(categoryDto);
+            assertThat(result).hasSize(2);
         }
     }
 
@@ -177,13 +166,13 @@ class CategoryServiceImplTest {
     class UpdateCategory {
 
         @Test
-        @DisplayName("обновляет название категории")
+        @DisplayName("обновляет название категории её владельцем")
         void updateCategory_success() {
             when(categoryRepository.findById(5L)).thenReturn(Optional.of(category));
-            when(categoryRepository.existsByNameAndUserId("Новое имя", 1L)).thenReturn(false);
+            when(categoryRepository.existsByNameVisibleToUser("Новое имя", 1L)).thenReturn(false);
             when(categoryRepository.save(any(Category.class))).thenReturn(category);
 
-            categoryService.updateCategory(5L, "Новое имя");
+            categoryService.updateCategory(5L, "Новое имя", 1L);
 
             assertThat(category.getName()).isEqualTo("Новое имя");
         }
@@ -194,15 +183,15 @@ class CategoryServiceImplTest {
             when(categoryRepository.findById(5L)).thenReturn(Optional.of(category));
             when(categoryRepository.save(any(Category.class))).thenReturn(category);
 
-            categoryService.updateCategory(5L, "Продукты");
+            categoryService.updateCategory(5L, "Продукты", 1L);
 
-            verify(categoryRepository, never()).existsByNameAndUserId(any(), any());
+            verify(categoryRepository, never()).existsByNameVisibleToUser(any(), any());
         }
 
         @Test
         @DisplayName("бросает InvalidDataException для пустого имени")
         void updateCategory_blankName_throws() {
-            assertThrows(InvalidDataException.class, () -> categoryService.updateCategory(5L, "  "));
+            assertThrows(InvalidDataException.class, () -> categoryService.updateCategory(5L, "  ", 1L));
             verify(categoryRepository, never()).findById(any());
         }
 
@@ -211,16 +200,42 @@ class CategoryServiceImplTest {
         void updateCategory_notFound_throws() {
             when(categoryRepository.findById(404L)).thenReturn(Optional.empty());
 
-            assertThrows(EntityNotFoundException.class, () -> categoryService.updateCategory(404L, "Имя"));
+            assertThrows(EntityNotFoundException.class, () -> categoryService.updateCategory(404L, "Имя", 1L));
         }
 
         @Test
         @DisplayName("бросает DuplicateEntityException при переименовании на занятое имя")
         void updateCategory_duplicateName_throws() {
             when(categoryRepository.findById(5L)).thenReturn(Optional.of(category));
-            when(categoryRepository.existsByNameAndUserId("Занятое имя", 1L)).thenReturn(true);
+            when(categoryRepository.existsByNameVisibleToUser("Занятое имя", 1L)).thenReturn(true);
 
-            assertThrows(DuplicateEntityException.class, () -> categoryService.updateCategory(5L, "Занятое имя"));
+            assertThrows(DuplicateEntityException.class, () -> categoryService.updateCategory(5L, "Занятое имя", 1L));
+            verify(categoryRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("бросает InvalidDataException при попытке изменить стандартную категорию")
+        void updateCategory_defaultCategory_throws() {
+            Category defaultCategory = new Category();
+            defaultCategory.setId(2L);
+            defaultCategory.setName("Транспорт");
+
+            when(categoryRepository.findById(2L)).thenReturn(Optional.of(defaultCategory));
+
+            assertThrows(InvalidDataException.class, () -> categoryService.updateCategory(2L, "Новое имя", 1L));
+            verify(categoryRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("бросает AccessDeniedException при попытке изменить чужую категорию")
+        void updateCategory_notOwner_throws() {
+            User otherUser = new User();
+            otherUser.setId(999L);
+            category.setUser(otherUser);
+
+            when(categoryRepository.findById(5L)).thenReturn(Optional.of(category));
+
+            assertThrows(AccessDeniedException.class, () -> categoryService.updateCategory(5L, "Новое имя", 1L));
             verify(categoryRepository, never()).save(any());
         }
     }
@@ -230,11 +245,11 @@ class CategoryServiceImplTest {
     class DeleteCategory {
 
         @Test
-        @DisplayName("удаляет категорию без транзакций")
+        @DisplayName("удаляет категорию без транзакций её владельцем")
         void deleteCategory_success() {
             when(categoryRepository.findById(5L)).thenReturn(Optional.of(category));
 
-            categoryService.deleteCategory(5L);
+            categoryService.deleteCategory(5L, 1L);
 
             verify(categoryRepository).delete(category);
         }
@@ -244,7 +259,7 @@ class CategoryServiceImplTest {
         void deleteCategory_notFound_throws() {
             when(categoryRepository.findById(404L)).thenReturn(Optional.empty());
 
-            assertThrows(EntityNotFoundException.class, () -> categoryService.deleteCategory(404L));
+            assertThrows(EntityNotFoundException.class, () -> categoryService.deleteCategory(404L, 1L));
         }
 
         @Test
@@ -253,7 +268,33 @@ class CategoryServiceImplTest {
             category.setTransactions(List.of(new Transaction()));
             when(categoryRepository.findById(5L)).thenReturn(Optional.of(category));
 
-            assertThrows(InvalidDataException.class, () -> categoryService.deleteCategory(5L));
+            assertThrows(InvalidDataException.class, () -> categoryService.deleteCategory(5L, 1L));
+            verify(categoryRepository, never()).delete(any());
+        }
+
+        @Test
+        @DisplayName("бросает InvalidDataException при попытке удалить стандартную категорию")
+        void deleteCategory_defaultCategory_throws() {
+            Category defaultCategory = new Category();
+            defaultCategory.setId(2L);
+            defaultCategory.setName("Транспорт");
+
+            when(categoryRepository.findById(2L)).thenReturn(Optional.of(defaultCategory));
+
+            assertThrows(InvalidDataException.class, () -> categoryService.deleteCategory(2L, 1L));
+            verify(categoryRepository, never()).delete(any());
+        }
+
+        @Test
+        @DisplayName("бросает AccessDeniedException при попытке удалить чужую категорию")
+        void deleteCategory_notOwner_throws() {
+            User otherUser = new User();
+            otherUser.setId(999L);
+            category.setUser(otherUser);
+
+            when(categoryRepository.findById(5L)).thenReturn(Optional.of(category));
+
+            assertThrows(AccessDeniedException.class, () -> categoryService.deleteCategory(5L, 1L));
             verify(categoryRepository, never()).delete(any());
         }
     }

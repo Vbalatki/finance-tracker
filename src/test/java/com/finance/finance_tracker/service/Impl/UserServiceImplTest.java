@@ -371,8 +371,6 @@ class UserServiceImplTest {
             usdAcc.setBalance(new BigDecimal("10.00"));
             usdAcc.setCurrency(Currency.USD);
 
-            when(currencyApiService.convertCurrency("RUB", "RUB", new BigDecimal("100.00")))
-                    .thenReturn(new BigDecimal("100.00"));
             when(currencyApiService.convertCurrency("USD", "RUB", new BigDecimal("10.00")))
                     .thenReturn(new BigDecimal("900.00"));
 
