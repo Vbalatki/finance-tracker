@@ -1,0 +1,102 @@
+databaseChangeLog:
+  - changeSet:
+      id: 25
+      author: dmitriy-sidorov
+      comment: >
+        Таблица плановых регулярных списаний/поступлений (подписки, аренда,
+        коммуналка, зарплата) — источник данных для проекции будущих дней
+        в календаре трат.
+      changes:
+        - createTable:
+            schemaName: finance_tracker
+            tableName: recurring_commitments
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: category_id
+                  type: BIGINT
+              - column:
+                  name: account_id
+                  type: BIGINT
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: DECIMAL(19, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: type
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: day_of_month
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+
+        - addForeignKeyConstraint:
+            baseTableSchemaName: finance_tracker
+            baseTableName: recurring_commitments
+            baseColumnNames: user_id
+            referencedTableSchemaName: finance_tracker
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_recurring_commitments_user
+            onDelete: CASCADE
+            onUpdate: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableSchemaName: finance_tracker
+            baseTableName: recurring_commitments
+            baseColumnNames: category_id
+            referencedTableSchemaName: finance_tracker
+            referencedTableName: categories
+            referencedColumnNames: id
+            constraintName: fk_recurring_commitments_category
+            onDelete: SET NULL
+            onUpdate: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableSchemaName: finance_tracker
+            baseTableName: recurring_commitments
+            baseColumnNames: account_id
+            referencedTableSchemaName: finance_tracker
+            referencedTableName: accounts
+            referencedColumnNames: id
+            constraintName: fk_recurring_commitments_account
+            onDelete: SET NULL
+            onUpdate: CASCADE
+
+        - createIndex:
+            schemaName: finance_tracker
+            tableName: recurring_commitments
+            indexName: idx_recurring_commitments_user_id
+            columns:
+              - column:
+                  name: user_id

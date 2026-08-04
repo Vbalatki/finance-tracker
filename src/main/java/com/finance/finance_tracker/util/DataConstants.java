@@ -36,4 +36,5 @@ public class DataConstants {
     public static final String MIN_PASSWORD_LENGTH = "8";
     public static final String CANNOT_MODIFY_DEFAULT_CATEGORY = "Нельзя изменить стандартную категорию";
     public static final String CANNOT_DELETE_DEFAULT_CATEGORY = "Нельзя удалить стандартную категорию";
+    public static final String RECURRING_COMMITMENT_NOT_FOUND = "Плановое списание не найдено";
 }

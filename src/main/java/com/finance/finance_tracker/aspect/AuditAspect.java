@@ -31,7 +31,8 @@ public class AuditAspect {
             " || execution(* com.finance.finance_tracker.service.Impl.BudgetServiceImpl.saveBudget(..))" +
             " || execution(* com.finance.finance_tracker.service.Impl.CategoryServiceImpl.saveCategory(..))" +
             " || execution(* com.finance.finance_tracker.service.Impl.TransactionServiceImpl.saveTransaction(..))" +
-            " || execution(* com.finance.finance_tracker.service.Impl.UserServiceImpl.registerUser(..))")
+            " || execution(* com.finance.finance_tracker.service.Impl.UserServiceImpl.registerUser(..))" +
+            " || execution(* com.finance.finance_tracker.service.Impl.RecurringCommitmentServiceImpl.save(..))")
     public void saveMethods() {}
 
     @Pointcut("execution(* com.finance.finance_tracker.service.Impl.AccountServiceImpl.updateAccount(..))" +
@@ -40,14 +41,16 @@ public class AuditAspect {
             " || execution(* com.finance.finance_tracker.service.Impl.BudgetServiceImpl.resetSpending(..))" +
             " || execution(* com.finance.finance_tracker.service.Impl.CategoryServiceImpl.updateCategory(..))" +
             " || execution(* com.finance.finance_tracker.service.Impl.TransactionServiceImpl.updateTransaction(..))" +
-            " || execution(* com.finance.finance_tracker.service.Impl.UserServiceImpl.updateUser(..))")
+            " || execution(* com.finance.finance_tracker.service.Impl.UserServiceImpl.updateUser(..))" +
+            " || execution(* com.finance.finance_tracker.service.Impl.RecurringCommitmentServiceImpl.toggleActive(..))")
     public void updateMethods() {}
 
     @Pointcut("execution(* com.finance.finance_tracker.service.Impl.AccountServiceImpl.deleteAccount(..))" +
             " || execution(* com.finance.finance_tracker.service.Impl.BudgetServiceImpl.deleteBudget(..))" +
             " || execution(* com.finance.finance_tracker.service.Impl.CategoryServiceImpl.deleteCategory(..))" +
             " || execution(* com.finance.finance_tracker.service.Impl.TransactionServiceImpl.deleteTransaction(..))" +
-            " || execution(* com.finance.finance_tracker.service.Impl.UserServiceImpl.deleteUser(..))")
+            " || execution(* com.finance.finance_tracker.service.Impl.UserServiceImpl.deleteUser(..))" +
+            " || execution(* com.finance.finance_tracker.service.Impl.RecurringCommitmentServiceImpl.delete(..))")
     public void deleteMethods() {}
 
     @Pointcut("saveMethods() || updateMethods() || deleteMethods()")

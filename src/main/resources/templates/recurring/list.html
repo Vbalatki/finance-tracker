@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Плановые списания</title>
+    <div th:replace="~{layout/head :: head}"></div>
+</head>
+<body>
+<div th:replace="~{layout/header :: header}"></div>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-arrow-repeat"></i> Плановые списания</h1>
+        <a th:href="@{/templates/recurring/create}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Добавить
+        </a>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Сумма</th>
+                    <th>Тип</th>
+                    <th>День месяца</th>
+                    <th>Категория</th>
+                    <th>Статус</th>
+                    <th>Действия</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="c : ${commitments}">
+                    <td th:text="${c.name}"></td>
+                    <td th:text="${#numbers.formatDecimal(c.amount, 1, 'COMMA', 2, 'POINT') + ' ₽'}"></td>
+                    <td>
+                        <span th:class="${c.type.name() == 'INCOME'} ? 'badge bg-success' : 'badge bg-danger'"
+                              th:text="${c.type.name() == 'INCOME'} ? 'Поступление' : 'Списание'"></span>
+                    </td>
+                    <td th:text="${c.dayOfMonth}"></td>
+                    <td th:text="${c.categoryName ?: '—'}"></td>
+                    <td>
+                        <span th:class="${c.active} ? 'badge bg-primary' : 'badge bg-secondary'"
+                              th:text="${c.active} ? 'Активно' : 'Приостановлено'"></span>
+                    </td>
+                    <td>
+                        <form th:action="@{/templates/recurring/{id}/toggle(id=${c.id})}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                <i th:class="${c.active} ? 'bi bi-pause' : 'bi bi-play'"></i>
+                            </button>
+                        </form>
+                        <form th:action="@{/templates/recurring/{id}/delete(id=${c.id})}" method="post" class="d-inline"
+                              onsubmit="return confirm('Удалить плановое списание?')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${commitments.isEmpty()}">
+                    <td colspan="7" class="text-center text-muted py-4">Плановых списаний нет</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{layout/footer :: footer}"></div>
+</body>
+</html>

@@ -77,6 +77,13 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("monthStart") LocalDateTime monthStart,
             @Param("monthEnd") LocalDateTime monthEnd);
 
+    @Query("SELECT t FROM Transaction t JOIN FETCH t.account a " +
+            "WHERE a.user.id = :userId AND t.createdAt >= :monthStart AND t.createdAt < :monthEnd")
+    List<Transaction> findByUserIdAndCreatedAtBetween(
+            @Param("userId") Long userId,
+            @Param("monthStart") LocalDateTime monthStart,
+            @Param("monthEnd") LocalDateTime monthEnd);
+
 
     boolean existsByExternalSourceAndExternalId(String externalSource, String externalId);
 }
