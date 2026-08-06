@@ -63,7 +63,7 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" th:if="${auth != null and auth.authenticated}">
                             <li><a class="dropdown-item" href="/profile"><i class="bi bi-person"></i> <span th:text="#{nav.profile}">Профиль</span></a></li>
-                            <li><a class="dropdown-item" href="/settings"><i class="bi bi-gear"></i> <span th:text="#{nav.settings}">Настройки</span></a></li>
+                            <li><a class="dropdown-item" href="/profile/settings"><i class="bi bi-gear"></i> <span th:text="#{nav.settings}">Настройки</span></a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form th:action="@{/logout}" method="post" class="d-inline">
