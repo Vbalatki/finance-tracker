@@ -2,6 +2,7 @@ package com.finance.finance_tracker.controller;
 
 import com.finance.finance_tracker.dto.*;
 import com.finance.finance_tracker.service.*;
+import com.finance.finance_tracker.util.CurrencyFormatter;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,6 +24,7 @@ public class MainController {
     private final UserService userService;
     private final AccountService accountService;
     private final TransactionService transactionService;
+    private final CurrencyFormatter currencyFormatter;
 
     /**
      * Корневая страница — просто редиректит дальше в зависимости от
@@ -64,7 +66,9 @@ public class MainController {
 
         List<TransactionDto> recentTransactions = transactionService.findRecentByUserId(userId, 10);
 
-        BigDecimal totalBalance = userService.getUserTotalBalanceInRub(accounts);
+        UserSettingsDto settings = userService.getUserSettings(userId);
+        BigDecimal totalBalance = accountService.getTotalBalanceInCurrency(userId, settings.getDefaultCurrency());
+        model.addAttribute("defaultCurrencySymbol", currencyFormatter.getSymbol(settings.getDefaultCurrency()));
 
         // Добавляем текущий путь для активного меню
         String currentPath = request.getRequestURI();

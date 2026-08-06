@@ -22,14 +22,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
-/**
- * Thymeleaf-контроллер для страниц управления категориями транзакций.
- *
- * <p><b>Внимание:</b> {@link #categoriesPage} показывает категории
- * {@link CategoryService#getAllCategories() всех пользователей}, а не
- * только текущего — это утечка чужих данных в UI, унаследованная от
- * реализации сервиса (см. Javadoc {@link CategoryService#getAllCategories()}).
- */
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/categories")

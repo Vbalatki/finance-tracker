@@ -1,7 +1,6 @@
 /* Основные стили */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f8f9fa;
 }
 
 .navbar {
@@ -16,7 +15,6 @@ body {
 
 .card-header {
     font-weight: 600;
-    border-bottom: 1px solid #e9ecef;
 }
 
 .table th {

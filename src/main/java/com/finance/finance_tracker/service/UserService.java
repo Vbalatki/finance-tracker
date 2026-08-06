@@ -3,6 +3,7 @@ package com.finance.finance_tracker.service;
 import com.finance.finance_tracker.dto.AccountDto;
 import com.finance.finance_tracker.dto.TransactionDto;
 import com.finance.finance_tracker.dto.UserDto;
+import com.finance.finance_tracker.dto.UserSettingsDto;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -156,4 +157,18 @@ public interface UserService {
      * @return суммарный расход в рублях
      */
     BigDecimal getUserTotalExpenseInRub(List<TransactionDto> list);
+
+    /**
+     * Возвращает текущие настройки пользователя.
+     *
+     * @throws com.finance.finance_tracker.exception.EntityNotFoundException если пользователь не найден
+     */
+    UserSettingsDto getUserSettings(Long userId);
+
+    /**
+     * Обновляет настройки пользователя.
+     *
+     * @throws com.finance.finance_tracker.exception.EntityNotFoundException если пользователь не найден
+     */
+    void updateUserSettings(Long userId, UserSettingsDto dto);
 }

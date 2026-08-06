@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: 26
+      author: dmitriy-sidorov
+      comment: >
+        Настройки пользователя: тема оформления, основная валюта для
+        агрегированных сумм, язык интерфейса.
+      changes:
+        - addColumn:
+            schemaName: finance_tracker
+            tableName: users
+            columns:
+              - column:
+                  name: theme
+                  type: VARCHAR(10)
+                  defaultValue: LIGHT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: default_currency
+                  type: VARCHAR(10)
+                  defaultValue: RUB
+                  constraints:
+                    nullable: false
+              - column:
+                  name: locale
+                  type: VARCHAR(5)
+                  defaultValue: ru
+                  constraints:
+                    nullable: false

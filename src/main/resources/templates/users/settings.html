@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="#{settings.title}">Настройки</title>
+    <div th:replace="~{layout/head :: head}"></div>
+</head>
+<body>
+<div th:replace="~{layout/header :: header}"></div>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h4 th:text="#{settings.title}">Настройки</h4>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/settings}" th:object="${settingsDto}" method="post">
+
+                        <div class="mb-4">
+                            <label class="form-label" th:text="#{settings.theme}">Тема оформления</label>
+                            <div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" th:field="*{theme}"
+                                           id="themeLight" value="LIGHT">
+                                    <label class="form-check-label" for="themeLight" th:text="#{settings.theme.light}">Светлая</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" th:field="*{theme}"
+                                           id="themeDark" value="DARK">
+                                    <label class="form-check-label" for="themeDark" th:text="#{settings.theme.dark}">Тёмная</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="defaultCurrency" class="form-label" th:text="#{settings.currency}">Основная валюта</label>
+                            <select class="form-select" id="defaultCurrency" th:field="*{defaultCurrency}">
+                                <option th:each="c : ${currencies}" th:value="${c}" th:text="${c}"></option>
+                            </select>
+                            <div class="form-text">Используется для отображения общего баланса на дашборде</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="locale" class="form-label" th:text="#{settings.locale}">Язык интерфейса</label>
+                            <select class="form-select" id="locale" th:field="*{locale}">
+                                <option value="ru">Русский</option>
+                                <option value="en">English</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" th:text="#{settings.save}">Сохранить</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{layout/footer :: footer}"></div>
+</body>
+</html>

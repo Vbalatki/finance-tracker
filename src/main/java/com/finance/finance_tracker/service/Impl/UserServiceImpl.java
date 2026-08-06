@@ -3,6 +3,7 @@ package com.finance.finance_tracker.service.Impl;
 import com.finance.finance_tracker.dto.AccountDto;
 import com.finance.finance_tracker.dto.TransactionDto;
 import com.finance.finance_tracker.dto.UserDto;
+import com.finance.finance_tracker.dto.UserSettingsDto;
 import com.finance.finance_tracker.entity.Account;
 import com.finance.finance_tracker.entity.Role;
 import com.finance.finance_tracker.entity.User;
@@ -304,5 +305,27 @@ public class UserServiceImpl implements UserService {
 
         BigDecimal rate = currencyApiService.convertCurrency(currency.name(), "RUB", BigDecimal.ONE);
         return amount.multiply(rate);
+    }
+
+    @Transactional(readOnly = true)
+    public UserSettingsDto getUserSettings(Long userId) {
+        User user = findById(userId);
+        UserSettingsDto dto = new UserSettingsDto();
+        dto.setTheme(user.getTheme());
+        dto.setDefaultCurrency(user.getDefaultCurrency());
+        dto.setLocale(user.getLocale());
+        return dto;
+    }
+
+    @Override
+    @Transactional
+    public void updateUserSettings(Long userId, UserSettingsDto dto) {
+        User user = findById(userId);
+        user.setTheme(dto.getTheme());
+        user.setDefaultCurrency(dto.getDefaultCurrency());
+        user.setLocale(dto.getLocale());
+        userRepository.save(user);
+        log.info("Обновлены настройки пользователя id={}: theme={}, defaultCurrency={}, locale={}",
+                userId, dto.getTheme(), dto.getDefaultCurrency(), dto.getLocale());
     }
 }

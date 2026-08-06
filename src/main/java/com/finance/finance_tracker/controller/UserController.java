@@ -2,6 +2,8 @@ package com.finance.finance_tracker.controller;
 
 
 import com.finance.finance_tracker.dto.UserDto;
+import com.finance.finance_tracker.dto.UserSettingsDto;
+import com.finance.finance_tracker.entity.enums.Currency;
 import com.finance.finance_tracker.service.Impl.UserDetailsServiceImpl;
 import com.finance.finance_tracker.service.UserService;
 import jakarta.validation.Valid;
@@ -144,5 +146,29 @@ public class UserController {
             model.addAttribute("error", e.getMessage());
             return "users/change-password";
         }
+    }
+
+    @GetMapping("/settings")
+    public String settingsPage(Model model, @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+        UserDto user = userService.getUserByEmail(userDetails.getUsername());
+        model.addAttribute("settingsDto", userService.getUserSettings(user.getId()));
+        model.addAttribute("currencies", Currency.values());
+        return "users/settings";
+    }
+
+    @PostMapping("/settings")
+    public String updateSettings(@Valid @ModelAttribute("settingsDto") UserSettingsDto dto,
+                                 BindingResult result,
+                                 @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails,
+                                 RedirectAttributes redirectAttributes,
+                                 Model model) {
+        if (result.hasErrors()) {
+            model.addAttribute("currencies", Currency.values());
+            return "users/settings";
+        }
+        UserDto user = userService.getUserByEmail(userDetails.getUsername());
+        userService.updateUserSettings(user.getId(), dto);
+        redirectAttributes.addFlashAttribute("success", "Настройки сохранены");
+        return "redirect:/settings";
     }
 }

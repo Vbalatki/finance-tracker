@@ -3,11 +3,14 @@ package com.finance.finance_tracker.controller;
 import com.finance.finance_tracker.dto.AccountDto;
 import com.finance.finance_tracker.dto.TransactionDto;
 import com.finance.finance_tracker.dto.UserDto;
+import com.finance.finance_tracker.dto.UserSettingsDto;
 import com.finance.finance_tracker.entity.SecurityUser;
 import com.finance.finance_tracker.entity.User;
+import com.finance.finance_tracker.entity.enums.Currency;
 import com.finance.finance_tracker.service.AccountService;
 import com.finance.finance_tracker.service.TransactionService;
 import com.finance.finance_tracker.service.UserService;
+import com.finance.finance_tracker.util.CurrencyFormatter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -44,11 +47,14 @@ class MainControllerTest {
     @Mock
     private TransactionService transactionService;
 
+    @Mock
+    CurrencyFormatter currencyFormatter;
+
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        MainController controller = new MainController(userService, accountService, transactionService);
+        MainController controller = new MainController(userService, accountService, transactionService, currencyFormatter);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .build();
@@ -108,10 +114,14 @@ class MainControllerTest {
         List<AccountDto> accounts = List.of(new AccountDto());
         List<TransactionDto> recent = List.of(new TransactionDto());
 
+        UserSettingsDto settings = new UserSettingsDto();
+        settings.setDefaultCurrency(Currency.RUB);
+
+        when(userService.getUserSettings(1L)).thenReturn(settings);
+        when(accountService.getTotalBalanceInCurrency(1L, Currency.RUB)).thenReturn(new BigDecimal("1000.00"));
         when(userService.getUserByEmail("user@example.com")).thenReturn(userDto);
         when(accountService.getUserAccounts(1L)).thenReturn(accounts);
         when(transactionService.findRecentByUserId(1L, 10)).thenReturn(recent);
-        when(userService.getUserTotalBalanceInRub(accounts)).thenReturn(new BigDecimal("1000.00"));
 
         mockMvc.perform(get("/dashboard"))
                 .andExpect(status().isOk())

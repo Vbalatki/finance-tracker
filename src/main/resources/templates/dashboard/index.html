@@ -46,7 +46,7 @@
             <h6 class="text-uppercase mb-1" style="opacity: 0.85; letter-spacing: 0.05em;">Общий баланс</h6>
             <h1 class="mb-0 fw-bold">
       <span th:if="${totalBalance != null}"
-            th:text="${#numbers.formatDecimal(totalBalance, 1, 'COMMA', 2, 'POINT') + ' ₽'}">
+            th:text="${#numbers.formatDecimal(totalBalance, 1, 'COMMA', 2, 'POINT') + ' ' + defaultCurrencySymbol}"
           0,00 ₽
       </span>
                 <span th:unless="${totalBalance != null}">0,00 ₽</span>
