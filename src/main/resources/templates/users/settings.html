@@ -20,7 +20,7 @@
                     <h4 th:text="#{settings.title}">Настройки</h4>
                 </div>
                 <div class="card-body">
-                    <form th:action="@{/settings}" th:object="${settingsDto}" method="post">
+                    <form th:action="@{/profile/settings}" th:object="${settingsDto}" method="post">
 
                         <div class="mb-4">
                             <label class="form-label" th:text="#{settings.theme}">Тема оформления</label>
