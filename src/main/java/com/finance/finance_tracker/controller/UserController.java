@@ -169,6 +169,6 @@ public class UserController {
         UserDto user = userService.getUserByEmail(userDetails.getUsername());
         userService.updateUserSettings(user.getId(), dto);
         redirectAttributes.addFlashAttribute("success", "Настройки сохранены");
-        return "redirect:/settings";
+        return "redirect:/profile/settings";
     }
 }
