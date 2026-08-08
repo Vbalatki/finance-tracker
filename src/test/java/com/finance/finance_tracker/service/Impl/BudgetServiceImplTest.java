@@ -322,33 +322,6 @@ class BudgetServiceImplTest {
         }
     }
 
-    @Nested
-    @DisplayName("resetSpending")
-    class ResetSpending {
-
-        @Test
-        @DisplayName("обнуляет текущие траты бюджета")
-        void resetSpending_setsCurrentSpendingToZero() {
-            Budget budget = new Budget();
-            budget.setId(1L);
-            budget.setCurrentSpending(new BigDecimal("500.00"));
-
-            when(budgetRepository.findById(1L)).thenReturn(Optional.of(budget));
-            when(budgetRepository.save(budget)).thenReturn(budget);
-
-            budgetService.resetSpending(1L);
-
-            assertThat(budget.getCurrentSpending()).isEqualByComparingTo(BigDecimal.ZERO);
-        }
-
-        @Test
-        @DisplayName("бросает EntityNotFoundException, если бюджет не найден")
-        void resetSpending_notFound_throws() {
-            when(budgetRepository.findById(404L)).thenReturn(Optional.empty());
-
-            assertThrows(EntityNotFoundException.class, () -> budgetService.resetSpending(404L));
-        }
-    }
 
     @Nested
     @DisplayName("deleteBudget")

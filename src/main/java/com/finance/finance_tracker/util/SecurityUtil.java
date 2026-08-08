@@ -1,11 +1,11 @@
 package com.finance.finance_tracker.util;
 
+import com.finance.finance_tracker.dto.AccountDto;
 import com.finance.finance_tracker.entity.SecurityUser;
+import com.finance.finance_tracker.exception.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 
-@Component
 public class SecurityUtil {
 
     public static Long getCurrentUserId() {
@@ -22,5 +22,11 @@ public class SecurityUtil {
             return auth.getName();
         }
         return "anonymous";
+    }
+
+    public static void requireOwnership(AccountDto account) {
+        if (!account.getUserId().equals(getCurrentUserId())) {
+            throw new AccessDeniedException("Нет доступа к этому счёту");
+        }
     }
 }

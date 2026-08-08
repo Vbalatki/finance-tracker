@@ -96,6 +96,8 @@ public class AccountController {
             return "redirect:/login";
         }
 
+        dto.setUserId(SecurityUtil.getCurrentUserId());
+
         if (result.hasErrors()) {
             model.addAttribute("currencies", Currency.values());
             return "accounts/create";
@@ -114,14 +116,10 @@ public class AccountController {
     }
 
     @GetMapping("/{id}")
-    public String accountDetail(@PathVariable Long id,
-                                @AuthenticationPrincipal UserDetails userDetails,
-                                Model model) {
+    public String accountDetail(@PathVariable Long id, Model model) {
         AccountDto account = accountService.findById(id);
-        Long currentUserId = SecurityUtil.getCurrentUserId();
-        if (!account.getUserId().equals(currentUserId)) {
-            throw new AccessDeniedException("Нет доступа к этому счёту");
-        }
+        SecurityUtil.requireOwnership(account);
+
         List<TransactionDto> transactions = transactionService.findByAccountId(id);
 
         String formattedBalance = currencyFormatter.formatAmount(
@@ -149,10 +147,7 @@ public class AccountController {
     @GetMapping("/{id}/edit")
     public String editAccountPage(@PathVariable Long id, Model model) {
         AccountDto account = accountService.findById(id);
-        Long currentUserId = SecurityUtil.getCurrentUserId();
-        if (!account.getUserId().equals(currentUserId)) {
-            throw new AccessDeniedException("Нет доступа к этому счёту");
-        }
+        SecurityUtil.requireOwnership(account);
 
         model.addAttribute("accountDto", account);
         model.addAttribute("currencies", Currency.values());
@@ -185,10 +180,7 @@ public class AccountController {
                                 RedirectAttributes redirectAttributes,
                                 Model model) {
         AccountDto existing = accountService.findById(id);
-        Long currentUserId = SecurityUtil.getCurrentUserId();
-        if (!existing.getUserId().equals(currentUserId)) {
-            throw new AccessDeniedException("Нет доступа к этому счёту");
-        }
+        SecurityUtil.requireOwnership(existing);
 
         if (result.hasErrors()) {
             model.addAttribute("currencies", Currency.values());
@@ -220,10 +212,7 @@ public class AccountController {
                                RedirectAttributes redirectAttributes) {
         try {
             AccountDto account = accountService.findById(id);
-            Long currentUserId = SecurityUtil.getCurrentUserId();
-            if (!account.getUserId().equals(currentUserId)) {
-                throw new AccessDeniedException("Нет доступа к этому счёту");
-            }
+            SecurityUtil.requireOwnership(account);
 
             LocalDateTime to = LocalDateTime.now();
             LocalDateTime from = to.minusDays(30);
@@ -258,10 +247,8 @@ public class AccountController {
                           RedirectAttributes redirectAttributes) {
         try {
             AccountDto account = accountService.findById(id);
-            Long currentUserId = SecurityUtil.getCurrentUserId();
-            if (!account.getUserId().equals(currentUserId)) {
-                throw new AccessDeniedException("Нет доступа к этому счёту");
-            }
+            SecurityUtil.requireOwnership(account);
+
             accountService.deposit(id, amount);
             redirectAttributes.addFlashAttribute("success",
                     String.format("Счет пополнен на %s",
@@ -291,10 +278,8 @@ public class AccountController {
                            RedirectAttributes redirectAttributes) {
         try {
             AccountDto account = accountService.findById(id);
-            Long currentUserId = SecurityUtil.getCurrentUserId();
-            if (!account.getUserId().equals(currentUserId)) {
-                throw new AccessDeniedException("Нет доступа к этому счёту");
-            }
+            SecurityUtil.requireOwnership(account);
+
             accountService.withdraw(id, amount);
             redirectAttributes.addFlashAttribute("success",
                     String.format("Со счета снято %s",

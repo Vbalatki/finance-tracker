@@ -123,6 +123,11 @@ class TransactionControllerTest {
     @Test
     @DisplayName("POST /transactions с валидными данными создаёт транзакцию и редиректит")
     void createTransaction_valid_redirectsToTransactions() throws Exception {
+        AccountDto acc = new AccountDto();
+        acc.setId(10L);
+        acc.setUserId(1L);
+        when(accountService.findById(10L)).thenReturn(acc);
+
         mockMvc.perform(post("/transactions")
                         .param("amount", "100.00")
                         .param("type", "INCOME")
@@ -131,6 +136,23 @@ class TransactionControllerTest {
                 .andExpect(redirectedUrl("/transactions"));
 
         verify(transactionService).saveTransaction(any(TransactionDto.class));
+    }
+
+    @Test
+    @DisplayName("POST /transactions с чужим accountId возвращает 403 и не создаёт транзакцию")
+    void createTransaction_otherUsersAccount_returnsForbidden() throws Exception {
+        AccountDto acc = new AccountDto();
+        acc.setId(10L);
+        acc.setUserId(999L);
+        when(accountService.findById(10L)).thenReturn(acc);
+
+        mockMvc.perform(post("/transactions")
+                        .param("amount", "100.00")
+                        .param("type", "INCOME")
+                        .param("accountId", "10"))
+                .andExpect(status().isForbidden());
+
+        verify(transactionService, never()).saveTransaction(any());
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.finance.finance_tracker.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
@@ -30,6 +31,7 @@ public class UserDto {
     @Size(max = 255, message = "Email must not exceed 255 characters")
     private String email;
 
+    @JsonIgnore
     @NotBlank(message = "Password cannot be blank")
     @Size(min = 8, max = 255, message = "Password must be 8-255 characters")
     private String password;

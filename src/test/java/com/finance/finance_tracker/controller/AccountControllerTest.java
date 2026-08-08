@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.annotation.Import;
@@ -41,6 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Тесты {@link AccountController}. MockMvc собирается через standaloneSetup —
@@ -149,6 +151,21 @@ class AccountControllerTest {
                 .andExpect(view().name("accounts/create"));
 
         verify(accountService, never()).saveAccount(any());
+    }
+
+    @Test
+    @DisplayName("POST /accounts игнорирует чужой userId из тела запроса")
+    void createAccount_spoofedUserId_usesAuthenticatedUserIdInstead() throws Exception {
+        mockMvc.perform(post("/accounts")
+                        .param("name", "Новый счет")
+                        .param("balance", "0")
+                        .param("currency", "RUB")
+                        .param("userId", "999"))
+                .andExpect(status().is3xxRedirection());
+
+        ArgumentCaptor<AccountDto> captor = ArgumentCaptor.forClass(AccountDto.class);
+        verify(accountService).saveAccount(captor.capture());
+        assertThat(captor.getValue().getUserId()).isEqualTo(1L); // не 999
     }
 
     @Test

@@ -167,6 +167,9 @@ public class TransactionController {
             return "transactions/create";
         }
 
+        AccountDto account = accountService.findById(dto.getAccountId());
+        SecurityUtil.requireOwnership(account);
+
         try {
             transactionService.saveTransaction(dto);
             redirectAttributes.addFlashAttribute("success", "Транзакция успешно добавлена!");
@@ -194,9 +197,7 @@ public class TransactionController {
     public TransactionDto getTransactionEditForm(@PathVariable Long id) {
         TransactionDto existing = transactionService.getTransactionById(id);
         AccountDto account = accountService.findById(existing.getAccountId());
-        if (!account.getUserId().equals(SecurityUtil.getCurrentUserId())) {
-            throw new AccessDeniedException("Нет доступа к этой транзакции");
-        }
+        SecurityUtil.requireOwnership(account);
         return transactionService.findById(id);
     }
 
@@ -217,9 +218,7 @@ public class TransactionController {
                                     RedirectAttributes redirectAttributes) {
         TransactionDto existing = transactionService.getTransactionById(id);
         AccountDto account = accountService.findById(existing.getAccountId());
-        if (!account.getUserId().equals(SecurityUtil.getCurrentUserId())) {
-            throw new AccessDeniedException("Нет доступа к этой транзакции");
-        }
+        SecurityUtil.requireOwnership(account);
 
         if (result.hasErrors()) {
             redirectAttributes.addFlashAttribute("error", "Ошибка валидации");
@@ -252,9 +251,7 @@ public class TransactionController {
         try {
             TransactionDto transaction = transactionService.getTransactionById(id);
             AccountDto account = accountService.findById(transaction.getAccountId());
-            if (!account.getUserId().equals(SecurityUtil.getCurrentUserId())) {
-                throw new AccessDeniedException("Нет доступа к этой транзакции");
-            }
+            SecurityUtil.requireOwnership(account);
 
             Long accountId = transaction.getAccountId();
             transactionService.deleteTransaction(id);

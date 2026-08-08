@@ -38,7 +38,6 @@ public class AuditAspect {
     @Pointcut("execution(* com.finance.finance_tracker.service.Impl.AccountServiceImpl.updateAccount(..))" +
             " || execution(* com.finance.finance_tracker.service.Impl.AccountServiceImpl.deposit(..))" +
             " || execution(* com.finance.finance_tracker.service.Impl.AccountServiceImpl.withdraw(..))" +
-            " || execution(* com.finance.finance_tracker.service.Impl.BudgetServiceImpl.resetSpending(..))" +
             " || execution(* com.finance.finance_tracker.service.Impl.CategoryServiceImpl.updateCategory(..))" +
             " || execution(* com.finance.finance_tracker.service.Impl.TransactionServiceImpl.updateTransaction(..))" +
             " || execution(* com.finance.finance_tracker.service.Impl.UserServiceImpl.updateUser(..))" +

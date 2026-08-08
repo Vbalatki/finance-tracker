@@ -9,6 +9,7 @@ import com.finance.finance_tracker.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -42,7 +43,7 @@ public class UserController {
      */
     @GetMapping
     public String userProfile(Model model,
-                              @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+                              @AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails != null) {
             UserDto user = userService.getUserByEmail(userDetails.getUsername());
             model.addAttribute("user", user);
@@ -60,7 +61,7 @@ public class UserController {
      */
     @GetMapping("/edit")
     public String editProfilePage(Model model,
-                                  @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+                                  @AuthenticationPrincipal UserDetails userDetails) {
         UserDto user = userService.getUserByEmail(userDetails.getUsername());
         model.addAttribute("user", user);
         model.addAttribute("userDto", user);
@@ -82,7 +83,7 @@ public class UserController {
     public String updateProfile(
             @ModelAttribute("userDto") @Valid UserDto dto,
             BindingResult result,
-            @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails,
+            @AuthenticationPrincipal UserDetails userDetails,
             RedirectAttributes redirectAttributes) {
 
         if (result.hasErrors()) {
@@ -127,7 +128,7 @@ public class UserController {
             @RequestParam("currentPassword") String currentPassword,
             @RequestParam("newPassword") String newPassword,
             @RequestParam("confirmPassword") String confirmPassword,
-            @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails,
+            @AuthenticationPrincipal UserDetails userDetails,
             Model model,
             RedirectAttributes redirectAttributes) {
 
@@ -149,7 +150,7 @@ public class UserController {
     }
 
     @GetMapping("/settings")
-    public String settingsPage(Model model, @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+    public String settingsPage(Model model, @AuthenticationPrincipal UserDetails userDetails) {
         UserDto user = userService.getUserByEmail(userDetails.getUsername());
         model.addAttribute("settingsDto", userService.getUserSettings(user.getId()));
         model.addAttribute("currencies", Currency.values());
@@ -159,7 +160,7 @@ public class UserController {
     @PostMapping("/settings")
     public String updateSettings(@Valid @ModelAttribute("settingsDto") UserSettingsDto dto,
                                  BindingResult result,
-                                 @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails,
+                                 @AuthenticationPrincipal UserDetails userDetails,
                                  RedirectAttributes redirectAttributes,
                                  Model model) {
         if (result.hasErrors()) {

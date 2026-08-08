@@ -31,13 +31,6 @@ public interface BudgetService {
      */
     BudgetDto saveBudget(BudgetDto budgetDto, Long userId);
 
-    /**
-     * Обнуляет накопленную сумму трат ({@code currentSpending}) бюджета.
-     *
-     * @param budgetId id бюджета
-     * @throws com.finance.finance_tracker.exception.EntityNotFoundException если бюджет не найден
-     */
-    void resetSpending(Long budgetId);
 
     /**
      * Удаляет бюджет.

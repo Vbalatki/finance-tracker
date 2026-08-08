@@ -15,5 +15,7 @@ public interface TransactionMapper {
     @Mapping(source = "account.currency", target = "accountCurrency")
     @Mapping(source = "category.id", target = "categoryId")
     TransactionDto toDto(Transaction transaction);
+
+    @Mapping(target = "id", ignore = true)
     Transaction toEntity(TransactionDto dto);
 }

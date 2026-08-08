@@ -57,20 +57,6 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card-footer bg-transparent">
-                        <div class="btn-group w-100" role="group">
-                            <form th:action="@{/budgets/{id}/reset(id=${budget.id})}" method="post" style="display:inline; width:50%;">
-                                <button type="submit" class="btn btn-warning w-100" onclick="return confirm('Сбросить потраченную сумму в ноль?')">
-                                    <i class="bi bi-arrow-repeat"></i> Сбросить
-                                </button>
-                            </form>
-                            <form th:action="@{/budgets/{id}/delete(id=${budget.id})}" method="post" style="display:inline; width:50%;">
-                                <button type="submit" class="btn btn-danger w-100" onclick="return confirm('Удалить бюджет?')">
-                                    <i class="bi bi-trash"></i> Удалить
-                                </button>
-                            </form>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

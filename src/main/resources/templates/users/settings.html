@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title th:text="#{settings.title}">Настройки</title>
+    <title>Настройки</title>
     <div th:replace="~{layout/head :: head}"></div>
 </head>
 <body>
@@ -10,52 +10,53 @@
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
-                <span th:text="${success}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+
+            <div id="settingsToastContainer" class="alert d-none" role="alert"></div>
 
             <div class="card">
                 <div class="card-header">
-                    <h4 th:text="#{settings.title}">Настройки</h4>
+                    <h4>Настройки</h4>
                 </div>
                 <div class="card-body">
-                    <form th:action="@{/profile/settings}" th:object="${settingsDto}" method="post">
 
-                        <div class="mb-4">
-                            <label class="form-label" th:text="#{settings.theme}">Тема оформления</label>
-                            <div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" th:field="*{theme}"
-                                           id="themeLight" value="LIGHT">
-                                    <label class="form-check-label" for="themeLight" th:text="#{settings.theme.light}">Светлая</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" th:field="*{theme}"
-                                           id="themeDark" value="DARK">
-                                    <label class="form-check-label" for="themeDark" th:text="#{settings.theme.dark}">Тёмная</label>
-                                </div>
+                    <div class="mb-4">
+                        <label class="form-label">Тема оформления</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="theme"
+                                       id="themeLight" value="LIGHT"
+                                       th:checked="${settingsDto.theme.name() == 'LIGHT'}">
+                                <label class="form-check-label" for="themeLight">Светлая</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="theme"
+                                       id="themeDark" value="DARK"
+                                       th:checked="${settingsDto.theme.name() == 'DARK'}">
+                                <label class="form-check-label" for="themeDark">Тёмная</label>
                             </div>
                         </div>
+                        <div class="form-text">Изменения применяются сразу</div>
+                    </div>
 
-                        <div class="mb-4">
-                            <label for="defaultCurrency" class="form-label" th:text="#{settings.currency}">Основная валюта</label>
-                            <select class="form-select" id="defaultCurrency" th:field="*{defaultCurrency}">
-                                <option th:each="c : ${currencies}" th:value="${c}" th:text="${c}"></option>
-                            </select>
-                            <div class="form-text">Используется для отображения общего баланса на дашборде</div>
-                        </div>
+                    <div class="mb-4">
+                        <label for="defaultCurrency" class="form-label">Основная валюта</label>
+                        <select class="form-select" id="defaultCurrency">
+                            <option th:each="c : ${currencies}"
+                                    th:value="${c}"
+                                    th:text="${c}"
+                                    th:selected="${c == settingsDto.defaultCurrency}"></option>
+                        </select>
+                        <div class="form-text">Используется для отображения общего баланса на дашборде</div>
+                    </div>
 
-                        <div class="mb-4">
-                            <label for="locale" class="form-label" th:text="#{settings.locale}">Язык интерфейса</label>
-                            <select class="form-select" id="locale" th:field="*{locale}">
-                                <option value="ru">Русский</option>
-                                <option value="en">English</option>
-                            </select>
-                        </div>
+                    <div class="mb-2">
+                        <label for="locale" class="form-label">Язык интерфейса</label>
+                        <select class="form-select" id="locale" disabled>
+                            <option value="ru" selected>Русский</option>
+                        </select>
+                        <div class="form-text">Другие языки скоро появятся</div>
+                    </div>
 
-                        <button type="submit" class="btn btn-primary" th:text="#{settings.save}">Сохранить</button>
-                    </form>
                 </div>
             </div>
         </div>
@@ -63,5 +64,61 @@
 </div>
 
 <div th:replace="~{layout/footer :: footer}"></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        function getCsrfHeaders() {
+            const token = document.querySelector('meta[name="_csrf"]')?.content;
+            const header = document.querySelector('meta[name="_csrf_header"]')?.content;
+            return token && header ? { [header]: token } : {};
+        }
+
+        function showToast(message, isError) {
+            const box = document.getElementById('settingsToastContainer');
+            if (!box) return;
+            box.textContent = message;
+            box.className = 'alert ' + (isError ? 'alert-danger' : 'alert-success');
+            box.classList.remove('d-none');
+            setTimeout(() => box.classList.add('d-none'), 2500);
+        }
+
+        // Тема: применяем на клиенте мгновенно (просто атрибут на <html>,
+        // Bootstrap 5.3 сам перерисует всё через CSS), сохранение на сервере
+        // идёт в фоне, без блокировки интерфейса.
+        document.querySelectorAll('input[name="theme"]').forEach(function (radio) {
+            radio.addEventListener('change', function () {
+                const theme = this.value;
+                document.documentElement.setAttribute('data-bs-theme', theme.toLowerCase());
+
+                fetch('/profile/settings/theme', {
+                    method: 'POST',
+                    headers: Object.assign({ 'Content-Type': 'application/x-www-form-urlencoded' }, getCsrfHeaders()),
+                    body: 'theme=' + encodeURIComponent(theme)
+                })
+                    .then(response => {
+                        if (!response.ok) throw new Error('failed');
+                        showToast('Тема сохранена', false);
+                    })
+                    .catch(() => showToast('Не удалось сохранить тему', true));
+            });
+        });
+
+        const currencySelect = document.getElementById('defaultCurrency');
+        if (currencySelect) {
+            currencySelect.addEventListener('change', function () {
+                fetch('/profile/settings/currency', {
+                    method: 'POST',
+                    headers: Object.assign({ 'Content-Type': 'application/x-www-form-urlencoded' }, getCsrfHeaders()),
+                    body: 'defaultCurrency=' + encodeURIComponent(this.value)
+                })
+                    .then(response => {
+                        if (!response.ok) throw new Error('failed');
+                        showToast('Валюта сохранена', false);
+                    })
+                    .catch(() => showToast('Не удалось сохранить валюту', true));
+            });
+        }
+    });
+</script>
 </body>
 </html>

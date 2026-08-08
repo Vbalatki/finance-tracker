@@ -106,25 +106,6 @@ public class BudgetController {
     }
 
     /**
-     * Обнуляет накопленные траты бюджета. Ошибки перехватываются и
-     * отображаются как flash-сообщение.
-     *
-     * @param id                 id бюджета
-     * @param redirectAttributes атрибуты для flash-сообщений
-     * @return редирект на {@code /budgets}
-     */
-    @PostMapping("/{id}/reset")
-    public String resetBudget(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            budgetService.resetSpending(id);
-            redirectAttributes.addFlashAttribute("success", "Траты сброшены");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-        }
-        return "redirect:/budgets";
-    }
-
-    /**
      * Удаляет бюджет. Ошибки перехватываются и отображаются как flash-сообщение.
      *
      * @param id                 id бюджета

@@ -141,27 +141,6 @@ class BudgetControllerTest {
     }
 
     @Test
-    @DisplayName("POST /budgets/{id}/reset сбрасывает траты и редиректит")
-    void resetBudget_success_redirects() throws Exception {
-        mockMvc.perform(post("/budgets/1/reset"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/budgets"))
-                .andExpect(flash().attributeExists("success"));
-
-        verify(budgetService).resetSpending(1L);
-    }
-
-    @Test
-    @DisplayName("POST /budgets/{id}/reset при ошибке пишет flash-ошибку, но не падает")
-    void resetBudget_serviceThrows_setsFlashError() throws Exception {
-        doThrow(new RuntimeException("Бюджет не найден")).when(budgetService).resetSpending(404L);
-
-        mockMvc.perform(post("/budgets/404/reset"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(flash().attributeExists("error"));
-    }
-
-    @Test
     @DisplayName("POST /budgets/{id}/delete удаляет бюджет и редиректит")
     void deleteBudget_success_redirects() throws Exception {
         mockMvc.perform(post("/budgets/1/delete"))

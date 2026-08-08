@@ -126,23 +126,6 @@ public class BudgetServiceImpl implements BudgetService {
         return budgetMapper.toDto(saved);
     }
 
-    @Override
-    @Transactional
-    public void resetSpending(Long budgetId) {
-        log.debug("Сброс потраченной суммы для бюджета: id={}", budgetId);
-
-        Budget budget = budgetRepository.findById(budgetId)
-                .orElseThrow(() -> {
-                    log.error("Бюджет не найден при сбросе: id={}", budgetId);
-                    return new EntityNotFoundException(BUDGET_NOT_FOUND + ", id: " + budgetId);
-                });
-
-        BigDecimal oldSpending = budget.getCurrentSpending();
-        budget.setCurrentSpending(BigDecimal.ZERO);
-        budgetRepository.save(budget);
-
-        log.info("Сброшена потраченная сумма для бюджета id={}: было={}, стало=0", budgetId, oldSpending);
-    }
 
     @Override
     @Transactional
