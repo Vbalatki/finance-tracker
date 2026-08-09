@@ -20,6 +20,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -28,6 +30,8 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 @Table(name = "transactions", schema = "finance_tracker")
+@SQLDelete(sql = "UPDATE finance_tracker.transactions SET active = false WHERE id = ?")
+@Where(clause = "active = true")
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = {"account", "category"})
@@ -53,6 +57,9 @@ public class Transaction {
 
     @Column(name = "external_id", length = 128)
     private String externalId;
+
+    @Column(name = "active", nullable = false)
+    private boolean active = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)

@@ -43,6 +43,7 @@ public class TransactionRepositoryIT {
     private TestEntityManager entityManager;
 
     private Long userId;
+    private Long accountId;
 
     private void seedData() {
         User user = new User();
@@ -74,10 +75,10 @@ public class TransactionRepositoryIT {
         entityManager.persist(tx);
 
         entityManager.flush();
-        entityManager.clear(); // критично: сбрасываем persistence context,
-        // чтобы следующий запрос реально шёл в БД,
-        // а не отдавал уже закэшированные в сессии объекты
+        entityManager.clear();  // критично: сбрасываем persistence context, чтобы следующий запрос реально шёл в БД,
+                                // а не отдавал уже закэшированные в сессии объекты
         userId = user.getId();
+        accountId = account.getId();
     }
 
     @Test
@@ -159,5 +160,25 @@ public class TransactionRepositoryIT {
                 .orElse(BigDecimal.ZERO);
 
         assertThat(total).isEqualByComparingTo("150.00"); // с обоих счетов, не с одного
+    }
+
+    @Test
+    @DisplayName("deleteByAccountId мягко удаляет транзакции — именно так, как рассчитывает AccountServiceImpl.deleteAccount")
+    void deleteByAccountId_softDeletesTransactions() {
+        seedData();
+
+        transactionRepository.deleteByAccountId(accountId);
+        entityManager.getEntityManager().flush();
+        entityManager.getEntityManager().clear();
+
+        assertThat(transactionRepository.findByAccountId(accountId)).isEmpty();
+
+        // физически строка на месте — значит deleteByAccountId уважает @SQLDelete,
+        // а не бьёт напрямую bulk DELETE в обход него
+        Long txCount = ((Number) entityManager.getEntityManager()
+                .createNativeQuery("SELECT COUNT(*) FROM finance_tracker.transactions WHERE account_id = ?")
+                .setParameter(1, accountId)
+                .getSingleResult()).longValue();
+        assertThat(txCount).isEqualTo(1L);
     }
 }

@@ -19,6 +19,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -31,6 +33,8 @@ import static com.finance.finance_tracker.util.DataConstants.LENGTH_255;
 @Setter
 @Entity
 @Table(name = "accounts", schema = "finance_tracker")
+@SQLDelete(sql = "UPDATE finance_tracker.accounts SET active = false WHERE id = ? AND version = ?")
+@Where(clause = "active = true")
 @AllArgsConstructor
 @ToString(exclude = {"user", "transactions"})
 public class Account {
@@ -43,6 +47,9 @@ public class Account {
 
     @Column(name = "balance", nullable = false)
     private BigDecimal balance = BigDecimal.ZERO;
+
+    @Column(name = "active", nullable = false)
+    private boolean active = true;
 
     @Enumerated(EnumType.STRING)
     private Currency currency;

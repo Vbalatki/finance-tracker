@@ -21,3 +21,5 @@ databaseChangeLog:
       file: db/changelog/changelog/V9__user_settings.yaml
   - include:
       file: db/changelog/changelog/V10__add_account_name_unique_constraint.yaml
+  - include:
+      file: db/changelog/changelog/V11__soft_delete_accounts_transactions.yaml

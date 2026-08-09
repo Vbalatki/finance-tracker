@@ -24,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -48,14 +47,12 @@ class AuditAspectTest {
     @Mock
     private Signature signature;
 
-    private final AuditAspect auditAspect = new AuditAspect(auditServiceMockHolder(), new ObjectMapper());
-
+    // Реальный ObjectMapper — сериализация args/result в details не мокается,
+    // это единственный способ честно проверить итоговую строку деталей.
     private AuditAspect aspect;
 
-    private static AuditService auditServiceMockHolder() {
-        return null; // не используется, см. @BeforeEach
-    }
-
+    // Классы-пустышки — нужны только для их simple name, по которому
+    // determineEntityType() распознаёт тип сущности.
     static class AccountServiceImpl {}
     static class BudgetServiceImpl {}
     static class UnknownServiceImpl {}
@@ -255,6 +252,49 @@ class AuditAspectTest {
             ArgumentCaptor<String> detailsCaptor = ArgumentCaptor.forClass(String.class);
             verify(auditService).log(any(), any(), any(), any(), any(), detailsCaptor.capture());
             assertThat(detailsCaptor.getValue()).contains("Exception: Счёт не найден");
+        }
+
+        @Test
+        @DisplayName("если сериализация args в JSON падает — используется fallback на Arrays.toString, а не падает весь аудит")
+        void jsonSerializationFails_fallsBackToArraysToString() throws Throwable {
+            when(joinPoint.getSignature()).thenReturn(signature);
+            when(signature.getName()).thenReturn("saveAccount");
+
+            // Самоссылающаяся структура — Jackson бросит JsonMappingException
+            // на бесконечной рекурсии при попытке сериализовать её в JSON
+            java.util.Map<String, Object> selfReferencing = new java.util.HashMap<>();
+            selfReferencing.put("self", selfReferencing);
+            when(joinPoint.getArgs()).thenReturn(new Object[]{selfReferencing});
+            when(joinPoint.getTarget()).thenReturn(new AccountServiceImpl());
+            when(joinPoint.proceed()).thenReturn(null);
+
+            aspect.audit(joinPoint);
+
+            ArgumentCaptor<String> detailsCaptor = ArgumentCaptor.forClass(String.class);
+            verify(auditService).log(any(), any(), any(), any(), any(), detailsCaptor.capture());
+            // fallback-ветка использует Arrays.toString(args), а не ObjectMapper —
+            // само наличие непустой строки "Args:" и то, что метод вообще
+            // не бросил исключение наружу, подтверждает, что catch отработал
+            assertThat(detailsCaptor.getValue()).contains("Args:");
+        }
+    }
+
+    @Nested
+    @DisplayName("resetSpending — отдельная явная ветка UPDATE")
+    class ResetSpendingAction {
+
+        @Test
+        @DisplayName("resetSpending не начинается с update, но всё равно распознаётся как UPDATE")
+        void resetSpending_recognizedAsUpdate() throws Throwable {
+            when(joinPoint.getSignature()).thenReturn(signature);
+            when(signature.getName()).thenReturn("resetSpending");
+            when(joinPoint.getArgs()).thenReturn(new Object[]{3L});
+            when(joinPoint.getTarget()).thenReturn(new BudgetServiceImpl());
+            when(joinPoint.proceed()).thenReturn(null);
+
+            aspect.audit(joinPoint);
+
+            verify(auditService).log(any(), any(), eq("UPDATE"), eq("Budget"), eq(3L), any());
         }
     }
 }

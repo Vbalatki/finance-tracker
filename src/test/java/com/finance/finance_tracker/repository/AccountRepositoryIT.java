@@ -18,6 +18,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DataJpaTest
@@ -67,5 +69,45 @@ class AccountRepositoryIT {
 
         assertThrows(DataIntegrityViolationException.class,
                 () -> accountRepository.saveAndFlush(duplicate));
+    }
+
+    @Test
+    @DisplayName("после мягкого удаления имя счёта освобождается для повторного использования")
+    void softDeletedAccountName_becomesAvailableForReuse() {
+        User user = new User();
+        user.setName("Иван");
+        user.setSurname("Иванов");
+        user.setBirthday(LocalDate.of(1990, 1, 1));
+        user.setEmail("reuse-name-test@example.com");
+        user.setPassword("encoded");
+        user.setActive(true);
+        entityManager.persist(user);
+
+        Account original = new Account();
+        original.setName("Основной счет");
+        original.setBalance(BigDecimal.ZERO);
+        original.setCurrency(Currency.RUB);
+        original.setUser(user);
+        entityManager.persistAndFlush(original);
+        Long originalId = original.getId();
+
+        accountRepository.delete(original);
+        entityManager.flush();
+        entityManager.clear();
+
+        Account recreated = new Account();
+        recreated.setName("Основной счет"); // то же имя, что у мягко удалённого
+        recreated.setBalance(BigDecimal.ZERO);
+        recreated.setCurrency(Currency.RUB);
+        recreated.setUser(entityManager.getEntityManager().getReference(User.class, user.getId()));
+
+        assertThatCode(() -> accountRepository.saveAndFlush(recreated))
+                .doesNotThrowAnyException();
+
+        Object rawActive = entityManager.getEntityManager()
+                .createNativeQuery("SELECT active FROM finance_tracker.accounts WHERE id = ?")
+                .setParameter(1, originalId)
+                .getSingleResult();
+        assertThat(rawActive).isEqualTo(false);
     }
 }

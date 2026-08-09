@@ -1,0 +1,64 @@
+databaseChangeLog:
+  - changeSet:
+      id: 27
+      author: dimtriy_sidorov
+      comment: >
+        Полное мягкое удаление (C3): без этих колонок @SQLDelete/@Where на
+        Account и Transaction работать не могут. До этой миграции User
+        мягко удалялся, а каскад через User.accounts -> Account.transactions
+        (CascadeType.ALL) физически стирал счета и транзакции — единственные
+        данные, которые в финансовом трекере действительно нельзя терять.
+      changes:
+        - addColumn:
+            schemaName: finance_tracker
+            tableName: accounts
+            columns:
+              - column:
+                  name: active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+        - addColumn:
+            schemaName: finance_tracker
+            tableName: transactions
+            columns:
+              - column:
+                  name: active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 28
+      author: dimtriy_sidorov
+      comment: >
+        Оба существующих UNIQUE-констрейнта на accounts (uk_accounts_name_user
+        из V9, uk_accounts_bank_external_account из V6) считали мягко
+        удалённый (active=false) счёт всё ещё существующим на уровне БД —
+        конфликтовали бы с existsByNameAndUserId/
+        existsByBankCodeAndExternalAccountNumber, которые теперь фильтрует
+        Hibernate через @Where(active=true). Партиальный индекс — тот же
+        приём, что уже применён в V7 для uk_categories_default_name.
+      changes:
+        - dropUniqueConstraint:
+            schemaName: finance_tracker
+            tableName: accounts
+            constraintName: uk_accounts_name_user
+        - dropUniqueConstraint:
+            schemaName: finance_tracker
+            tableName: accounts
+            constraintName: uk_accounts_bank_external_account
+        - sql:
+            sql: >
+              CREATE UNIQUE INDEX uk_accounts_name_user_active
+              ON finance_tracker.accounts (name, user_id)
+              WHERE active = true;
+            dbms: postgresql
+        - sql:
+            sql: >
+              CREATE UNIQUE INDEX uk_accounts_bank_external_active
+              ON finance_tracker.accounts (bank_code, external_account_number)
+              WHERE active = true;
+            dbms: postgresql
