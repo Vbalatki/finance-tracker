@@ -172,16 +172,16 @@
                             </thead>
                             <tbody>
                             <tr th:each="log : ${recentLogs}">
-                                <td th:text="${#temporals.format(log.createdAt, 'dd.MM.yyyy HH:mm:ss')}"/></td>
-                                <td> th:text="${log.username}"/> (<span th:text="${log.userId}"/>)</td>
+                                <td th:text="${#temporals.format(log.createdAt, 'dd.MM.yyyy HH:mm:ss')}"></td>
+                                <td th:text="|${log.username} (${log.userId})|"></td>
                                 <td>
-                                        <span class="badge" th:class="${log.action == 'CREATE' ? 'bg-success' : (log.action == 'UPDATE' ? 'bg-warning' : 'bg-danger')}">
-                                            <span th:text="${log.action}"></span>
-                                        </span>
+                                <span class="badge" th:class="${log.action == 'CREATE' ? 'bg-success' : (log.action == 'UPDATE' ? 'bg-warning' : 'bg-danger')}">
+                                    <span th:text="${log.action}"></span>
+                                </span>
                                 </td>
-                                <td th:text="${log.entityType}"/></td>
-                                <td th:text="${log.entityId}"/></td>
-                                <td style="max-width: 300px; overflow: auto; word-break: break-word;" th:text="${log.details}"/></td>
+                                <td th:text="${log.entityType}"></td>
+                                <td th:text="${log.entityId}"></td>
+                                <td style="max-width: 300px; overflow: auto; word-break: break-word;" th:text="${log.details}"></td>
                             </tr>
                             <tr th:if="${recentLogs.isEmpty()}">
                                 <td colspan="6" class="text-center">Нет записей аудита</td>

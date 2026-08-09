@@ -288,6 +288,23 @@ class AccountControllerTest {
     }
 
     @Test
+    @DisplayName("POST /accounts/{id}/sync для чужого счёта не синхронизирует и пишет ошибку во flash")
+    void syncWithBank_otherUsersAccount_setsFlashErrorAndDoesNotSync() throws Exception {
+        AccountDto acc = new AccountDto();
+        acc.setId(10L);
+        acc.setUserId(999L);
+
+        when(accountService.findById(10L)).thenReturn(acc);
+
+        mockMvc.perform(post("/accounts/10/sync"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/accounts/10"))
+                .andExpect(flash().attributeExists("error"));
+
+        verify(bankImportService, never()).syncTransactions(any(), any(), any());
+    }
+
+    @Test
     @DisplayName("POST /accounts/{id}/deposit пополняет свой счёт и редиректит с сообщением об успехе")
     void deposit_ownAccount_success() throws Exception {
         AccountDto acc = new AccountDto();

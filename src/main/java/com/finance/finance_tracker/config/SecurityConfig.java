@@ -69,20 +69,20 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @Bean
-    public AuthenticationSuccessHandler successHandler() {
-        return (request, response, authentication) -> {
-            Set<String> roles = authentication.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .collect(Collectors.toSet());
-
-            if (roles.contains("ROLE_ADMIN")) {
-                response.sendRedirect("/admin/dashboard");
-            } else {
-                response.sendRedirect("/dashboard");
-            }
-        };
-    }
+//    @Bean
+//    public AuthenticationSuccessHandler successHandler() {
+//        return (request, response, authentication) -> {
+//            Set<String> roles = authentication.getAuthorities().stream()
+//                    .map(GrantedAuthority::getAuthority)
+//                    .collect(Collectors.toSet());
+//
+//            if (roles.contains("ROLE_ADMIN")) {
+//                response.sendRedirect("/admin");
+//            } else {
+//                response.sendRedirect("/dashboard");
+//            }
+//        };
+//    }
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {

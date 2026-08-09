@@ -71,6 +71,7 @@ class CurrencyFormatterTest {
         assertThat(formatter.getSymbol(Currency.USD)).isEqualTo("$");
         assertThat(formatter.getSymbol(Currency.EUR)).isEqualTo("€");
         assertThat(formatter.getSymbol(Currency.GBP)).isEqualTo("£");
+        assertThat(formatter.getSymbol(Currency.JPY)).isEqualTo("¥");
         assertThat(formatter.getSymbol(Currency.KZT)).isEqualTo("₸");
         assertThat(formatter.getSymbol(null)).isEqualTo("₽");
     }
@@ -80,5 +81,11 @@ class CurrencyFormatterTest {
     void getSymbolWithCode_success() {
         assertThat(formatter.getSymbolWithCode(Currency.USD)).isEqualTo("$ USD");
         assertThat(formatter.getSymbolWithCode(null)).isEqualTo("₽ RUB");
+    }
+
+    @Test
+    @DisplayName("форматирует иены с символом ¥ перед суммой")
+    void formatAmount_jpy() {
+        assertThat(formatter.formatAmount(new BigDecimal("1000"), Currency.JPY)).isEqualTo("¥1,000.00");
     }
 }

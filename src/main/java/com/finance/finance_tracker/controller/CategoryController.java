@@ -36,7 +36,7 @@ public class CategoryController {
      * @return {@code "categories/list"}
      */
     @GetMapping
-    public String categoriesPage(Model model, @AuthenticationPrincipal UserDetails userDetails) {
+    public String categoriesPage(Model model) {
         Long userId = SecurityUtil.getCurrentUserId();
         List<CategoryDto> categories = categoryService.getAllCategoriesByUserId(userId);
         model.addAttribute("categories", categories);

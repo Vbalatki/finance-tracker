@@ -111,6 +111,11 @@
                           th:text="'£' + ${#numbers.formatDecimal(account.balance, 1, 'COMMA', 2, 'POINT')}">
                       £0
                     </span>
+                      <!-- Для йен -->
+                    <span th:case="JPY"
+                          th:text="'¥' + ${#numbers.formatDecimal(account.balance, 1, 'COMMA', 2, 'POINT')}">
+                      ¥0
+                    </span>
                       <!-- Для тенге -->
                     <span th:case="KZT"
                           th:text="${#numbers.formatDecimal(account.balance, 1, 'COMMA', 2, 'POINT') + ' ₸'}">

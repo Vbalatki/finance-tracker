@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 26
+      author: dimtriy_sidorov
+      comment: >
+        Устраняет гонку в AccountServiceImpl.saveAccount/updateAccount (C1):
+        уникальность имени счёта в пределах пользователя проверялась только
+        check-then-act в сервисе, без backing constraint'а. Аналогичный
+        constraint уже есть для categories (uk_categories_name_user) и
+        budgets (uk_budgets_user_category) — для accounts его не завели.
+      changes:
+        - addUniqueConstraint:
+            schemaName: finance_tracker
+            tableName: accounts
+            columnNames: name, user_id
+            constraintName: uk_accounts_name_user

@@ -35,6 +35,8 @@ public class CurrencyFormatter {
                 return "€" + formattedAmount;
             case GBP:
                 return "£" + formattedAmount;
+            case JPY:
+                return "¥" + formattedAmount;
             case KZT:
                 return formattedAmount + " ₸";
             case RUB:
@@ -62,6 +64,7 @@ public class CurrencyFormatter {
             case USD: return "$";
             case EUR: return "€";
             case GBP: return "£";
+            case JPY: return "¥";
             case KZT: return "₸";
             case RUB: default: return "₽";
         }
