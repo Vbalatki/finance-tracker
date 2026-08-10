@@ -1,4 +1,3 @@
-// BankIntegrationController.java
 package com.finance.finance_tracker.controller;
 
 import com.finance.finance_tracker.config.TBankProperties;
