@@ -5,7 +5,7 @@ import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.dto.UserSettingsDto;
 import com.finance.finance_tracker.entity.enums.Currency;
 import com.finance.finance_tracker.entity.enums.Theme;
-import com.finance.finance_tracker.service.Impl.UserDetailsServiceImpl;
+import com.finance.finance_tracker.service.impl.UserDetailsServiceImpl;
 import com.finance.finance_tracker.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

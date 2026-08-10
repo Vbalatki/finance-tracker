@@ -1,4 +1,4 @@
-package com.finance.finance_tracker.service.Impl;
+package com.finance.finance_tracker.service.impl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

@@ -1,4 +1,4 @@
-package com.finance.finance_tracker.service.Impl;
+package com.finance.finance_tracker.service.impl;
 
 import com.finance.finance_tracker.dto.bank.BankStatementResult;
 import com.finance.finance_tracker.dto.bank.BankTransactionDto;
@@ -90,6 +90,33 @@ class BankImportServiceImplTest {
             List<Transaction> txs = (List<Transaction>) list;
             return txs.size() == 1 && "op-2".equals(txs.get(0).getExternalId());
         }));
+    }
+
+    @Test
+    @DisplayName("syncTransactions дедуплицирует операции с одинаковым externalId внутри одного ответа банка")
+    void syncTransactions_duplicateExternalIdWithinSameStatement_savesOnlyOnce() {
+        Account account = new Account();
+        account.setId(10L);
+        account.setBankCode("TBANK");
+        account.setExternalAccountNumber("40702810110011000000");
+
+        when(accountRepository.findById(10L)).thenReturn(Optional.of(account));
+
+        // одна и та же операция дважды в одном ответе — имитация пересечения страниц пагинации
+        BankTransactionDto tx1 = new BankTransactionDto(
+                "op-dup", "40702810110011000000", new BigDecimal("500.00"), "RUB", "Зарплата", LocalDateTime.now());
+        BankTransactionDto tx2 = new BankTransactionDto(
+                "op-dup", "40702810110011000000", new BigDecimal("500.00"), "RUB", "Зарплата", LocalDateTime.now());
+
+        when(tBankConnector.fetchTransactions(eq("40702810110011000000"), any(), any()))
+                .thenReturn(new BankStatementResult(List.of(tx1, tx2), null));
+        when(transactionRepository.findExistingExternalIds(eq("TBANK"), eq(List.of("op-dup"))))
+                .thenReturn(List.of());
+
+        int imported = bankImportService.syncTransactions(10L, LocalDateTime.now().minusDays(30), LocalDateTime.now());
+
+        assertThat(imported).isEqualTo(1);
+        verify(transactionRepository).saveAll(argThat(list -> ((List<?>) list).size() == 1));
     }
 
     @Test

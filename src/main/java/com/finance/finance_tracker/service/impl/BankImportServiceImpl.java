@@ -1,7 +1,6 @@
-package com.finance.finance_tracker.service.Impl;
+package com.finance.finance_tracker.service.impl;
 
 import com.finance.finance_tracker.dto.bank.BankStatementResult;
-import com.finance.finance_tracker.dto.bank.TBankOperationDto;
 import com.finance.finance_tracker.dto.bank.BankTransactionDto;
 import com.finance.finance_tracker.entity.Account;
 import com.finance.finance_tracker.entity.Transaction;
@@ -27,6 +26,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.finance.finance_tracker.util.DataConstants.ACCOUNT_NAME_EXISTS;
@@ -89,7 +91,17 @@ public class BankImportServiceImpl implements BankImportService {
                 connector.fetchTransactions(account.getExternalAccountNumber(), from, to);
 
 
-        List<String> externalIds = statement.transactions().stream()
+        List<BankTransactionDto> distinctByExternalId = statement.transactions().stream()
+                .filter(distinctByKey(BankTransactionDto::externalId))
+                .collect(Collectors.toList());
+
+        if (distinctByExternalId.size() < statement.transactions().size()) {
+            log.warn("Ответ банка для счёта id={} содержит {} дублирующихся externalId в одной выписке — " +
+                            "вероятно, пересечение страниц пагинации",
+                    accountId, statement.transactions().size() - distinctByExternalId.size());
+        }
+
+        List<String> externalIds = distinctByExternalId.stream()
                 .map(BankTransactionDto::externalId)
                 .collect(Collectors.toList());
 
@@ -98,7 +110,7 @@ public class BankImportServiceImpl implements BankImportService {
                 : new HashSet<>(transactionRepository.findExistingExternalIds(account.getBankCode(), externalIds));
 
         List<Transaction> newTransactions = new ArrayList<>();
-        for (BankTransactionDto bankTx : statement.transactions()) {
+        for (BankTransactionDto bankTx : distinctByExternalId) {
             if (alreadyImported.contains(bankTx.externalId())) {
                 continue;
             }
@@ -136,5 +148,10 @@ public class BankImportServiceImpl implements BankImportService {
             throw new InvalidDataException("Неизвестный банк: " + bankCode);
         }
         return tBankConnector;
+    }
+
+    private static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+        Set<Object> seen = ConcurrentHashMap.newKeySet();
+        return t -> seen.add(keyExtractor.apply(t));
     }
 }

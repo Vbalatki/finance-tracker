@@ -5,7 +5,7 @@ import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.entity.SecurityUser;
 import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.exception.InvalidDataException;
-import com.finance.finance_tracker.service.Impl.UserDetailsServiceImpl;
+import com.finance.finance_tracker.service.impl.UserDetailsServiceImpl;
 import com.finance.finance_tracker.service.UserService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

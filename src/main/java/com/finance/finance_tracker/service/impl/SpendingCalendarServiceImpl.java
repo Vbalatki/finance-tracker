@@ -1,4 +1,4 @@
-package com.finance.finance_tracker.service.Impl;
+package com.finance.finance_tracker.service.impl;
 
 import com.finance.finance_tracker.dto.CalendarDayDto;
 import com.finance.finance_tracker.dto.CalendarMonthDto;
