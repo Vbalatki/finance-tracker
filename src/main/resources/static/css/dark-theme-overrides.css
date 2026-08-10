@@ -1,0 +1,78 @@
+/* Оверрайды для тёмной темы поверх Bootstrap 5.3 + собственных
+   хардкод-цветов, оставшихся в проекте с до-тёмной эпохи. Bootstrap
+   сам не темнит утилитные классы вроде .bg-white/.bg-light — по
+   спецификации фреймворка они обязаны оставаться белыми/светлыми
+   всегда, поэтому их приходится переопределять явно здесь. */
+
+[data-theme="dark"] .bg-white,
+[data-bs-theme="dark"] .bg-white {
+    background-color: var(--bs-card-bg) !important;
+}
+
+[data-bs-theme="dark"] .bg-light {
+    background-color: var(--bs-tertiary-bg) !important;
+    color: var(--bs-body-color) !important;
+}
+
+[data-bs-theme="dark"] .text-dark {
+    color: var(--bs-body-color) !important;
+}
+
+/* Карточки со своим фоном (border-0 bg-light и т.д. на дашборде/статистике) */
+[data-bs-theme="dark"] .card.bg-light,
+[data-bs-theme="dark"] .card.border-0.bg-light {
+    background-color: var(--bs-tertiary-bg) !important;
+}
+
+/* Полупрозрачные bg-*-opacity-10 карточки (статистика на transactions/list,
+   dashboard) — на тёмном фоне их "10% непрозрачности" выглядит как почти
+   белое пятно, увеличиваем контраст через смешивание с телом страницы */
+[data-bs-theme="dark"] .bg-opacity-10 {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Карточка общего баланса на дашборде — свой inline-градиент, Bootstrap
+   его не видит и не трогает; в тёмной теме оставляем читаемым как есть,
+   градиент сам по себе достаточно тёмный и не требует правок, только
+   убеждаемся, что текст не потерялся */
+[data-bs-theme="dark"] .card[style*="linear-gradient"] {
+    color: #fff !important;
+}
+
+/* Таблицы: Bootstrap 5.3 сам поддерживает table-striped/table-hover в
+   тёмной теме, но наш кастомный .table th (см. style.css) должен не
+   перетягивать светлый фон поверх тёмных строк */
+[data-bs-theme="dark"] .table th {
+    background-color: var(--bs-tertiary-bg);
+    color: var(--bs-body-color);
+}
+
+/* Календарь — полностью свой, некастомизированный под Bootstrap блок */
+[data-bs-theme="dark"] .calendar-day {
+    border-color: var(--bs-border-color);
+    background-color: var(--bs-body-bg);
+}
+
+[data-bs-theme="dark"] .calendar-day.other-month {
+    opacity: 0.25;
+}
+
+[data-bs-theme="dark"] .calendar-weekday {
+    color: var(--bs-secondary-color);
+}
+
+[data-bs-theme="dark"] .calendar-day-planned {
+    border-top-color: var(--bs-border-color);
+    color: var(--bs-secondary-color);
+}
+
+/* Badge с bg-light (используется под стандартные категории на /categories) */
+[data-bs-theme="dark"] .badge.bg-light {
+    background-color: var(--bs-tertiary-bg) !important;
+    color: var(--bs-body-color) !important;
+    border-color: var(--bs-border-color) !important;
+}
+
+/* Модалки и dropdown Bootstrap уже темнит нативно через data-bs-theme —
+   не трогаем, но проверь после применения этого файла, что подтверждения
+   удаления (accounts/list.html, transactions/list.html) выглядят нормально */

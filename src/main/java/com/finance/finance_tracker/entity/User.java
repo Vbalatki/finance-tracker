@@ -77,9 +77,6 @@ public class User {
     @Column (name = "default_currency", nullable = false)
     private Currency defaultCurrency = Currency.RUB;
 
-    @Column(name = "locale", nullable = false)
-    private String locale = "ru";
-
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Account> accounts = new ArrayList<>();
 

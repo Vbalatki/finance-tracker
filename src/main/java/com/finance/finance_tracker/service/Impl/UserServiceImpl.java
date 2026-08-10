@@ -312,8 +312,7 @@ public class UserServiceImpl implements UserService {
         User user = findById(userId);
         UserSettingsDto dto = new UserSettingsDto();
         dto.setTheme(user.getTheme());
-        dto.setDefaultCurrency(user.getDefaultCurrency());
-        dto.setLocale(user.getLocale());
+        dto.setDefaultCurrency(user.getDefaultCurrency());;
         return dto;
     }
 
@@ -323,9 +322,8 @@ public class UserServiceImpl implements UserService {
         User user = findById(userId);
         user.setTheme(dto.getTheme());
         user.setDefaultCurrency(dto.getDefaultCurrency());
-        user.setLocale(dto.getLocale());
         userRepository.save(user);
         log.info("Обновлены настройки пользователя id={}: theme={}, defaultCurrency={}, locale={}",
-                userId, dto.getTheme(), dto.getDefaultCurrency(), dto.getLocale());
+                userId, dto.getTheme(), dto.getDefaultCurrency());
     }
 }

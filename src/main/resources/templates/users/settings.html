@@ -49,14 +49,6 @@
                         <div class="form-text">Используется для отображения общего баланса на дашборде</div>
                     </div>
 
-                    <div class="mb-2">
-                        <label for="locale" class="form-label">Язык интерфейса</label>
-                        <select class="form-select" id="locale" disabled>
-                            <option value="ru" selected>Русский</option>
-                        </select>
-                        <div class="form-text">Другие языки скоро появятся</div>
-                    </div>
-
                 </div>
             </div>
         </div>
@@ -86,7 +78,8 @@
         // Bootstrap 5.3 сам перерисует всё через CSS), сохранение на сервере
         // идёт в фоне, без блокировки интерфейса.
         document.querySelectorAll('input[name="theme"]').forEach(function (radio) {
-            radio.addEventListener('change', function () {
+            radio.addEventListener('change', function (event) {
+                event.preventDefault();
                 const theme = this.value;
                 document.documentElement.setAttribute('data-bs-theme', theme.toLowerCase());
 
@@ -96,10 +89,13 @@
                     body: 'theme=' + encodeURIComponent(theme)
                 })
                     .then(response => {
-                        if (!response.ok) throw new Error('failed');
-                        showToast('Тема сохранена', false);
+                        if (!response.ok) throw new Error('HTTP ' + response.status);
+                        return showToast('Тема сохранена', false);
                     })
-                    .catch(() => showToast('Не удалось сохранить тему', true));
+                    .catch(err => {
+                        console.error('Ошибка сохранения темы:', err);
+                        showToast('Не удалось сохранить тему', true);
+                    });
             });
         });
 

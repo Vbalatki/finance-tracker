@@ -13,7 +13,4 @@ public class UserSettingsDto {
 
     @NotNull(message = "Основная валюта обязательна")
     private Currency defaultCurrency;
-
-    @NotNull(message = "Язык обязателен")
-    private String locale;
 }

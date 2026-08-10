@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 27
+      author: dmitriy-sidorov
+      comment: >
+        Убирает locale — решили не делать переключение языка, банки и
+        аудитория продукта русскоязычные, мультиязычность не нужна.
+      changes:
+        - dropColumn:
+            schemaName: finance_tracker
+            tableName: users
+            columnName: locale

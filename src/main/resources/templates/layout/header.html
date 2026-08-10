@@ -16,43 +16,43 @@
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="/dashboard">
-                            <i class="bi bi-speedometer2"></i> <span th:text="#{nav.dashboard}">Дашборд</span>
+                            <i class="bi bi-speedometer2"></i> Дашборд
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/transactions">
-                            <i class="bi bi-arrow-left-right"></i> <span th:text="#{nav.transactions}">Транзакции</span>
+                            <i class="bi bi-arrow-left-right"></i> Транзакции
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/accounts">
-                            <i class="bi bi-wallet2"></i> <span th:text="#{nav.accounts}">Счета</span>
+                            <i class="bi bi-wallet2"></i> Счета
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/categories">
-                            <i class="bi bi-tags"></i> <span th:text="#{nav.categories}">Категории</span>
+                            <i class="bi bi-tags"></i> Категории
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/budgets">
-                            <i class="bi bi-pie-chart"></i> <span th:text="#{nav.budgets}">Бюджеты</span>
+                            <i class="bi bi-pie-chart"></i> Бюджеты
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/calendar">
-                            <i class="bi bi-calendar3"></i> <span th:text="#{nav.calendar}">Календарь</span>
+                            <i class="bi bi-calendar3"></i> Календарь
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/recurring">
-                            <i class="bi bi-arrow-repeat"></i> <span th:text="#{nav.recurring}">Плановые списания</span>
+                            <i class="bi bi-arrow-repeat"></i> Плановые списания
                         </a>
                     </li>
 
                     <li class="nav-item" sec:authorize="hasRole('ADMIN')">
                         <a class="nav-link text-warning" href="/admin">
-                            <i class="bi bi-shield-lock-fill"></i> <span th:text="#{nav.admin}">Админ панель</span>
+                            <i class="bi bi-shield-lock-fill"></i> Админ панель
                         </a>
                     </li>
 
@@ -62,13 +62,13 @@
                             <i class="bi bi-person-circle"></i> <span th:text="${auth.name}"></span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" th:if="${auth != null and auth.authenticated}">
-                            <li><a class="dropdown-item" href="/profile"><i class="bi bi-person"></i> <span th:text="#{nav.profile}">Профиль</span></a></li>
-                            <li><a class="dropdown-item" href="/profile/settings"><i class="bi bi-gear"></i> <span th:text="#{nav.settings}">Настройки</span></a></li>
+                            <li><a class="dropdown-item" href="/profile"><i class="bi bi-person"></i> Профиль</a></li>
+                            <li><a class="dropdown-item" href="/profile/settings"><i class="bi bi-gear"></i> Настройки</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form th:action="@{/logout}" method="post" class="d-inline">
                                     <button type="submit" class="dropdown-item">
-                                        <i class="bi bi-box-arrow-right"></i> <span th:text="#{nav.logout}">Выход</span>
+                                        <i class="bi bi-box-arrow-right"></i> Выход
                                     </button>
                                 </form>
                             </li>
