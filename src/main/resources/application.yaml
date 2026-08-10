@@ -128,11 +128,12 @@ springdoc:
 tbank:
   url: "https://business.tbank.ru"
   token: ${TBANK_API_TOKEN:}
+  sandbox-test-account: "40702810510000710417"
 
 
 # ======= Внешний API курсов валют =======
 currencyapi:
   url: "https://v6.exchangerate-api.com/v6/"
   key: ${CURRENCY_API_KEY:}
-  sandbox-test-account: "40702810510000710417"
+
 
