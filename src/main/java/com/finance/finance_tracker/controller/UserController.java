@@ -4,10 +4,12 @@ package com.finance.finance_tracker.controller;
 import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.dto.UserSettingsDto;
 import com.finance.finance_tracker.entity.enums.Currency;
+import com.finance.finance_tracker.entity.enums.Theme;
 import com.finance.finance_tracker.service.Impl.UserDetailsServiceImpl;
 import com.finance.finance_tracker.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
@@ -149,27 +152,43 @@ public class UserController {
         }
     }
 
-    @GetMapping("/settings")
-    public String settingsPage(Model model, @AuthenticationPrincipal UserDetails userDetails) {
+    @GetMapping("/profile/settings")
+    public String settingsPage(Model model, @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
         UserDto user = userService.getUserByEmail(userDetails.getUsername());
         model.addAttribute("settingsDto", userService.getUserSettings(user.getId()));
         model.addAttribute("currencies", Currency.values());
         return "users/settings";
     }
 
-    @PostMapping("/settings")
-    public String updateSettings(@Valid @ModelAttribute("settingsDto") UserSettingsDto dto,
-                                 BindingResult result,
-                                 @AuthenticationPrincipal UserDetails userDetails,
-                                 RedirectAttributes redirectAttributes,
-                                 Model model) {
-        if (result.hasErrors()) {
-            model.addAttribute("currencies", Currency.values());
-            return "users/settings";
-        }
+    /**
+     * Мгновенное сохранение темы оформления — вызывается AJAX-запросом со
+     * страницы настроек при клике на радио-кнопку, без формы и кнопки
+     * "Сохранить". Читает текущие настройки, меняет только тему, сохраняет
+     * целиком — переиспользует существующий bulk-метод сервиса, не плодит
+     * отдельный узкий метод в сервисном слое ради одного поля.
+     */
+    @PostMapping("/profile/settings/theme")
+    @ResponseBody
+    public ResponseEntity<Void> updateTheme(@RequestParam Theme theme,
+                                            @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
         UserDto user = userService.getUserByEmail(userDetails.getUsername());
-        userService.updateUserSettings(user.getId(), dto);
-        redirectAttributes.addFlashAttribute("success", "Настройки сохранены");
-        return "redirect:/profile/settings";
+        UserSettingsDto settings = userService.getUserSettings(user.getId());
+        settings.setTheme(theme);
+        userService.updateUserSettings(user.getId(), settings);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Мгновенное сохранение основной валюты — тот же приём, что и для темы.
+     */
+    @PostMapping("/profile/settings/currency")
+    @ResponseBody
+    public ResponseEntity<Void> updateDefaultCurrency(@RequestParam Currency defaultCurrency,
+                                                      @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+        UserDto user = userService.getUserByEmail(userDetails.getUsername());
+        UserSettingsDto settings = userService.getUserSettings(user.getId());
+        settings.setDefaultCurrency(defaultCurrency);
+        userService.updateUserSettings(user.getId(), settings);
+        return ResponseEntity.ok().build();
     }
 }
