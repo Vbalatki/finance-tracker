@@ -134,4 +134,5 @@ tbank:
 currencyapi:
   url: "https://v6.exchangerate-api.com/v6/"
   key: ${CURRENCY_API_KEY:}
+  sandbox-test-account: "40702810510000710417"
 

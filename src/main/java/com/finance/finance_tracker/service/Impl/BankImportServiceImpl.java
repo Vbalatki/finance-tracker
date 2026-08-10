@@ -23,6 +23,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.finance.finance_tracker.util.DataConstants.ACCOUNT_NAME_EXISTS;
 import static com.finance.finance_tracker.util.DataConstants.ACCOUNT_NOT_FOUND;
@@ -83,10 +88,18 @@ public class BankImportServiceImpl implements BankImportService {
         BankStatementResult statement =
                 connector.fetchTransactions(account.getExternalAccountNumber(), from, to);
 
-        int imported = 0;
+
+        List<String> externalIds = statement.transactions().stream()
+                .map(BankTransactionDto::externalId)
+                .collect(Collectors.toList());
+
+        Set<String> alreadyImported = externalIds.isEmpty()
+                ? Set.of()
+                : new HashSet<>(transactionRepository.findExistingExternalIds(account.getBankCode(), externalIds));
+
+        List<Transaction> newTransactions = new ArrayList<>();
         for (BankTransactionDto bankTx : statement.transactions()) {
-            if (transactionRepository.existsByExternalSourceAndExternalId(
-                    account.getBankCode(), bankTx.externalId())) {
+            if (alreadyImported.contains(bankTx.externalId())) {
                 continue;
             }
 
@@ -98,10 +111,11 @@ public class BankImportServiceImpl implements BankImportService {
             tx.setCreatedAt(bankTx.bookingDate());
             tx.setExternalSource(account.getBankCode());
             tx.setExternalId(bankTx.externalId());
-
-            transactionRepository.save(tx);
-            imported++;
+            newTransactions.add(tx);
         }
+
+        transactionRepository.saveAll(newTransactions);
+        int imported = newTransactions.size();
 
         if (statement.endingBalance() != null && !to.isBefore(LocalDateTime.now().minusMinutes(5))) {
             account.setBalance(statement.endingBalance());

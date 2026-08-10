@@ -39,8 +39,17 @@
 
                         <div class="mb-3">
                             <label for="externalAccountNumber" class="form-label">Номер счёта в банке</label>
-                            <input type="text" class="form-control" id="externalAccountNumber"
-                                   name="externalAccountNumber" placeholder="40702810110011000000" required>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="externalAccountNumber"
+                                       name="externalAccountNumber" placeholder="40702810110011000000" required>
+                                <button type="button" class="btn btn-outline-secondary" id="fillSandboxAccountBtn"
+                                        th:attr="data-sandbox-account=${sandboxTestAccount}">
+                                    Тестовый счёт песочницы
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                Для проверки интеграции можно подставить готовый тестовый счёт песочницы Т-Банка.
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -75,5 +84,29 @@
 </div>
 
 <div th:replace="~{layout/footer :: footer}"></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const fillBtn = document.getElementById('fillSandboxAccountBtn');
+        const accountInput = document.getElementById('externalAccountNumber');
+        const accountNameInput = document.getElementById('accountName');
+        const currencySelect = document.getElementById('currency');
+
+        if (fillBtn && accountInput) {
+            fillBtn.addEventListener('click', function () {
+                const sandboxAccount = fillBtn.getAttribute('data-sandbox-account');
+                if (!sandboxAccount) return;
+
+                accountInput.value = sandboxAccount;
+                if (accountNameInput && !accountNameInput.value) {
+                    accountNameInput.value = 'Т-Банк песочница';
+                }
+                if (currencySelect) {
+                    currencySelect.value = 'RUB';
+                }
+            });
+        }
+    });
+</script>
 </body>
 </html>

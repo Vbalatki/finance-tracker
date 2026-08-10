@@ -77,20 +77,27 @@ public class TransactionController {
                     .collect(Collectors.toList());
         }
 
-        // Реальный баланс выбранных счетов (текущий остаток на счетах)
         BigDecimal balance = userService.getUserTotalBalanceInRub(accountsToShow);
 
-        // Статистика по транзакциям (доходы/расходы) для отображения сумм операций
+        List<Long> accountIds = accountsToShow.stream().map(AccountDto::getId).collect(Collectors.toList());
+        List<TransactionDto> allTxForAccounts = accountIds.isEmpty()
+                ? List.of()
+                : transactionService.findByAccountIdIn(accountIds);
+
+        if (categoryId != null) {
+            allTxForAccounts = allTxForAccounts.stream()
+                    .filter(t -> categoryId.equals(t.getCategoryId()))
+                    .collect(Collectors.toList());
+        }
+
+        Map<Long, List<TransactionDto>> txByAccountId = allTxForAccounts.stream()
+                .collect(Collectors.groupingBy(TransactionDto::getAccountId));
+
         Map<AccountDto, List<TransactionDto>> transactionsByAccount = new LinkedHashMap<>();
         List<TransactionDto> allFilteredTransactions = new ArrayList<>();
 
         for (AccountDto acc : accountsToShow) {
-            List<TransactionDto> txList = transactionService.findByAccountId(acc.getId());
-            if (categoryId != null) {
-                txList = txList.stream()
-                        .filter(t -> categoryId.equals(t.getCategoryId()))
-                        .collect(Collectors.toList());
-            }
+            List<TransactionDto> txList = new ArrayList<>(txByAccountId.getOrDefault(acc.getId(), List.of()));
             txList.sort((t1, t2) -> t2.getCreatedAt().compareTo(t1.getCreatedAt()));
             transactionsByAccount.put(acc, txList);
             allFilteredTransactions.addAll(txList);

@@ -33,15 +33,15 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     @Query("SELECT t FROM Transaction t " +
             "JOIN FETCH t.account " +
-            "LEFT JOIN FETCH t.category c " +
-            "WHERE c.id = :categoryId")
-    List<Transaction> findByCategoryId(Long categoryId);
+            "LEFT JOIN FETCH t.category " +
+            "WHERE t.account.id = :accountId")
+    List<Transaction> findByAccountId(Long accountId);
 
     @Query("SELECT t FROM Transaction t " +
             "JOIN FETCH t.account " +
             "LEFT JOIN FETCH t.category " +
-            "WHERE t.account.id = :accountId")
-    List<Transaction> findByAccountId(Long accountId);
+            "WHERE t.account.id IN :accountIds")
+    List<Transaction> findByAccountIdIn(@Param("accountIds") List<Long> accountIds);
 
     @Query("SELECT t FROM Transaction t " +
             "JOIN FETCH t.account " +
@@ -67,15 +67,16 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     );
 
 
-    @Query("SELECT t.amount, a.currency FROM Transaction t " +
+    @Query("SELECT t.category.id, t.amount, a.currency FROM Transaction t " +
             "JOIN t.account a " +
-            "WHERE t.category.id = :categoryId " +
+            "WHERE t.category.id IN :categoryIds " +
             "AND t.type = com.finance.finance_tracker.entity.enums.TransactionType.EXPENSE " +
             "AND t.createdAt >= :monthStart AND t.createdAt < :monthEnd")
-    List<Object[]> findExpensesByCategoryAndMonth(
-            @Param("categoryId") Long categoryId,
+    List<Object[]> findExpensesByCategoryIdsAndMonth(
+            @Param("categoryIds") List<Long> categoryIds,
             @Param("monthStart") LocalDateTime monthStart,
             @Param("monthEnd") LocalDateTime monthEnd);
+
 
     @Query("SELECT t FROM Transaction t JOIN FETCH t.account a " +
             "WHERE a.user.id = :userId AND t.createdAt >= :monthStart AND t.createdAt < :monthEnd")
@@ -84,6 +85,11 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("monthStart") LocalDateTime monthStart,
             @Param("monthEnd") LocalDateTime monthEnd);
 
+    @Query("SELECT t.externalId FROM Transaction t " +
+            "WHERE t.externalSource = :externalSource AND t.externalId IN :externalIds")
+    List<String> findExistingExternalIds(
+            @Param("externalSource") String externalSource,
+            @Param("externalIds") List<String> externalIds);
 
     boolean existsByExternalSourceAndExternalId(String externalSource, String externalId);
 }

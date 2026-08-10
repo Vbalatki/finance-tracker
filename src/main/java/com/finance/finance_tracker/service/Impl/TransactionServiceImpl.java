@@ -210,16 +210,6 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Transactional(readOnly = true)
-    public List<TransactionDto> getTransactionsByCategory(Long categoryId) {
-        log.debug("Запрос транзакций по категории: categoryId={}", categoryId);
-        List<Transaction> list = transactionRepository.findByCategoryId(categoryId);
-        log.debug("Найдено транзакций: {}", list.size());
-        return list.stream()
-                .map(transactionMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
     public BigDecimal calculateUserBalance(Long userId) {
         log.debug("Расчёт баланса пользователя: userId={}", userId);
         BigDecimal income = transactionRepository.sumAmountByUserIdAndType(userId, TransactionType.INCOME)
@@ -245,6 +235,17 @@ public class TransactionServiceImpl implements TransactionService {
                     }
                     return dto;
                 })
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<TransactionDto> findByAccountIdIn(List<Long> accountIds) {
+        if (accountIds == null || accountIds.isEmpty()) {
+            return List.of();
+        }
+        log.debug("Запрос транзакций по списку счетов: accountIds={}", accountIds);
+        return transactionRepository.findByAccountIdIn(accountIds).stream()
+                .map(transactionMapper::toDto)
                 .collect(Collectors.toList());
     }
 

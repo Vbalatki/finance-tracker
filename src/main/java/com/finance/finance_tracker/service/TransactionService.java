@@ -80,12 +80,11 @@ public interface TransactionService {
     List<TransactionDto> findByUserId(Long userId);
 
     /**
-     * Возвращает транзакции, привязанные к указанной категории.
-     *
-     * @param categoryId id категории
-     * @return список транзакций категории
+     * Возвращает транзакции сразу по нескольким счетам одним запросом —
+     * используется там, где иначе пришлось бы дёргать findByAccountId в цикле.
      */
-    List<TransactionDto> getTransactionsByCategory(Long categoryId);
+    List<TransactionDto> findByAccountIdIn(List<Long> accountIds);
+
 
     /**
      * Считает баланс пользователя как разницу между суммой всех его

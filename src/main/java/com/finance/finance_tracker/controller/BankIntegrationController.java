@@ -1,5 +1,7 @@
+// BankIntegrationController.java
 package com.finance.finance_tracker.controller;
 
+import com.finance.finance_tracker.config.TBankProperties;
 import com.finance.finance_tracker.util.SecurityUtil;
 import com.finance.finance_tracker.entity.enums.Currency;
 import com.finance.finance_tracker.service.BankImportService;
@@ -14,22 +16,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-/**
- * Thymeleaf-контроллер привязки счёта к внешнему банку. Отдельно от
- * {@link AccountController}, потому что тут ещё нет id существующего
- * Account — сам Account создаётся в процессе привязки.
- */
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/bank-integration")
 public class BankIntegrationController {
 
     private final BankImportService bankImportService;
+    private final TBankProperties tBankProperties;
 
     @GetMapping("/link")
     public String linkPage(Model model, @AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) return "redirect:/login";
         model.addAttribute("currencies", Currency.values());
+        model.addAttribute("sandboxTestAccount", tBankProperties.sandboxTestAccount());
         return "bank-integration/link";
     }
 
@@ -52,6 +51,7 @@ public class BankIntegrationController {
             return "redirect:/accounts/" + accountId;
         } catch (Exception e) {
             model.addAttribute("currencies", Currency.values());
+            model.addAttribute("sandboxTestAccount", tBankProperties.sandboxTestAccount());
             model.addAttribute("error", e.getMessage());
             return "bank-integration/link";
         }

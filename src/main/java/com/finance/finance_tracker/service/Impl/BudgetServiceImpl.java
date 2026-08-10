@@ -21,7 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -57,23 +59,29 @@ public class BudgetServiceImpl implements BudgetService {
             log.debug("У пользователя id={} нет бюджетов", userId);
         }
 
-        // Границы текущего месяца считаем один раз в Java
+        // BudgetServiceImpl.getBudgetsByUserId — заменить блок начиная с "Границы текущего месяца..."
         LocalDateTime monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay();
         LocalDateTime monthEnd = monthStart.plusMonths(1);
 
+        List<Long> categoryIds = list.stream()
+                .map(b -> b.getCategory().getId())
+                .collect(Collectors.toList());
+
+        Map<Long, BigDecimal> spentByCategory = new HashMap<>();
+        if (!categoryIds.isEmpty()) {
+            List<Object[]> rows = transactionRepository.findExpensesByCategoryIdsAndMonth(categoryIds, monthStart, monthEnd);
+            for (Object[] row : rows) {
+                Long categoryId = (Long) row[0];
+                BigDecimal amount = (BigDecimal) row[1];
+                Currency currency = (Currency) row[2];
+                BigDecimal converted = currencyApiService.convertCurrency(currency.name(), Currency.RUB.name(), amount);
+                spentByCategory.merge(categoryId, converted, BigDecimal::add);
+            }
+        }
+
         List<BudgetDto> budgets = list.stream().map(budget -> {
             BudgetDto dto = budgetMapper.toDto(budget);
-            List<Object[]> rows = transactionRepository.findExpensesByCategoryAndMonth( // запрос транзакций
-                    dto.getCategoryId(), monthStart, monthEnd);                         // с их карренси
-            BigDecimal spent = BigDecimal.ZERO;
-            for (Object[] row : rows) {
-                BigDecimal amount = (BigDecimal) row[0];
-                Currency currency = (Currency) row[1];
-                spent = spent.add(currencyApiService.convertCurrency(
-                        currency.name(), Currency.RUB.name(), amount));          // convert by currency
-            }
-
-            dto.setCurrentSpending(spent == null ? BigDecimal.ZERO : spent);     //
+            dto.setCurrentSpending(spentByCategory.getOrDefault(dto.getCategoryId(), BigDecimal.ZERO));
             return dto;
         }).collect(Collectors.toList());
 
