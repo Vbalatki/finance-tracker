@@ -94,6 +94,75 @@ mvn spring-boot:run
 
 > **Меняли уже применённый changeSet вручную?** Liquibase хранит контрольную сумму каждого применённого changeSet в `public.databasechangelog` и откажется катить миграции дальше при расхождении. На локальной dev-базе, если применённый changeSet ещё не ушёл в общий git/прод, можно просто снести volume (`docker volume rm finance-tracker_postgres-data`) и накатить заново. На проде так делать нельзя — только новый changeSet поверх.
 
+## Схема базы данных
+
+```mermaid
+erDiagram
+  USERS ||--o{ ACCOUNTS : owns
+  USERS ||--o{ CATEGORIES : owns
+  USERS ||--o{ BUDGETS : sets
+  USERS ||--o{ RECURRING_COMMITMENTS : schedules
+  USERS }o--o{ ROLES : has
+  ACCOUNTS ||--o{ TRANSACTIONS : contains
+  CATEGORIES ||--o{ TRANSACTIONS : classifies
+  CATEGORIES ||--o| BUDGETS : limits
+  CATEGORIES ||--o{ RECURRING_COMMITMENTS : classifies
+  ACCOUNTS ||--o{ RECURRING_COMMITMENTS : charges
+
+  USERS {
+    bigint id PK
+    string email UK
+    string password
+    boolean active
+  }
+  ROLES {
+    bigint id PK
+    string name UK
+  }
+  ACCOUNTS {
+    bigint id PK
+    bigint user_id FK
+    string name
+    decimal balance
+    string currency
+    bigint version
+    boolean active
+  }
+  CATEGORIES {
+    bigint id PK
+    bigint user_id FK "null значит стандартная"
+    string name
+  }
+  TRANSACTIONS {
+    bigint id PK
+    bigint account_id FK
+    bigint category_id FK
+    decimal amount
+    string type
+    string external_id
+    boolean active
+  }
+  BUDGETS {
+    bigint id PK
+    bigint user_id FK
+    bigint category_id FK
+    decimal monthly_limit
+  }
+  RECURRING_COMMITMENTS {
+    bigint id PK
+    bigint user_id FK
+    bigint category_id FK
+    bigint account_id FK
+    int day_of_month
+  }
+  AUDIT {
+    bigint id PK
+    bigint user_id "без FK-констрейнта"
+    string action
+    string entity_type
+  }
+```
+
 ## Swagger / OpenAPI
 
 Документирован только раздел `/api/**` (реальный JSON REST API) — остальные
