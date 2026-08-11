@@ -35,6 +35,8 @@ public class AdminController {
     private final UserService userService;
     private final AuditService auditService;
 
+
+
     /**
      * Главная страница админ-панели: список пользователей, список ролей и
      * последние 50 записей аудита.

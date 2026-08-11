@@ -134,9 +134,37 @@ class CategoryControllerTest {
         CategoryDto dto = new CategoryDto();
         dto.setId(5L);
         dto.setName("Продукты");
+        dto.setUserId(1L);
         when(categoryService.getCategoryById(5L)).thenReturn(dto);
 
         mockMvc.perform(get("/categories/5/edit"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("categories/edit"));
+    }
+
+    @Test
+    @DisplayName("GET /categories/{id}/edit для чужой категории возвращает 403")
+    void editCategoryForm_otherUsersCategory_returnsForbidden() throws Exception {
+        CategoryDto dto = new CategoryDto();
+        dto.setId(5L);
+        dto.setName("Чужая категория");
+        dto.setUserId(999L);
+        when(categoryService.getCategoryById(5L)).thenReturn(dto);
+
+        mockMvc.perform(get("/categories/5/edit"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET /categories/{id}/edit для стандартной категории доступен всем")
+    void editCategoryForm_defaultCategory_returnsEditView() throws Exception {
+        CategoryDto dto = new CategoryDto();
+        dto.setId(2L);
+        dto.setName("Транспорт");
+        dto.setUserId(null);
+        when(categoryService.getCategoryById(2L)).thenReturn(dto);
+
+        mockMvc.perform(get("/categories/2/edit"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("categories/edit"));
     }

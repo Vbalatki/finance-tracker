@@ -5,6 +5,7 @@ import com.finance.finance_tracker.entity.Budget;
 import com.finance.finance_tracker.entity.Category;
 import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.entity.enums.Currency;
+import com.finance.finance_tracker.exception.AccessDeniedException;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
 import com.finance.finance_tracker.mapper.BudgetMapper;
 import com.finance.finance_tracker.repository.BudgetRepository;
@@ -328,22 +329,42 @@ class BudgetServiceImplTest {
     class DeleteBudget {
 
         @Test
-        @DisplayName("удаляет существующий бюджет")
+        @DisplayName("удаляет бюджет своего владельца")
         void deleteBudget_success() {
-            when(budgetRepository.existsById(1L)).thenReturn(true);
+            Budget budget = new Budget();
+            budget.setId(1L);
+            budget.setUser(user);
 
-            budgetService.deleteBudget(1L);
+            when(budgetRepository.findById(1L)).thenReturn(Optional.of(budget));
 
-            verify(budgetRepository).deleteById(1L);
+            budgetService.deleteBudget(1L, 1L);
+
+            verify(budgetRepository).delete(budget);
         }
 
         @Test
         @DisplayName("бросает EntityNotFoundException, если бюджет не найден")
         void deleteBudget_notFound_throws() {
-            when(budgetRepository.existsById(404L)).thenReturn(false);
+            when(budgetRepository.findById(404L)).thenReturn(Optional.empty());
 
-            assertThrows(EntityNotFoundException.class, () -> budgetService.deleteBudget(404L));
-            verify(budgetRepository, never()).deleteById(any());
+            assertThrows(EntityNotFoundException.class, () -> budgetService.deleteBudget(404L, 1L));
+            verify(budgetRepository, never()).delete(any());
+        }
+
+        @Test
+        @DisplayName("бросает AccessDeniedException при попытке удалить чужой бюджет")
+        void deleteBudget_notOwner_throws() {
+            User otherUser = new User();
+            otherUser.setId(999L);
+
+            Budget budget = new Budget();
+            budget.setId(1L);
+            budget.setUser(otherUser);
+
+            when(budgetRepository.findById(1L)).thenReturn(Optional.of(budget));
+
+            assertThrows(AccessDeniedException.class, () -> budgetService.deleteBudget(1L, 1L));
+            verify(budgetRepository, never()).delete(any());
         }
     }
 }

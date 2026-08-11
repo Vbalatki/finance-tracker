@@ -2,6 +2,7 @@ package com.finance.finance_tracker.controller;
 
 import com.finance.finance_tracker.dto.CategoryDto;
 import com.finance.finance_tracker.dto.UserDto;
+import com.finance.finance_tracker.exception.AccessDeniedException;
 import com.finance.finance_tracker.service.CategoryService;
 import com.finance.finance_tracker.service.UserService;
 import com.finance.finance_tracker.util.SecurityUtil;
@@ -96,6 +97,10 @@ public class CategoryController {
     @GetMapping("/{id}/edit")
     public String editCategoryForm(@PathVariable Long id, Model model) {
         CategoryDto category = categoryService.getCategoryById(id);
+        Long currentUserId = SecurityUtil.getCurrentUserId();
+        if (category.getUserId() != null && !category.getUserId().equals(currentUserId)) {
+            throw new AccessDeniedException("Нет доступа к этой категории");
+        }
         model.addAttribute("categoryDto", category);
         return "categories/edit";
     }

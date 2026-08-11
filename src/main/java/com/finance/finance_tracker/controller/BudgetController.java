@@ -115,7 +115,8 @@ public class BudgetController {
     @PostMapping("/{id}/delete")
     public String deleteBudget(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
-            budgetService.deleteBudget(id);
+            Long userId = SecurityUtil.getCurrentUserId();
+            budgetService.deleteBudget(id, userId);
             redirectAttributes.addFlashAttribute("success", "Бюджет удалён");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());

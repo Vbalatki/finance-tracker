@@ -15,6 +15,7 @@ public interface RecurringCommitmentMapper {
     @Mapping(target = "userId", source = "user.id")
     RecurringCommitmentDto toDto(RecurringCommitment entity);
 
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "account", ignore = true)

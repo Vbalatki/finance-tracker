@@ -3,6 +3,7 @@ package com.finance.finance_tracker.service.impl;
 import com.finance.finance_tracker.dto.BudgetDto;
 import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.entity.enums.Currency;
+import com.finance.finance_tracker.exception.AccessDeniedException;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
 import com.finance.finance_tracker.mapper.BudgetMapper;
 import com.finance.finance_tracker.entity.Budget;
@@ -137,15 +138,22 @@ public class BudgetServiceImpl implements BudgetService {
 
     @Override
     @Transactional
-    public void deleteBudget(Long budgetId) {
-        log.debug("Удаление бюджета: id={}", budgetId);
+    public void deleteBudget(Long budgetId, Long currentUserId) {
+        log.debug("Удаление бюджета: id={}, currentUserId={}", budgetId, currentUserId);
 
-        if (!budgetRepository.existsById(budgetId)) {
-            log.error("Бюджет не найден при удалении: id={}", budgetId);
-            throw new EntityNotFoundException(BUDGET_NOT_FOUND + ", id: " + budgetId);
+        Budget budget = budgetRepository.findById(budgetId)
+                .orElseThrow(() -> {
+                    log.error("Бюджет не найден при удалении: id={}", budgetId);
+                    return new EntityNotFoundException(BUDGET_NOT_FOUND + ", id: " + budgetId);
+                });
+
+        if (!budget.getUser().getId().equals(currentUserId)) {
+            log.warn("Попытка удалить чужой бюджет: id={}, currentUserId={}, ownerId={}",
+                    budgetId, currentUserId, budget.getUser().getId());
+            throw new AccessDeniedException("Нет доступа к этому бюджету");
         }
 
-        budgetRepository.deleteById(budgetId);
+        budgetRepository.delete(budget);
         log.info("Удалён бюджет с id: {}", budgetId);
     }
 }

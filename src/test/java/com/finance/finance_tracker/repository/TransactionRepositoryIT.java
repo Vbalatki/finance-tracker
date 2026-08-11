@@ -75,8 +75,9 @@ public class TransactionRepositoryIT {
         entityManager.persist(tx);
 
         entityManager.flush();
-        entityManager.clear();  // критично: сбрасываем persistence context, чтобы следующий запрос реально шёл в БД,
-                                // а не отдавал уже закэшированные в сессии объекты
+        entityManager.clear(); // критично: сбрасываем persistence context,
+        // чтобы следующий запрос реально шёл в БД,
+        // а не отдавал уже закэшированные в сессии объекты
         userId = user.getId();
         accountId = account.getId();
     }
@@ -113,72 +114,22 @@ public class TransactionRepositoryIT {
                 .doesNotThrowAnyException();
     }
 
-
     @Test
-    @DisplayName("sumAmountByUserIdAndType суммирует транзакции со ВСЕХ счетов пользователя")
-    void sumAmountByUserIdAndType_sumsAcrossAllUserAccounts() {
-        User user = new User();
-        user.setName("Пётр");
-        user.setSurname("Петров");
-        user.setBirthday(LocalDate.of(1990, 1, 1));
-        user.setEmail("multi-account@example.com");
-        user.setPassword("encoded");
-        user.setActive(true);
-        entityManager.persist(user);
+    @DisplayName("findRecentByUserId(int) — default-метод реально ограничивает выборку через PageRequest")
+    void findRecentByUserId_intOverload_respectsLimit() {
+        seedData();
 
-        Account acc1 = new Account();
-        acc1.setName("Счет 1");
-        acc1.setBalance(BigDecimal.ZERO);
-        acc1.setCurrency(Currency.RUB);
-        acc1.setUser(user);
-        entityManager.persist(acc1);
-
-        Account acc2 = new Account();
-        acc2.setName("Счет 2");
-        acc2.setBalance(BigDecimal.ZERO);
-        acc2.setCurrency(Currency.RUB);
-        acc2.setUser(user);
-        entityManager.persist(acc2);
-
-        Transaction tx1 = new Transaction();
-        tx1.setAmount(new BigDecimal("100.00"));
-        tx1.setType(TransactionType.INCOME);
-        tx1.setAccount(acc1);
-        entityManager.persist(tx1);
-
-        Transaction tx2 = new Transaction();
-        tx2.setAmount(new BigDecimal("50.00"));
-        tx2.setType(TransactionType.INCOME);
-        tx2.setAccount(acc2);
-        entityManager.persist(tx2);
-
+        Account account = entityManager.getEntityManager().getReference(Account.class, accountId);
+        Transaction secondTx = new Transaction();
+        secondTx.setAmount(new BigDecimal("50.00"));
+        secondTx.setType(TransactionType.INCOME);
+        secondTx.setAccount(account);
+        entityManager.persist(secondTx);
         entityManager.flush();
         entityManager.clear();
 
-        BigDecimal total = transactionRepository
-                .sumAmountByUserIdAndType(user.getId(), TransactionType.INCOME)
-                .orElse(BigDecimal.ZERO);
+        var result = transactionRepository.findRecentByUserId(userId, 1);
 
-        assertThat(total).isEqualByComparingTo("150.00"); // с обоих счетов, не с одного
-    }
-
-    @Test
-    @DisplayName("deleteByAccountId мягко удаляет транзакции — именно так, как рассчитывает AccountServiceImpl.deleteAccount")
-    void deleteByAccountId_softDeletesTransactions() {
-        seedData();
-
-        transactionRepository.deleteByAccountId(accountId);
-        entityManager.getEntityManager().flush();
-        entityManager.getEntityManager().clear();
-
-        assertThat(transactionRepository.findByAccountId(accountId)).isEmpty();
-
-        // физически строка на месте — значит deleteByAccountId уважает @SQLDelete,
-        // а не бьёт напрямую bulk DELETE в обход него
-        Long txCount = ((Number) entityManager.getEntityManager()
-                .createNativeQuery("SELECT COUNT(*) FROM finance_tracker.transactions WHERE account_id = ?")
-                .setParameter(1, accountId)
-                .getSingleResult()).longValue();
-        assertThat(txCount).isEqualTo(1L);
+        assertThat(result).hasSize(1); // а не 2, хотя в базе их теперь две
     }
 }

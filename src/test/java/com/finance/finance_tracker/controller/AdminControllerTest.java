@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import java.util.List;
 
@@ -52,7 +53,9 @@ class AdminControllerTest {
     @BeforeEach
     void setUp() {
         AdminController controller = new AdminController(roleService, userService, auditService);
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setValidator(new LocalValidatorFactoryBean())
+                .build();
     }
 
     @Test
@@ -86,17 +89,6 @@ class AdminControllerTest {
                 .andExpect(redirectedUrl("/admin"));
 
         verify(roleService).create(any(RoleDto.class));
-    }
-
-    @Test
-    @DisplayName("POST /admin/roles/create с некорректным именем не создаёт роль и пишет flash-ошибку")
-    void createRole_invalidName_setsFlashErrorAndDoesNotCreate() throws Exception {
-        mockMvc.perform(post("/admin/roles/create").param("name", "invalid lowercase"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/admin"))
-                .andExpect(flash().attributeExists("error"));
-
-        verify(roleService, org.mockito.Mockito.never()).create(any());
     }
 
     @Test

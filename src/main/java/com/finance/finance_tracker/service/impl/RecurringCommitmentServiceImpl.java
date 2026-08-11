@@ -67,6 +67,9 @@ public class RecurringCommitmentServiceImpl implements RecurringCommitmentServic
         if (dto.getCategoryId() != null) {
             Category category = categoryRepository.findById(dto.getCategoryId())
                     .orElseThrow(() -> new EntityNotFoundException(CATEGORY_NOT_FOUND + ", id: " + dto.getCategoryId()));
+            if (category.getUser() != null && !category.getUser().getId().equals(userId)) {
+                throw new AccessDeniedException("Нет доступа к этой категории");
+            }
             commitment.setCategory(category);
         } else {
             commitment.setCategory(null);
@@ -75,6 +78,9 @@ public class RecurringCommitmentServiceImpl implements RecurringCommitmentServic
         if (dto.getAccountId() != null) {
             Account account = accountRepository.findById(dto.getAccountId())
                     .orElseThrow(() -> new EntityNotFoundException(ACCOUNT_NOT_FOUND + ", id: " + dto.getAccountId()));
+            if (!account.getUser().getId().equals(userId)) {
+                throw new AccessDeniedException("Нет доступа к этому счету");
+            }
             commitment.setAccount(account);
         } else {
             commitment.setAccount(null);

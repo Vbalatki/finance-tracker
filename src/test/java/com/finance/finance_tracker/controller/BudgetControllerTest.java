@@ -3,6 +3,7 @@ package com.finance.finance_tracker.controller;
 import com.finance.finance_tracker.dto.BudgetDto;
 import com.finance.finance_tracker.entity.SecurityUser;
 import com.finance.finance_tracker.entity.User;
+import com.finance.finance_tracker.exception.AccessDeniedException;
 import com.finance.finance_tracker.service.BudgetService;
 import com.finance.finance_tracker.service.CategoryService;
 import org.junit.jupiter.api.AfterEach;
@@ -128,10 +129,6 @@ class BudgetControllerTest {
     @Test
     @DisplayName("POST /budgets без обязательных полей возвращает форму с ошибками и подкладывает categories в модель")
     void saveBudget_missingRequiredFields_returnsFormViewWithCategories() throws Exception {
-        // Раньше контроллер при ошибках валидации НЕ подкладывал "categories"
-        // обратно в модель (в отличие от showCreateForm) — реальный Thymeleaf
-        // рендеринг budgets/form.html в этом случае падал. Починено: теперь
-        // явно проверяем, что categories в модели есть.
         when(categoryService.getAllCategoriesByUserId(1L)).thenReturn(List.of());
 
         mockMvc.perform(post("/budgets").param("monthlyLimit", ""))
@@ -148,16 +145,28 @@ class BudgetControllerTest {
                 .andExpect(redirectedUrl("/budgets"))
                 .andExpect(flash().attributeExists("success"));
 
-        verify(budgetService).deleteBudget(1L);
+        verify(budgetService).deleteBudget(1L, 1L);
     }
 
     @Test
     @DisplayName("POST /budgets/{id}/delete при ошибке пишет flash-ошибку")
     void deleteBudget_serviceThrows_setsFlashError() throws Exception {
-        doThrow(new RuntimeException("Бюджет не найден")).when(budgetService).deleteBudget(404L);
+        doThrow(new RuntimeException("Бюджет не найден")).when(budgetService).deleteBudget(404L, 1L);
 
         mockMvc.perform(post("/budgets/404/delete"))
                 .andExpect(status().is3xxRedirection())
+                .andExpect(flash().attributeExists("error"));
+    }
+
+    @Test
+    @DisplayName("POST /budgets/{id}/delete для чужого бюджета пишет flash-ошибку и не удаляет")
+    void deleteBudget_otherUsersBudget_setsFlashErrorAndDoesNotDelete() throws Exception {
+        doThrow(new AccessDeniedException("Нет доступа к этому бюджету"))
+                .when(budgetService).deleteBudget(1L, 1L);
+
+        mockMvc.perform(post("/budgets/1/delete"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/budgets"))
                 .andExpect(flash().attributeExists("error"));
     }
 }

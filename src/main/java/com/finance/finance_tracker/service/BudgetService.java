@@ -35,8 +35,10 @@ public interface BudgetService {
     /**
      * Удаляет бюджет.
      *
-     * @param budgetId id бюджета
+     * @param budgetId      id бюджета
+     * @param currentUserId id текущего аутентифицированного пользователя — проверяется владение
      * @throws com.finance.finance_tracker.exception.EntityNotFoundException если бюджет не найден
+     * @throws com.finance.finance_tracker.exception.AccessDeniedException если бюджет принадлежит другому пользователю
      */
-    void deleteBudget(Long budgetId);
+    void deleteBudget(Long budgetId, Long currentUserId);
 }
