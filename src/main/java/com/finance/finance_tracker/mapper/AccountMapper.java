@@ -10,6 +10,8 @@ import org.mapstruct.Mapping;
 public interface AccountMapper {
     @Mapping(source = "user.id", target = "userId")
     AccountDto toDto(Account account);
+
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)
     Account toEntity(AccountDto accountDto);
 }

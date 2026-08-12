@@ -5,6 +5,7 @@ import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.entity.SecurityUser;
 import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.exception.DuplicateEntityException;
+import com.finance.finance_tracker.handler.GlobalExceptionHandler;
 import com.finance.finance_tracker.service.CategoryService;
 import com.finance.finance_tracker.service.UserService;
 import org.junit.jupiter.api.AfterEach;
@@ -53,6 +54,7 @@ class CategoryControllerTest {
         CategoryController controller = new CategoryController(categoryService, userService);
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new GlobalExceptionHandler())
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .build();
 

@@ -11,6 +11,7 @@ public interface CategoryMapper {
     @Mapping(target = "defaultCategory", source = "defaultCategory")
     CategoryDto toDto(Category category);
 
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)
     Category toEntity(CategoryDto dto);
 }

@@ -24,12 +24,12 @@ class RoleMapperTest {
     }
 
     @Test
-    @DisplayName("toEntity не переносит id из dto — Role.id примитив long, дефолт 0")
+    @DisplayName("toEntity игнорирует id из dto даже если он заполнен")
     void toEntity_ignoresIdFromDto() {
         RoleDto dto = new RoleDto();
         dto.setId(999L);
         dto.setName("ROLE_MANAGER");
 
-        assertThat(mapper.toEntity(dto).getId()).isZero();
+        assertThat(mapper.toEntity(dto).getId()).isNull();
     }
 }

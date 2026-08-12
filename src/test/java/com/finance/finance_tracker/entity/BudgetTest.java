@@ -20,12 +20,18 @@ class BudgetTest {
     }
 
     @Test
-    @DisplayName("equals — в отличие от остальных сущностей, Budget НЕ id-based (Lombok @Data по всем полям)")
-    void equals_isFieldBased_unlikeOtherEntities() {
+    @DisplayName("equals — только по id, monthlyLimit не участвует (как и у остальных сущностей)")
+    void equals_sameId_equalRegardlessOfOtherFields() {
         Budget a = new Budget(); a.setId(1L); a.setMonthlyLimit(new BigDecimal("5000.00"));
         Budget b = new Budget(); b.setId(1L); b.setMonthlyLimit(new BigDecimal("3000.00"));
 
-        // документирует текущее (непоследовательное) поведение, а не одобряет его
-        assertThat(a).isNotEqualTo(b);
+        assertThat(a).isEqualTo(b);
+    }
+
+    @Test
+    @DisplayName("hashCode — константный")
+    void hashCode_isConstant() {
+        Budget withId = new Budget(); withId.setId(1L);
+        assertThat(withId.hashCode()).isEqualTo(new Budget().hashCode());
     }
 }
