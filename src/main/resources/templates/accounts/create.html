@@ -77,8 +77,9 @@
                             </div>
                         </div>
 
-                        <!-- Скрытое поле userId -->
-                        <input type="hidden" th:field="*{userId}">
+                        <!-- userId сюда намеренно не выводится: сервер сам берёт его
+                             из SecurityContext в AccountController.createAccount,
+                             чтобы форму нельзя было подделать под чужого пользователя -->
 
                         <!-- Кнопки -->
                         <div class="d-flex justify-content-between">

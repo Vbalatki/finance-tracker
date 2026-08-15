@@ -75,10 +75,7 @@ public class AccountController {
         if (userDetails == null) {
             return "redirect:/login";
         }
-        Long userId = SecurityUtil.getCurrentUserId();
-
         AccountDto accountDto = new AccountDto();
-        accountDto.setUserId(userId);
 
         model.addAttribute("accountDto", accountDto);
         model.addAttribute("currencies", Currency.values());
@@ -315,10 +312,7 @@ public class AccountController {
 
         try {
             AccountDto account = accountService.findById(id);
-            Long currentUserId = SecurityUtil.getCurrentUserId();
-            if (!account.getUserId().equals(currentUserId)) {
-                throw new AccessDeniedException("Нет доступа к этому счёту");
-            }
+            SecurityUtil.requireOwnership(account);
 
             String accountName = account.getName();
             accountService.deleteAccount(id);

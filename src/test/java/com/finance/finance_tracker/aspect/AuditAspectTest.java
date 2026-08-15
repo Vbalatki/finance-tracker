@@ -278,23 +278,4 @@ class AuditAspectTest {
             assertThat(detailsCaptor.getValue()).contains("Args:");
         }
     }
-
-    @Nested
-    @DisplayName("resetSpending — отдельная явная ветка UPDATE")
-    class ResetSpendingAction {
-
-        @Test
-        @DisplayName("resetSpending не начинается с update, но всё равно распознаётся как UPDATE")
-        void resetSpending_recognizedAsUpdate() throws Throwable {
-            when(joinPoint.getSignature()).thenReturn(signature);
-            when(signature.getName()).thenReturn("resetSpending");
-            when(joinPoint.getArgs()).thenReturn(new Object[]{3L});
-            when(joinPoint.getTarget()).thenReturn(new BudgetServiceImpl());
-            when(joinPoint.proceed()).thenReturn(null);
-
-            aspect.audit(joinPoint);
-
-            verify(auditService).log(any(), any(), eq("UPDATE"), eq("Budget"), eq(3L), any());
-        }
-    }
 }

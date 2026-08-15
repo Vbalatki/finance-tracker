@@ -97,4 +97,49 @@ class AccountOptimisticLockingIT {
         Account finalState = accountRepository.findById(accountId).orElseThrow();
         assertThat(finalState.getBalance()).isEqualByComparingTo("1100.00");
     }
+
+    @Test
+    @DisplayName("delete() с устаревшим version бросает исключение, а не тихо \"удаляет\" 0 строк")
+    void concurrentDelete_staleVersion_throwsInsteadOfSilentNoOp() {
+        User user = new User();
+        user.setName("Иван");
+        user.setSurname("Иванов");
+        user.setBirthday(LocalDate.of(1990, 1, 1));
+        user.setEmail("optimistic-lock-delete-test@example.com");
+        user.setPassword("encoded");
+        user.setActive(true);
+        entityManager.persist(user);
+
+        Account account = new Account();
+        account.setName("Счет под удаление");
+        account.setBalance(new BigDecimal("500.00"));
+        account.setCurrency(Currency.RUB);
+        account.setUser(user);
+        entityManager.persist(account);
+        entityManager.flush();
+        Long accountId = account.getId();
+
+        entityManager.clear();
+
+        // Два "запроса" читают один и тот же счёт до чьих-либо изменений
+        Account firstRead = accountRepository.findById(accountId).orElseThrow();
+        entityManager.detach(firstRead);
+        Account secondRead = accountRepository.findById(accountId).orElseThrow();
+        entityManager.detach(secondRead);
+
+        // "Первый запрос" успевает сохранить правку — version в БД инкрементится
+        firstRead.setBalance(firstRead.getBalance().add(new BigDecimal("10.00")));
+        accountRepository.saveAndFlush(firstRead);
+
+        // "Второй запрос" пытается удалить счёт, уже держа на руках устаревший version.
+        // Без check = ResultCheckStyle.COUNT на @SQLDelete это удаление тихо
+        // затронуло бы 0 строк и прошло бы как будто всё ок.
+        assertThrows(ObjectOptimisticLockingFailureException.class,
+                () -> accountRepository.delete(secondRead));
+
+        // Счёт остался активным — устаревшее удаление не должно было применяться
+        entityManager.clear();
+        Account finalState = accountRepository.findById(accountId).orElseThrow();
+        assertThat(finalState.isActive()).isTrue();
+    }
 }

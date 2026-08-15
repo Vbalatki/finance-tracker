@@ -25,7 +25,11 @@ public class AccountDto {
     @NotNull(message = "Currency cannot be null")
     private Currency currency;
 
-    @NotNull(message = "UserId cannot be null")
+    // Без @NotNull: userId никогда не должен приходить от клиента и всегда
+    // проставляется в контроллере из SecurityContext (AccountController.createAccount)
+    // ПОСЛЕ того, как отрабатывает @Valid. Если бы тут стоял @NotNull, форма без
+    // userId (что и есть цель фикса IDOR) валилась бы с ошибкой валидации ещё до
+    // того, как контроллер успевал его проставить.
     private Long userId;
 
     private String bankCode;

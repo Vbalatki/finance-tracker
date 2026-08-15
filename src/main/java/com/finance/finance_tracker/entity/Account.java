@@ -19,6 +19,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
@@ -33,7 +34,12 @@ import static com.finance.finance_tracker.util.DataConstants.LENGTH_255;
 @Setter
 @Entity
 @Table(name = "accounts", schema = "finance_tracker")
-@SQLDelete(sql = "UPDATE finance_tracker.accounts SET active = false WHERE id = ? AND version = ?")
+// check = COUNT обязателен: без него Hibernate не проверяет, сколько строк
+// реально обновил этот кастомный SQL, и условие "AND version = ?" по факту
+// ничего не защищает — конфликт по устаревшей версии молча проигнорируется
+// вместо ObjectOptimisticLockingFailureException (см. AccountOptimisticLockingIT)
+@SQLDelete(sql = "UPDATE finance_tracker.accounts SET active = false WHERE id = ? AND version = ?",
+        check = ResultCheckStyle.COUNT)
 @Where(clause = "active = true")
 @AllArgsConstructor
 @ToString(exclude = {"user", "transactions"})

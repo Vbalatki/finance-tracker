@@ -95,8 +95,7 @@ public class AuditAspect {
         if (methodName.startsWith("save") || methodName.equals("registerUser")) return "CREATE";
         if (methodName.startsWith("update")
                 || "deposit".equals(methodName)
-                || "withdraw".equals(methodName)
-                || "resetSpending".equals(methodName)) return "UPDATE";
+                || "withdraw".equals(methodName)) return "UPDATE";
         if (methodName.startsWith("delete")) return "DELETE";
         return "UNKNOWN";
     }

@@ -135,6 +135,7 @@ public class UserController {
             Model model,
             RedirectAttributes redirectAttributes) {
 
+        // Проверка совпадения паролей
         if (!newPassword.equals(confirmPassword)) {
             model.addAttribute("error", "Новый пароль и подтверждение не совпадают");
             return "users/change-password";
@@ -151,8 +152,8 @@ public class UserController {
         }
     }
 
-    @GetMapping("/settings")
-    public String settingsPage(Model model, @AuthenticationPrincipal UserDetails userDetails) {
+    @GetMapping("/profile/settings")
+    public String settingsPage(Model model, @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
         UserDto user = userService.getUserByEmail(userDetails.getUsername());
         model.addAttribute("settingsDto", userService.getUserSettings(user.getId()));
         model.addAttribute("currencies", Currency.values());
@@ -166,10 +167,10 @@ public class UserController {
      * целиком — переиспользует существующий bulk-метод сервиса, не плодит
      * отдельный узкий метод в сервисном слое ради одного поля.
      */
-    @PostMapping("/settings/theme")
+    @PostMapping("/profile/settings/theme")
     @ResponseBody
     public ResponseEntity<Void> updateTheme(@RequestParam Theme theme,
-                                            @AuthenticationPrincipal UserDetails userDetails) {
+                                            @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
         UserDto user = userService.getUserByEmail(userDetails.getUsername());
         UserSettingsDto settings = userService.getUserSettings(user.getId());
         settings.setTheme(theme);
@@ -180,10 +181,10 @@ public class UserController {
     /**
      * Мгновенное сохранение основной валюты — тот же приём, что и для темы.
      */
-    @PostMapping("/settings/currency")
+    @PostMapping("/profile/settings/currency")
     @ResponseBody
     public ResponseEntity<Void> updateDefaultCurrency(@RequestParam Currency defaultCurrency,
-                                                      @AuthenticationPrincipal UserDetails userDetails) {
+                                                      @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
         UserDto user = userService.getUserByEmail(userDetails.getUsername());
         UserSettingsDto settings = userService.getUserSettings(user.getId());
         settings.setDefaultCurrency(defaultCurrency);

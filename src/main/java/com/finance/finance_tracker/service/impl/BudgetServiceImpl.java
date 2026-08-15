@@ -60,7 +60,7 @@ public class BudgetServiceImpl implements BudgetService {
             log.debug("У пользователя id={} нет бюджетов", userId);
         }
 
-        // BudgetServiceImpl.getBudgetsByUserId — заменить блок начиная с "Границы текущего месяца..."
+        // Границы текущего календарного месяца — для расчёта потраченного по каждой категории
         LocalDateTime monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay();
         LocalDateTime monthEnd = monthStart.plusMonths(1);
 
