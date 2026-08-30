@@ -8,6 +8,7 @@ import com.finance.finance_tracker.exception.DuplicateEntityException;
 import com.finance.finance_tracker.handler.GlobalExceptionHandler;
 import com.finance.finance_tracker.service.CategoryService;
 import com.finance.finance_tracker.service.UserService;
+import com.finance.finance_tracker.testsupport.TestValidators;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,6 +39,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Тесты {@link CategoryController} через standalone MockMvc.
+ *
+ * ВАЖНО про editCategoryForm_*: на момент сборки этого пакета в реальном
+ * репозитории уже была чужая правка — ownership-check в editCategoryForm
+ * (GET) плюс тесты на неё. Три теста editCategoryForm_* ниже я
+ * реконструировал по фактическому коду контроллера (он у меня сверен
+ * дословно), а не списал байт-в-байт из живого файла — имена методов
+ * и точная форма проверок могут отличаться от оригинала. Перед мерджем
+ * сверь именно этот блок с тем, что реально в репозитории, и оставь одну
+ * версию, а не обе.
  */
 @ExtendWith(MockitoExtension.class)
 class CategoryControllerTest {
@@ -56,6 +66,7 @@ class CategoryControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
+                .setValidator(TestValidators.permissive())
                 .build();
 
         User user = new User();
@@ -130,8 +141,10 @@ class CategoryControllerTest {
                 .andExpect(flash().attributeExists("error"));
     }
 
+    // --- editCategoryForm_* — реконструировано, см. предупреждение в javadoc класса ---
+
     @Test
-    @DisplayName("GET /categories/{id}/edit возвращает форму редактирования")
+    @DisplayName("GET /categories/{id}/edit для своей категории возвращает форму редактирования")
     void editCategoryForm_returnsEditView() throws Exception {
         CategoryDto dto = new CategoryDto();
         dto.setId(5L);
@@ -149,7 +162,7 @@ class CategoryControllerTest {
     void editCategoryForm_otherUsersCategory_returnsForbidden() throws Exception {
         CategoryDto dto = new CategoryDto();
         dto.setId(5L);
-        dto.setName("Чужая категория");
+        dto.setName("Продукты");
         dto.setUserId(999L);
         when(categoryService.getCategoryById(5L)).thenReturn(dto);
 
@@ -158,18 +171,20 @@ class CategoryControllerTest {
     }
 
     @Test
-    @DisplayName("GET /categories/{id}/edit для стандартной категории доступен всем")
+    @DisplayName("GET /categories/{id}/edit для стандартной категории доступен любому пользователю")
     void editCategoryForm_defaultCategory_returnsEditView() throws Exception {
         CategoryDto dto = new CategoryDto();
         dto.setId(2L);
         dto.setName("Транспорт");
-        dto.setUserId(null);
+        dto.setDefaultCategory(true);
         when(categoryService.getCategoryById(2L)).thenReturn(dto);
 
         mockMvc.perform(get("/categories/2/edit"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("categories/edit"));
     }
+
+    // --- конец реконструированного блока ---
 
     @Test
     @DisplayName("POST /categories/{id}/edit обновляет имя категории и редиректит")

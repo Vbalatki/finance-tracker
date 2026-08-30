@@ -1,6 +1,7 @@
 package com.finance.finance_tracker.dto;
 
 import com.finance.finance_tracker.entity.enums.Currency;
+import com.finance.finance_tracker.validation.UniqueAccountName;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -11,6 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
+@UniqueAccountName
 public class AccountDto {
     private Long id;
 
@@ -25,11 +27,11 @@ public class AccountDto {
     @NotNull(message = "Currency cannot be null")
     private Currency currency;
 
-    // Без @NotNull: userId никогда не должен приходить от клиента и всегда
-    // проставляется в контроллере из SecurityContext (AccountController.createAccount)
-    // ПОСЛЕ того, как отрабатывает @Valid. Если бы тут стоял @NotNull, форма без
-    // userId (что и есть цель фикса IDOR) валилась бы с ошибкой валидации ещё до
-    // того, как контроллер успевал его проставить.
+    // @NotNull снят другим агентом 2026-08-13 (см. Audit/Patch Log) — поле
+    // не должно приходить от клиента, ставится в AccountController.createAccount
+    // из SecurityContext уже ПОСЛЕ @Valid. UniqueAccountNameValidator этого
+    // поля тоже не читает, использует SecurityUtil.getCurrentUserId() — по той
+    // же причине.
     private Long userId;
 
     private String bankCode;

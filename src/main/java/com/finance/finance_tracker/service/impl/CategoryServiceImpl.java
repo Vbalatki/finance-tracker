@@ -1,13 +1,12 @@
 package com.finance.finance_tracker.service.impl;
 
 import com.finance.finance_tracker.dto.CategoryDto;
+import com.finance.finance_tracker.entity.Category;
+import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.exception.AccessDeniedException;
-import com.finance.finance_tracker.exception.DuplicateEntityException;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
 import com.finance.finance_tracker.exception.InvalidDataException;
 import com.finance.finance_tracker.mapper.CategoryMapper;
-import com.finance.finance_tracker.entity.Category;
-import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.repository.CategoryRepository;
 import com.finance.finance_tracker.repository.UserRepository;
 import com.finance.finance_tracker.service.CategoryService;
@@ -22,8 +21,6 @@ import java.util.stream.Collectors;
 import static com.finance.finance_tracker.util.DataConstants.CANNOT_DELETE_CATEGORY;
 import static com.finance.finance_tracker.util.DataConstants.CANNOT_DELETE_DEFAULT_CATEGORY;
 import static com.finance.finance_tracker.util.DataConstants.CANNOT_MODIFY_DEFAULT_CATEGORY;
-import static com.finance.finance_tracker.util.DataConstants.CATEGORY_NAME_BLANK;
-import static com.finance.finance_tracker.util.DataConstants.CATEGORY_NAME_EXISTS;
 import static com.finance.finance_tracker.util.DataConstants.CATEGORY_NOT_FOUND;
 import static com.finance.finance_tracker.util.DataConstants.USER_NOT_FOUND;
 
@@ -41,20 +38,14 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryDto saveCategory(CategoryDto dto) {
         log.debug("Сохранение новой категории: name={}, userId={}", dto.getName(), dto.getUserId());
 
-        if (dto.getName() == null || dto.getName().isBlank()) {
-            throw new InvalidDataException(CATEGORY_NAME_BLANK);
-        }
-
+        // Пустое имя и дубликат имени теперь ловятся Bean Validation
+        // (@NotBlank + @UniqueCategoryName на CategoryDto) до вызова этого
+        // метода — здесь больше не дублируем.
         User user = userRepository.findById(dto.getUserId())
                 .orElseThrow(() -> {
                     log.error("Пользователь не найден при сохранении категории: userId={}", dto.getUserId());
                     return new EntityNotFoundException(USER_NOT_FOUND + ", id: " + dto.getUserId());
                 });
-
-        if (categoryRepository.existsByNameVisibleToUser(dto.getName(), dto.getUserId())) {
-            log.warn("Попытка создать дубликат категории: name={}, userId={}", dto.getName(), dto.getUserId());
-            throw new DuplicateEntityException(CATEGORY_NAME_EXISTS + ": " + dto.getName());
-        }
 
         Category category = new Category();
         category.setName(dto.getName().trim());
@@ -100,10 +91,6 @@ public class CategoryServiceImpl implements CategoryService {
     public void updateCategory(Long id, String name, Long currentUserId) {
         log.debug("Обновление категории: id={}, newName={}, currentUserId={}", id, name, currentUserId);
 
-        if (name == null || name.isBlank()) {
-            throw new InvalidDataException(CATEGORY_NAME_BLANK);
-        }
-
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> {
                     log.error("Категория не найдена при обновлении: id={}", id);
@@ -117,22 +104,16 @@ public class CategoryServiceImpl implements CategoryService {
             throw new InvalidDataException(CANNOT_MODIFY_DEFAULT_CATEGORY);
         }
 
-        // ИСПРАВЛЕНО: раньше здесь не было проверки владения — любой
-        // аутентифицированный пользователь мог переименовать чужую
-        // категорию по id (IDOR).
         if (!category.getUser().getId().equals(currentUserId)) {
             log.warn("Попытка изменить чужую категорию: id={}, currentUserId={}, ownerId={}",
                     id, currentUserId, category.getUser().getId());
             throw new AccessDeniedException("Нет доступа к этой категории");
         }
 
-        if (!category.getName().equals(name)) {
-            if (categoryRepository.existsByNameVisibleToUser(name, currentUserId)) {
-                log.warn("Попытка обновить категорию на уже существующее имя: id={}, name={}", id, name);
-                throw new DuplicateEntityException(CATEGORY_NAME_EXISTS + ": " + name);
-            }
-        }
-
+        // Уникальность нового имени теперь проверяет @UniqueCategoryName
+        // на CategoryDto (исключает саму категорию по id) — до вызова
+        // этого метода. Здесь остаются только бизнес-правила, для которых
+        // нет DTO-эквивалента: default-категория и владение.
         String oldName = category.getName();
         category.setName(name.trim());
         categoryRepository.save(category);

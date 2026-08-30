@@ -5,7 +5,6 @@ import com.finance.finance_tracker.entity.Category;
 import com.finance.finance_tracker.entity.Transaction;
 import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.exception.AccessDeniedException;
-import com.finance.finance_tracker.exception.DuplicateEntityException;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
 import com.finance.finance_tracker.exception.InvalidDataException;
 import com.finance.finance_tracker.mapper.CategoryMapper;
@@ -31,6 +30,14 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit-тесты для {@link CategoryServiceImpl}.
+ * saveCategory_blankName_throws / saveCategory_nullName_throws /
+ * saveCategory_duplicate_throws / updateCategory_blankName_throws /
+ * updateCategory_duplicateName_throws / updateCategory_sameName_skipsUniquenessCheck
+ * удалены — эта логика переехала в @NotBlank + @UniqueCategoryName на
+ * CategoryDto, тестируется отдельно в UniqueCategoryNameValidatorTest.
+ */
 @ExtendWith(MockitoExtension.class)
 class CategoryServiceImplTest {
 
@@ -68,10 +75,9 @@ class CategoryServiceImplTest {
     class SaveCategory {
 
         @Test
-        @DisplayName("создаёт категорию, когда имя уникально среди своих и стандартных")
+        @DisplayName("создаёт категорию для существующего пользователя")
         void saveCategory_success() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(categoryRepository.existsByNameVisibleToUser("Продукты", 1L)).thenReturn(false);
             when(categoryRepository.save(any(Category.class))).thenReturn(category);
             when(categoryMapper.toDto(category)).thenReturn(categoryDto);
 
@@ -89,7 +95,6 @@ class CategoryServiceImplTest {
         void saveCategory_trimsName() {
             categoryDto.setName("  Продукты  ");
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(categoryRepository.existsByNameVisibleToUser("  Продукты  ", 1L)).thenReturn(false);
             when(categoryRepository.save(any(Category.class))).thenReturn(category);
             when(categoryMapper.toDto(category)).thenReturn(categoryDto);
 
@@ -101,38 +106,11 @@ class CategoryServiceImplTest {
         }
 
         @Test
-        @DisplayName("бросает InvalidDataException для пустого названия")
-        void saveCategory_blankName_throws() {
-            categoryDto.setName("   ");
-
-            assertThrows(InvalidDataException.class, () -> categoryService.saveCategory(categoryDto));
-            verify(userRepository, never()).findById(any());
-        }
-
-        @Test
-        @DisplayName("бросает InvalidDataException для null названия")
-        void saveCategory_nullName_throws() {
-            categoryDto.setName(null);
-
-            assertThrows(InvalidDataException.class, () -> categoryService.saveCategory(categoryDto));
-        }
-
-        @Test
         @DisplayName("бросает EntityNotFoundException, если пользователь не найден")
         void saveCategory_userNotFound_throws() {
             when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
             assertThrows(EntityNotFoundException.class, () -> categoryService.saveCategory(categoryDto));
-        }
-
-        @Test
-        @DisplayName("бросает DuplicateEntityException, если имя уже занято (своей или стандартной категорией)")
-        void saveCategory_duplicate_throws() {
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(categoryRepository.existsByNameVisibleToUser("Продукты", 1L)).thenReturn(true);
-
-            assertThrows(DuplicateEntityException.class, () -> categoryService.saveCategory(categoryDto));
-            verify(categoryRepository, never()).save(any());
         }
     }
 
@@ -146,7 +124,6 @@ class CategoryServiceImplTest {
             Category defaultCategory = new Category();
             defaultCategory.setId(1L);
             defaultCategory.setName("Транспорт");
-            // user не установлен -> null -> стандартная
 
             when(categoryRepository.findVisibleToUserOrderByIdAsc(1L))
                     .thenReturn(List.of(category, defaultCategory));
@@ -169,7 +146,6 @@ class CategoryServiceImplTest {
         @DisplayName("обновляет название категории её владельцем")
         void updateCategory_success() {
             when(categoryRepository.findById(5L)).thenReturn(Optional.of(category));
-            when(categoryRepository.existsByNameVisibleToUser("Новое имя", 1L)).thenReturn(false);
             when(categoryRepository.save(any(Category.class))).thenReturn(category);
 
             categoryService.updateCategory(5L, "Новое имя", 1L);
@@ -178,39 +154,11 @@ class CategoryServiceImplTest {
         }
 
         @Test
-        @DisplayName("не проверяет уникальность, если имя не меняется")
-        void updateCategory_sameName_skipsUniquenessCheck() {
-            when(categoryRepository.findById(5L)).thenReturn(Optional.of(category));
-            when(categoryRepository.save(any(Category.class))).thenReturn(category);
-
-            categoryService.updateCategory(5L, "Продукты", 1L);
-
-            verify(categoryRepository, never()).existsByNameVisibleToUser(any(), any());
-        }
-
-        @Test
-        @DisplayName("бросает InvalidDataException для пустого имени")
-        void updateCategory_blankName_throws() {
-            assertThrows(InvalidDataException.class, () -> categoryService.updateCategory(5L, "  ", 1L));
-            verify(categoryRepository, never()).findById(any());
-        }
-
-        @Test
         @DisplayName("бросает EntityNotFoundException, если категория не найдена")
         void updateCategory_notFound_throws() {
             when(categoryRepository.findById(404L)).thenReturn(Optional.empty());
 
             assertThrows(EntityNotFoundException.class, () -> categoryService.updateCategory(404L, "Имя", 1L));
-        }
-
-        @Test
-        @DisplayName("бросает DuplicateEntityException при переименовании на занятое имя")
-        void updateCategory_duplicateName_throws() {
-            when(categoryRepository.findById(5L)).thenReturn(Optional.of(category));
-            when(categoryRepository.existsByNameVisibleToUser("Занятое имя", 1L)).thenReturn(true);
-
-            assertThrows(DuplicateEntityException.class, () -> categoryService.updateCategory(5L, "Занятое имя", 1L));
-            verify(categoryRepository, never()).save(any());
         }
 
         @Test

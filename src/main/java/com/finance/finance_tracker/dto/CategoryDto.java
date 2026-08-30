@@ -1,10 +1,12 @@
 package com.finance.finance_tracker.dto;
 
-import jakarta.validation.constraints.Size;
+import com.finance.finance_tracker.validation.UniqueCategoryName;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
+@UniqueCategoryName
 public class CategoryDto {
 
     private Long id;
@@ -17,6 +19,5 @@ public class CategoryDto {
 
     private Long userId;
 
-    // true для стандартных категорий — видны всем, недоступны для редактирования/удаления.
     private boolean defaultCategory;
 }

@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -87,12 +86,15 @@ public class CategoryController {
     }
 
     /**
-     * Страница формы редактирования категории.
+     * Страница формы редактирования категории. Доступна только владельцу
+     * категории (для стандартных категорий, у которых userId == null,
+     * доступ открыт всем — это не ошибка, а норма).
      *
      * @param id    id категории
      * @param model модель представления
      * @return {@code "categories/edit"}
      * @throws com.finance.finance_tracker.exception.EntityNotFoundException если категория не найдена
+     * @throws AccessDeniedException если категория принадлежит другому пользователю
      */
     @GetMapping("/{id}/edit")
     public String editCategoryForm(@PathVariable Long id, Model model) {
@@ -106,21 +108,29 @@ public class CategoryController {
     }
 
     /**
-     * Обрабатывает отправку формы редактирования категории. Ошибки
+     * Обрабатывает отправку формы редактирования категории. Пустое имя и
+     * уникальность нового имени проверяет Bean Validation
+     * ({@code @NotBlank} + {@code @UniqueCategoryName} на {@link CategoryDto})
+     * до вызова сервиса. Ошибки сервиса (default-категория, чужая категория)
      * перехватываются и отображаются как flash-сообщение.
      *
      * @param id                 id категории
-     * @param name               новое имя
+     * @param dto                новые данные формы
+     * @param result             результат валидации
      * @param redirectAttributes атрибуты для flash-сообщений
-     * @return редирект на {@code /categories}
+     * @return редирект на {@code /categories}, либо {@code "categories/edit"} при ошибках валидации
      */
     @PostMapping("/{id}/edit")
     public String updateCategory(@PathVariable Long id,
-                                 @RequestParam String name,
+                                 @Valid @ModelAttribute("categoryDto") CategoryDto dto,
+                                 BindingResult result,
                                  RedirectAttributes redirectAttributes) {
+        if (result.hasErrors()) {
+            return "categories/edit";
+        }
         try {
             Long currentUserId = SecurityUtil.getCurrentUserId();
-            categoryService.updateCategory(id, name, currentUserId);
+            categoryService.updateCategory(id, dto.getName(), currentUserId);
             redirectAttributes.addFlashAttribute("success", "Категория обновлена");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());

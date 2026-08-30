@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Component
+@Component("tBankConnector")
 public class TBankConnector implements BankConnector {
 
     private final WebClient tbankWebClient;
@@ -46,7 +46,7 @@ public class TBankConnector implements BankConnector {
     }
 
     @Override
-    public BankStatementResult fetchTransactions(String accountNumber, LocalDateTime from, LocalDateTime to) {
+    public BankStatementResult fetchTransactions(String accountNumber, LocalDateTime from, LocalDateTime to, String principalName) {
         log.info("Запрос выписки Т-Банк: accountNumber={}, период {} - {}", accountNumber, from, to);
 
         try {

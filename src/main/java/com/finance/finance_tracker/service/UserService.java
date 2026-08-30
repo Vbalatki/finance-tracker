@@ -1,6 +1,7 @@
 package com.finance.finance_tracker.service;
 
 import com.finance.finance_tracker.dto.AccountDto;
+import com.finance.finance_tracker.dto.ChangePasswordDto;
 import com.finance.finance_tracker.dto.TransactionDto;
 import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.dto.UserSettingsDto;
@@ -19,11 +20,12 @@ public interface UserService {
     /**
      * Регистрирует нового пользователя. Пароль сохраняется в закодированном
      * виде ({@link org.springframework.security.crypto.password.PasswordEncoder}),
-     * пользователь создаётся активным.
+     * пользователь создаётся активным. Уникальность email проверяется
+     * Bean Validation ({@link com.finance.finance_tracker.validation.UniqueEmail}
+     * на {@link UserDto}) до вызова этого метода.
      *
      * @param dto данные регистрации
      * @return созданный пользователь
-     * @throws com.finance.finance_tracker.exception.DuplicateEntityException если email уже зарегистрирован
      */
     UserDto registerUser(UserDto dto);
 
@@ -45,7 +47,7 @@ public interface UserService {
 
     /**
      * Обновляет базовые данные профиля (имя, фамилию, дату рождения, email).
-     * Пароль этим методом не меняется — см. {@link #changePassword(Long, String, String)}.
+     * Пароль этим методом не меняется — см. {@link #changePassword(Long, ChangePasswordDto)}.
      *
      * @param id  id пользователя
      * @param dto новые значения полей
@@ -89,15 +91,16 @@ public interface UserService {
     Set<Long> getUserRoleIds(Long userId);
 
     /**
-     * Меняет пароль пользователя, предварительно проверяя текущий пароль.
+     * Меняет пароль пользователя: проверяет текущий пароль, длину нового
+     * пароля и совпадение с подтверждением проверяет Bean Validation на
+     * {@link ChangePasswordDto} до вызова этого метода.
      *
-     * @param userId          id пользователя
-     * @param currentPassword текущий (нешифрованный) пароль для проверки
-     * @param newPassword     новый пароль, минимум 8 символов
+     * @param userId id пользователя
+     * @param dto    текущий пароль, новый пароль и его подтверждение
      * @throws com.finance.finance_tracker.exception.EntityNotFoundException если пользователь не найден
-     * @throws com.finance.finance_tracker.exception.InvalidDataException если текущий пароль неверен или новый короче 8 символов
+     * @throws com.finance.finance_tracker.exception.InvalidDataException если текущий пароль неверен
      */
-    void changePassword(Long userId, String currentPassword, String newPassword);
+    void changePassword(Long userId, ChangePasswordDto dto);
 
     /**
      * Возвращает пользователя по email.
@@ -140,8 +143,7 @@ public interface UserService {
 
     /**
      * Считает суммарный доход ({@code INCOME}) по списку транзакций
-     * в пересчёте на рубли. Для рублёвых транзакций конвертация не
-     * вызывается (короткий путь без обращения к внешнему API курсов).
+     * в пересчёте на рубли.
      *
      * @param list список транзакций (может быть {@code null} или пустым — тогда результат 0)
      * @return суммарный доход в рублях
@@ -150,8 +152,7 @@ public interface UserService {
 
     /**
      * Считает суммарный расход ({@code EXPENSE}) по списку транзакций
-     * в пересчёте на рубли. Для рублёвых транзакций конвертация не
-     * вызывается — как и в {@link #getUserTotalIncomeInRub(List)}.
+     * в пересчёте на рубли.
      *
      * @param list список транзакций (может быть {@code null} или пустым — тогда результат 0)
      * @return суммарный расход в рублях

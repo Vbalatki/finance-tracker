@@ -1,6 +1,7 @@
 package com.finance.finance_tracker.service.impl;
 
 import com.finance.finance_tracker.dto.AccountDto;
+import com.finance.finance_tracker.dto.ChangePasswordDto;
 import com.finance.finance_tracker.dto.TransactionDto;
 import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.entity.Account;
@@ -17,6 +18,7 @@ import com.finance.finance_tracker.repository.AccountRepository;
 import com.finance.finance_tracker.repository.RoleRepository;
 import com.finance.finance_tracker.repository.UserRepository;
 import com.finance.finance_tracker.service.CurrencyApiService;
+import com.finance.finance_tracker.validation.PasswordValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -36,9 +38,9 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -46,6 +48,10 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit-тесты для {@link UserServiceImpl}.
+ * registerUser_duplicateEmail_throws удалён — проверка уникальности email
+ * переехала в @UniqueEmail (Bean Validation на UserDto), тестируется
+ * отдельно в UniqueEmailValidatorTest. changePassword_tooShort_throws
+ * удалён по той же причине (теперь @Size на ChangePasswordDto).
  */
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
@@ -64,6 +70,8 @@ class UserServiceImplTest {
     private AccountMapper accountMapper;
     @Mock
     private CurrencyApiService currencyApiService;
+    @Mock
+    private PasswordValidator passwordValidator;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -101,7 +109,6 @@ class UserServiceImplTest {
             userRole.setId(2L);
             userRole.setName("ROLE_USER");
 
-            when(userRepository.existsByEmail("ivan@example.com")).thenReturn(false);
             when(userMapper.toEntity(userDto)).thenReturn(user);
             when(passwordEncoder.encode("password123")).thenReturn("encoded");
             when(roleRepository.findByName("ROLE_USER")).thenReturn(Optional.of(userRole));
@@ -119,21 +126,11 @@ class UserServiceImplTest {
         @Test
         @DisplayName("бросает EntityNotFoundException, если стандартная роль ROLE_USER не найдена в БД")
         void registerUser_defaultRoleMissing_throws() {
-            when(userRepository.existsByEmail("ivan@example.com")).thenReturn(false);
             when(userMapper.toEntity(userDto)).thenReturn(user);
             when(passwordEncoder.encode("password123")).thenReturn("encoded");
             when(roleRepository.findByName("ROLE_USER")).thenReturn(Optional.empty());
 
             assertThrows(EntityNotFoundException.class, () -> userService.registerUser(userDto));
-            verify(userRepository, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("бросает DuplicateEntityException, если email уже занят")
-        void registerUser_duplicateEmail_throws() {
-            when(userRepository.existsByEmail("ivan@example.com")).thenReturn(true);
-
-            assertThrows(DuplicateEntityException.class, () -> userService.registerUser(userDto));
             verify(userRepository, never()).save(any());
         }
     }
@@ -278,36 +275,37 @@ class UserServiceImplTest {
     class ChangePassword {
 
         @Test
-        @DisplayName("меняет пароль при верном текущем и достаточно длинном новом")
+        @DisplayName("меняет пароль, делегируя проверку текущего PasswordValidator")
         void changePassword_success() {
+            ChangePasswordDto dto = new ChangePasswordDto();
+            dto.setCurrentPassword("oldPass");
+            dto.setNewPassword("newPassword123");
+            dto.setConfirmPassword("newPassword123");
+
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(passwordEncoder.matches("oldPass", "encodedOldPassword")).thenReturn(true);
             when(passwordEncoder.encode("newPassword123")).thenReturn("encodedNew");
             when(userRepository.save(user)).thenReturn(user);
 
-            userService.changePassword(1L, "oldPass", "newPassword123");
+            userService.changePassword(1L, dto);
 
+            verify(passwordValidator).validateCurrentPassword(user, "oldPass");
             assertThat(user.getPassword()).isEqualTo("encodedNew");
         }
 
         @Test
         @DisplayName("бросает InvalidDataException при неверном текущем пароле")
         void changePassword_wrongCurrentPassword_throws() {
+            ChangePasswordDto dto = new ChangePasswordDto();
+            dto.setCurrentPassword("wrong");
+            dto.setNewPassword("newPassword123");
+            dto.setConfirmPassword("newPassword123");
+
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(passwordEncoder.matches("wrong", "encodedOldPassword")).thenReturn(false);
+            doThrow(new InvalidDataException("Текущий пароль введён неверно"))
+                    .when(passwordValidator).validateCurrentPassword(user, "wrong");
 
-            assertThrows(InvalidDataException.class,
-                    () -> userService.changePassword(1L, "wrong", "newPassword123"));
-            verify(passwordEncoder, never()).encode(anyString());
-        }
-
-        @Test
-        @DisplayName("бросает InvalidDataException, если новый пароль короче 8 символов")
-        void changePassword_tooShort_throws() {
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(passwordEncoder.matches("oldPass", "encodedOldPassword")).thenReturn(true);
-
-            assertThrows(InvalidDataException.class, () -> userService.changePassword(1L, "oldPass", "123"));
+            assertThrows(InvalidDataException.class, () -> userService.changePassword(1L, dto));
+            verify(userRepository, never()).save(any());
         }
     }
 
@@ -421,7 +419,7 @@ class UserServiceImplTest {
         }
 
         @Test
-        @DisplayName("ИСПРАВЛЕНО: для расхода в рублях НЕ вызывает конвертацию (короткий путь), как и для дохода")
+        @DisplayName("для расхода в рублях НЕ вызывает конвертацию (короткий путь)")
         void getUserTotalExpenseInRub_rubCurrency_doesNotCallConversionApi() {
             TransactionDto t = new TransactionDto();
             t.setType(TransactionType.EXPENSE);

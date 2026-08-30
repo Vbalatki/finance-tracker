@@ -1,8 +1,7 @@
 package com.finance.finance_tracker.service;
 
-import com.finance.finance_tracker.exception.BankIntegrationException;
-import com.finance.finance_tracker.dto.bank.BankTransactionDto;
 import com.finance.finance_tracker.dto.bank.BankStatementResult;
+import com.finance.finance_tracker.dto.bank.BankTransactionDto;
 
 import java.time.LocalDateTime;
 
@@ -23,14 +22,11 @@ public interface BankConnector {
     String bankCode();
 
     /**
-     * Возвращает транзакции по счёту за период. Только чтение —
-     * никаких операций записи/перевода этот метод не предполагает.
-     *
-     * @param accountNumber номер счёта в банке (не id вашего Account!)
-     * @param from          начало периода
-     * @param to            конец периода
-     * @return список транзакций в нормализованном формате
-     * @throws BankIntegrationException при ошибке обращения к банку
+     * @param principalName email текущего пользователя приложения
+     *                       (Authentication.getName()) — нужен коннекторам
+     *                       с per-пользовательской OAuth2-авторизацией
+     *                       (Alfa). Статическим коннекторам (T-Bank) не
+     *                       нужен, можно игнорировать.
      */
-    BankStatementResult fetchTransactions(String accountNumber, LocalDateTime from, LocalDateTime to);
+    BankStatementResult fetchTransactions(String accountNumber, LocalDateTime from, LocalDateTime to, String principalName);
 }

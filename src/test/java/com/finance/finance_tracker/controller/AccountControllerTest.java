@@ -1,16 +1,17 @@
 package com.finance.finance_tracker.controller;
 
 import com.finance.finance_tracker.dto.AccountDto;
-import com.finance.finance_tracker.service.BankImportService;
-import com.finance.finance_tracker.util.CurrencyFormatter;
 import com.finance.finance_tracker.entity.SecurityUser;
 import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.entity.enums.Currency;
 import com.finance.finance_tracker.exception.InsufficientFundsException;
 import com.finance.finance_tracker.handler.GlobalExceptionHandler;
 import com.finance.finance_tracker.service.AccountService;
+import com.finance.finance_tracker.service.BankImportService;
 import com.finance.finance_tracker.service.TransactionService;
 import com.finance.finance_tracker.service.UserService;
+import com.finance.finance_tracker.testsupport.TestValidators;
+import com.finance.finance_tracker.util.CurrencyFormatter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,6 +31,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.math.BigDecimal;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -42,7 +44,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Тесты {@link AccountController}. MockMvc собирается через standaloneSetup —
@@ -50,6 +51,10 @@ import static org.assertj.core.api.Assertions.assertThat;
  * полного Spring-контекста и без реального рендеринга Thymeleaf-шаблонов.
  * Аутентификация имитируется прямой записью в SecurityContextHolder
  * (её читают и @AuthenticationPrincipal, и SecurityUtil.getCurrentUserId()).
+ * .setValidator(TestValidators.permissive()) нужен из-за @UniqueAccountName
+ * на AccountDto — без него standalone-фабрика валидаторов попытается
+ * создать UniqueAccountNameValidator обычной рефлексией (у него нет
+ * no-arg конструктора, только конструктор с AccountRepository) и упадёт.
  */
 @ExtendWith(MockitoExtension.class)
 @Import(GlobalExceptionHandler.class)
@@ -75,6 +80,7 @@ class AccountControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
+                .setValidator(TestValidators.permissive())
                 .build();
 
         authenticateAsUserId(1L, "user@example.com");

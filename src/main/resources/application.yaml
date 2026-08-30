@@ -44,6 +44,23 @@ spring:
         generate_statistics: false
     show-sql: true
     open-in-view: false
+  security:
+    oauth2:
+      client:
+        registration:
+          alfabank:
+            client-id: ${ALFA_CLIENT_ID:stub-placeholder-client-id}
+            client-secret: ${ALFA_CLIENT_SECRET:stub-placeholder-client-secret}
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - statements
+        provider:
+          alfabank:
+            authorization-uri: https://id-sandbox.alfabank.ru/oidc/authorize
+            token-uri: https://sandbox.alfabank.ru/oidc/token
+            user-info-uri: https://sandbox.alfabank.ru/oidc/userinfo
+            user-name-attribute: sub
 
   # ======= THYMELEAF =======
   thymeleaf:
@@ -129,8 +146,10 @@ tbank:
   url: "https://business.tbank.ru"
   token: ${TBANK_API_TOKEN:}
   sandbox-test-account: "40702810510000710417"
-
-
+alfa:
+  api-url: "https://sandbox.alfabank.ru/api"
+  token-encryption-key: ${ALFA_TOKEN_ENCRYPTION_KEY:}
+  mode: ${ALFA_MODE:stub}
 # ======= Внешний API курсов валют =======
 currencyapi:
   url: "https://v6.exchangerate-api.com/v6/"

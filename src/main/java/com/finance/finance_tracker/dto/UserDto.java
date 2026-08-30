@@ -1,16 +1,20 @@
 package com.finance.finance_tracker.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.finance.finance_tracker.util.DataConstants;
+import com.finance.finance_tracker.validation.UniqueEmail;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Email;
+
 import java.time.LocalDate;
 import java.util.Set;
 
 @Data
+@UniqueEmail
 public class UserDto {
     private Long id;
 
@@ -33,7 +37,7 @@ public class UserDto {
 
     @JsonIgnore
     @NotBlank(message = "Password cannot be blank")
-    @Size(min = 8, max = 255, message = "Password must be 8-255 characters")
+    @Size(min = DataConstants.MIN_PASSWORD_LENGTH, max = 255, message = "Password must be 8-255 characters")
     private String password;
 
     private boolean active = true;

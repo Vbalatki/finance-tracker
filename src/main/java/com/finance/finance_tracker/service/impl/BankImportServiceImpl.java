@@ -17,6 +17,7 @@ import com.finance.finance_tracker.service.BankConnector;
 import com.finance.finance_tracker.service.BankImportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,8 +45,8 @@ public class BankImportServiceImpl implements BankImportService {
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
 
-    private final BankConnector tBankConnector;
-
+    private final @Qualifier("tBankConnector") BankConnector tBankConnector;
+    private final @Qualifier("alfaBankConnector") BankConnector alfaBankConnector;
     @Override
     @Transactional
     public Long linkAccount(Long userId, String bankCode, String externalAccountNumber,
@@ -88,7 +89,7 @@ public class BankImportServiceImpl implements BankImportService {
 
         BankConnector connector = resolveConnector(account.getBankCode());
         BankStatementResult statement =
-                connector.fetchTransactions(account.getExternalAccountNumber(), from, to);
+                connector.fetchTransactions(account.getExternalAccountNumber(), from, to, account.getUser().getEmail());
 
 
         List<BankTransactionDto> distinctByExternalId = statement.transactions().stream()
@@ -144,10 +145,11 @@ public class BankImportServiceImpl implements BankImportService {
     }
 
     private BankConnector resolveConnector(String bankCode) {
-        if (!"TBANK".equals(bankCode)) {
-            throw new InvalidDataException("Неизвестный банк: " + bankCode);
-        }
-        return tBankConnector;
+        return switch (bankCode) {
+            case "TBANK" -> tBankConnector;
+            case "ALFA" -> alfaBankConnector;
+            default -> throw new InvalidDataException("Неизвестный банк: " + bankCode);
+        };
     }
 
     private static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {

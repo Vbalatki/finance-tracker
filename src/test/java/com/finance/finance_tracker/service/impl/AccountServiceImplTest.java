@@ -4,7 +4,6 @@ import com.finance.finance_tracker.dto.AccountDto;
 import com.finance.finance_tracker.entity.Account;
 import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.entity.enums.Currency;
-import com.finance.finance_tracker.exception.DuplicateEntityException;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
 import com.finance.finance_tracker.exception.InsufficientFundsException;
 import com.finance.finance_tracker.exception.InvalidAmountException;
@@ -31,14 +30,16 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
  * Unit-тесты для {@link AccountServiceImpl}.
- * Репозитории и маппер замоканы — тестируется только бизнес-логика сервиса.
+ * saveAccount_duplicateName_throws / updateAccount_duplicateName_throws /
+ * updateAccount_sameName_skipsUniquenessCheck удалены — проверка
+ * уникальности имени переехала в @UniqueAccountName (Bean Validation на
+ * AccountDto), тестируется отдельно в UniqueAccountNameValidatorTest.
  */
 @ExtendWith(MockitoExtension.class)
 class AccountServiceImplTest {
@@ -86,10 +87,9 @@ class AccountServiceImplTest {
     class SaveAccount {
 
         @Test
-        @DisplayName("создаёт счёт, когда пользователь существует и имя уникально")
+        @DisplayName("создаёт счёт, когда пользователь существует")
         void saveAccount_success() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(accountRepository.existsByNameAndUserId("Основной счет", 1L)).thenReturn(false);
             when(accountRepository.save(any(Account.class))).thenReturn(account);
             when(accountMapper.toDto(account)).thenReturn(accountDto);
 
@@ -110,7 +110,6 @@ class AccountServiceImplTest {
         void saveAccount_nullBalance_defaultsToZero() {
             accountDto.setBalance(null);
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(accountRepository.existsByNameAndUserId(any(), eq(1L))).thenReturn(false);
             when(accountRepository.save(any(Account.class))).thenReturn(account);
             when(accountMapper.toDto(account)).thenReturn(accountDto);
 
@@ -127,16 +126,6 @@ class AccountServiceImplTest {
             when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
             assertThrows(EntityNotFoundException.class, () -> accountService.saveAccount(accountDto));
-            verify(accountRepository, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("бросает DuplicateEntityException, если имя счёта уже занято")
-        void saveAccount_duplicateName_throws() {
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(accountRepository.existsByNameAndUserId("Основной счет", 1L)).thenReturn(true);
-
-            assertThrows(DuplicateEntityException.class, () -> accountService.saveAccount(accountDto));
             verify(accountRepository, never()).save(any());
         }
     }
@@ -315,7 +304,6 @@ class AccountServiceImplTest {
             updateDto.setCurrency(Currency.USD);
 
             when(accountRepository.findById(10L)).thenReturn(Optional.of(account));
-            when(accountRepository.existsByNameAndUserId("Новое имя", 1L)).thenReturn(false);
             when(accountRepository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
             when(accountMapper.toDto(any(Account.class))).thenReturn(accountDto);
 
@@ -323,36 +311,6 @@ class AccountServiceImplTest {
 
             assertThat(account.getName()).isEqualTo("Новое имя");
             assertThat(account.getCurrency()).isEqualTo(Currency.USD);
-        }
-
-        @Test
-        @DisplayName("бросает DuplicateEntityException при попытке взять занятое имя")
-        void updateAccount_duplicateName_throws() {
-            AccountDto updateDto = new AccountDto();
-            updateDto.setName("Занятое имя");
-            updateDto.setCurrency(Currency.USD);
-
-            when(accountRepository.findById(10L)).thenReturn(Optional.of(account));
-            when(accountRepository.existsByNameAndUserId("Занятое имя", 1L)).thenReturn(true);
-
-            assertThrows(DuplicateEntityException.class, () -> accountService.updateAccount(10L, updateDto));
-        }
-
-        @Test
-        @DisplayName("не проверяет уникальность имени, если оно не меняется")
-        void updateAccount_sameName_skipsUniquenessCheck() {
-            AccountDto updateDto = new AccountDto();
-            updateDto.setName("Основной счет");
-            updateDto.setCurrency(Currency.EUR);
-
-            when(accountRepository.findById(10L)).thenReturn(Optional.of(account));
-            when(accountRepository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(accountMapper.toDto(any(Account.class))).thenReturn(accountDto);
-
-            accountService.updateAccount(10L, updateDto);
-
-            verify(accountRepository, never()).existsByNameAndUserId(any(), any());
-            assertThat(account.getCurrency()).isEqualTo(Currency.EUR);
         }
 
         @Test

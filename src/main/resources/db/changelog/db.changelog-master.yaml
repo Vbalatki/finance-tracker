@@ -25,3 +25,5 @@ databaseChangeLog:
       file: db/changelog/changelog/V11__soft_delete_accounts_transactions.yaml
   - include:
       file: db/changelog/changelog/V12__drop_locale.yaml
+  - include:
+      file: db/changelog/changelog/V13__oauth2_authorized_client.yaml

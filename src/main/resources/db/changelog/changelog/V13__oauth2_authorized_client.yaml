@@ -1,0 +1,69 @@
+databaseChangeLog:
+  - changeSet:
+      id: 29
+      author: justin
+      comment: >
+        Таблица под OAuth2-токены банковских интеграций с полноценным
+        Authorization Code Flow (Alfa API, песочница). Адаптация
+        канонической схемы Spring Security (oauth2-client-schema.sql)
+        под Postgres: BLOB -> TEXT, значения токенов хранятся
+        зашифрованными (AES-GCM, base64) — см.
+        EncryptedJdbcOAuth2AuthorizedClientService / TokenEncryptor.
+        Ключ (client_registration_id, principal_name) совпадает с тем,
+        что ожидает OAuth2AuthorizedClientService — principal_name =
+        email пользователя (Authentication.getName()).
+      changes:
+        - createTable:
+            schemaName: finance_tracker
+            tableName: oauth2_authorized_client
+            columns:
+              - column:
+                  name: client_registration_id
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: principal_name
+                  type: VARCHAR(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: access_token_type
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: access_token_value
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: access_token_issued_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: access_token_expires_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: access_token_scopes
+                  type: VARCHAR(1000)
+              - column:
+                  name: refresh_token_value
+                  type: TEXT
+              - column:
+                  name: refresh_token_issued_at
+                  type: TIMESTAMP
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            schemaName: finance_tracker
+            tableName: oauth2_authorized_client
+            columnNames: client_registration_id, principal_name
+            constraintName: pk_oauth2_authorized_client

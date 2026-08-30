@@ -1,12 +1,13 @@
 package com.finance.finance_tracker.controller;
 
 
+import com.finance.finance_tracker.dto.ChangePasswordDto;
 import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.dto.UserSettingsDto;
 import com.finance.finance_tracker.entity.enums.Currency;
 import com.finance.finance_tracker.entity.enums.Theme;
-import com.finance.finance_tracker.service.impl.UserDetailsServiceImpl;
 import com.finance.finance_tracker.service.UserService;
+import com.finance.finance_tracker.service.impl.UserDetailsServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -73,8 +74,10 @@ public class UserController {
 
     /**
      * Обрабатывает отправку формы редактирования профиля. Если новый email
-     * уже занят другим пользователем, ошибка отображается как ошибка поля
-     * {@code email} (не как flash-сообщение).
+     * уже занят другим пользователем, ошибка приходит через
+     * {@link com.finance.finance_tracker.validation.UniqueEmail} ещё на
+     * этапе {@code @Valid} и попадает в {@code result} как ошибка поля
+     * {@code email} — до тела этого метода такие случаи не доходят.
      *
      * @param dto                новые данные профиля
      * @param result             результат валидации
@@ -107,43 +110,41 @@ public class UserController {
     /**
      * Страница формы смены пароля.
      *
+     * @param model модель представления
      * @return {@code "users/change-password"}
      */
     @GetMapping("/change-password")
-    public String changePasswordPage() {
+    public String changePasswordPage(Model model) {
+        model.addAttribute("changePasswordDto", new ChangePasswordDto());
         return "users/change-password";
     }
 
     /**
-     * Обрабатывает отправку формы смены пароля. Совпадение нового пароля и
-     * его подтверждения проверяется здесь же, до вызова сервиса.
+     * Обрабатывает отправку формы смены пароля. Совпадение нового пароля с
+     * подтверждением и его минимальная длина проверяются Bean Validation
+     * на {@link ChangePasswordDto} до вызова сервиса.
      *
-     * @param currentPassword    текущий пароль
-     * @param newPassword        новый пароль
-     * @param confirmPassword    подтверждение нового пароля
+     * @param dto                текущий пароль, новый пароль, подтверждение
+     * @param result             результат валидации
      * @param userDetails        текущий пользователь
-     * @param model              модель представления (при повторном рендере формы)
      * @param redirectAttributes атрибуты для flash-сообщений
      * @return редирект на {@code /profile} при успехе, иначе {@code "users/change-password"}
      */
     @PostMapping("/change-password")
     public String changePassword(
-            @RequestParam("currentPassword") String currentPassword,
-            @RequestParam("newPassword") String newPassword,
-            @RequestParam("confirmPassword") String confirmPassword,
+            @Valid @ModelAttribute("changePasswordDto") ChangePasswordDto dto,
+            BindingResult result,
             @AuthenticationPrincipal UserDetails userDetails,
             Model model,
             RedirectAttributes redirectAttributes) {
 
-        // Проверка совпадения паролей
-        if (!newPassword.equals(confirmPassword)) {
-            model.addAttribute("error", "Новый пароль и подтверждение не совпадают");
+        if (result.hasErrors()) {
             return "users/change-password";
         }
 
         try {
             UserDto user = userService.getUserByEmail(userDetails.getUsername());
-            userService.changePassword(user.getId(), currentPassword, newPassword);
+            userService.changePassword(user.getId(), dto);
             redirectAttributes.addFlashAttribute("success", "Пароль успешно изменен");
             return "redirect:/profile";
         } catch (Exception e) {

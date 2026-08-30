@@ -15,10 +15,15 @@
           <h4>Редактирование категории</h4>
         </div>
         <div class="card-body">
-          <form th:action="@{'/categories/' + ${categoryDto.id} + '/edit'}" method="post">
+          <form method="post" th:action="@{'/categories/' + ${categoryDto.id} + '/edit'}" th:object="${categoryDto}">
+            <input th:field="*{id}" type="hidden">
             <div class="mb-3">
               <label for="name" class="form-label">Название категории</label>
-              <input type="text" class="form-control" id="name" name="name" th:value="${categoryDto.name}" required>
+              <input class="form-control" id="name" required th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"
+                     th:field="*{name}" type="text">
+              <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}">
+                  <span th:errors="*{name}"></span>
+              </div>
             </div>
             <div class="d-flex justify-content-between">
               <a href="/categories" class="btn btn-secondary">Отмена</a>

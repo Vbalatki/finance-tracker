@@ -1,6 +1,7 @@
 package com.finance.finance_tracker.service.impl;
 
 import com.finance.finance_tracker.dto.AccountDto;
+import com.finance.finance_tracker.dto.ChangePasswordDto;
 import com.finance.finance_tracker.dto.TransactionDto;
 import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.dto.UserSettingsDto;
@@ -11,7 +12,6 @@ import com.finance.finance_tracker.entity.enums.Currency;
 import com.finance.finance_tracker.entity.enums.TransactionType;
 import com.finance.finance_tracker.exception.DuplicateEntityException;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
-import com.finance.finance_tracker.exception.InvalidDataException;
 import com.finance.finance_tracker.mapper.AccountMapper;
 import com.finance.finance_tracker.mapper.UserMapper;
 import com.finance.finance_tracker.repository.AccountRepository;
@@ -19,6 +19,7 @@ import com.finance.finance_tracker.repository.RoleRepository;
 import com.finance.finance_tracker.repository.UserRepository;
 import com.finance.finance_tracker.service.CurrencyApiService;
 import com.finance.finance_tracker.service.UserService;
+import com.finance.finance_tracker.validation.PasswordValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,10 +33,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.finance.finance_tracker.util.DataConstants.ACCOUNT_NAME_EXISTS;
-import static com.finance.finance_tracker.util.DataConstants.EMAIL_ALREADY_EXISTS;
-import static com.finance.finance_tracker.util.DataConstants.INCORRECT_CURRENT_PASSWORD;
-import static com.finance.finance_tracker.util.DataConstants.MIN_PASSWORD_LENGTH;
-import static com.finance.finance_tracker.util.DataConstants.PASSWORD_TOO_SHORT;
 import static com.finance.finance_tracker.util.DataConstants.ROLE_NOT_FOUND;
 import static com.finance.finance_tracker.util.DataConstants.USER_NOT_FOUND;
 
@@ -51,6 +48,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final AccountMapper accountMapper;
     private final CurrencyApiService currencyApiService;
+    private final PasswordValidator passwordValidator;
 
 
 
@@ -58,11 +56,8 @@ public class UserServiceImpl implements UserService {
     public UserDto registerUser(UserDto dto) {
         log.debug("Регистрация нового пользователя: email={}", dto.getEmail());
 
-        if (userRepository.existsByEmail(dto.getEmail())) {
-            log.warn("Попытка регистрации с уже существующим email: {}", dto.getEmail());
-            throw new DuplicateEntityException(EMAIL_ALREADY_EXISTS + ": " + dto.getEmail());
-        }
-
+        // Уникальность email проверена @UniqueEmail на UserDto ещё на уровне
+        // @Valid в контроллере — здесь больше не дублируем.
         User user = userMapper.toEntity(dto);
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setActive(true);
@@ -180,21 +175,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Transactional
-    public void changePassword(Long userId, String currentPassword, String newPassword) {
+    public void changePassword(Long userId, ChangePasswordDto dto) {
         log.debug("Смена пароля для пользователя: userId={}", userId);
         User user = findById(userId);
 
-        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            log.warn("Неудачная попытка смены пароля для пользователя {}: неверный текущий пароль", userId);
-            throw new InvalidDataException(INCORRECT_CURRENT_PASSWORD);
-        }
+        passwordValidator.validateCurrentPassword(user, dto.getCurrentPassword());
 
-        if (newPassword.length() < Integer.parseInt(MIN_PASSWORD_LENGTH)) {
-            log.warn("Неудачная попытка смены пароля для пользователя {}: пароль слишком короткий", userId);
-            throw new InvalidDataException(PASSWORD_TOO_SHORT);
-        }
-
-        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
         userRepository.save(user);
         log.info("Пароль изменён для пользователя: id={}", userId);
     }
@@ -312,7 +299,7 @@ public class UserServiceImpl implements UserService {
         User user = findById(userId);
         UserSettingsDto dto = new UserSettingsDto();
         dto.setTheme(user.getTheme());
-        dto.setDefaultCurrency(user.getDefaultCurrency());;
+        dto.setDefaultCurrency(user.getDefaultCurrency());
         return dto;
     }
 

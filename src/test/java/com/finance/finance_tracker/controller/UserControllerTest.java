@@ -1,12 +1,14 @@
 package com.finance.finance_tracker.controller;
 
 import com.finance.finance_tracker.dto.AccountDto;
+import com.finance.finance_tracker.dto.ChangePasswordDto;
 import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.entity.SecurityUser;
 import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.exception.InvalidDataException;
-import com.finance.finance_tracker.service.impl.UserDetailsServiceImpl;
 import com.finance.finance_tracker.service.UserService;
+import com.finance.finance_tracker.service.impl.UserDetailsServiceImpl;
+import com.finance.finance_tracker.testsupport.TestValidators;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,6 +28,8 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -38,6 +42,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Тесты {@link UserController} через standalone MockMvc.
+ * .setValidator(TestValidators.permissive()) нужен из-за @UniqueEmail на
+ * UserDto (используется в updateProfile).
  */
 @ExtendWith(MockitoExtension.class)
 class UserControllerTest {
@@ -55,6 +61,7 @@ class UserControllerTest {
         UserController controller = new UserController(userService, userDetailsServiceImpl);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
+                .setValidator(TestValidators.permissive())
                 .build();
 
         User user = new User();
@@ -151,7 +158,9 @@ class UserControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/profile"));
 
-        verify(userService).changePassword(1L, "oldPass", "newPassword123");
+        verify(userService).changePassword(eq(1L), argThat(dto ->
+                "oldPass".equals(dto.getCurrentPassword())
+                        && "newPassword123".equals(dto.getNewPassword())));
     }
 
     @Test
@@ -164,15 +173,21 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("users/change-password"));
 
-        verify(userService, never()).changePassword(anyLong(), any(), any());
+        verify(userService, never()).changePassword(anyLong(), any());
     }
 
     @Test
     @DisplayName("POST /change-password при неверном текущем пароле возвращает форму с ошибкой сервиса")
     void changePassword_wrongCurrentPassword_returnsViewWithServiceError() throws Exception {
         when(userService.getUserByEmail("user@example.com")).thenReturn(currentUserDto);
+
+        ChangePasswordDto expectedDto = new ChangePasswordDto();
+        expectedDto.setCurrentPassword("wrongPass");
+        expectedDto.setNewPassword("newPassword123");
+        expectedDto.setConfirmPassword("newPassword123");
+
         doThrow(new InvalidDataException("Текущий пароль введён неверно"))
-                .when(userService).changePassword(1L, "wrongPass", "newPassword123");
+                .when(userService).changePassword(1L, expectedDto);
 
         mockMvc.perform(post("/profile/change-password")
                         .param("currentPassword", "wrongPass")
