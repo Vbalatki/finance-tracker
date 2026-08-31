@@ -30,7 +30,7 @@ public interface TransactionService {
      * @throws com.finance.finance_tracker.exception.EntityNotFoundException если транзакция, новый счёт или новая категория не найдены
      * @throws com.finance.finance_tracker.exception.InvalidAmountException если новая сумма не положительна
      */
-    void updateTransaction(TransactionDto dto);
+    void updateTransaction(TransactionDto dto, Long userId);
 
     /**
      * Создаёт новую транзакцию и сразу применяет её эффект к балансу счёта

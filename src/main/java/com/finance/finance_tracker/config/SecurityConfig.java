@@ -1,11 +1,13 @@
 package com.finance.finance_tracker.config;
 
-
+import com.finance.finance_tracker.security.LoginFailureHandler;
+import com.finance.finance_tracker.security.RateLimitedAuthenticationProvider;
+import com.finance.finance_tracker.service.impl.LoginAttemptService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -19,19 +21,24 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final UserDetailsService userDetailsService;
+    private final LoginAttemptService loginAttemptService;
 
-    public SecurityConfig(UserDetailsService userDetailsService) {
+    public SecurityConfig(UserDetailsService userDetailsService, LoginAttemptService loginAttemptService) {
         this.userDetailsService = userDetailsService;
+        this.loginAttemptService = loginAttemptService;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/",
                                 "/login",
                                 "/register",
+                                "/forgot-password",
+                                "/reset-password",
                                 "/css/**",
                                 "/js/**",
                                 "/access-denied").permitAll()
@@ -50,7 +57,7 @@ public class SecurityConfig {
                         .usernameParameter("username")
                         .passwordParameter("password")
                         .defaultSuccessUrl("/dashboard", true)
-                        .failureUrl("/login?error=true")
+                        .failureHandler(new LoginFailureHandler())
                         .permitAll()
                 )
                 .logout(logout -> logout
@@ -58,7 +65,6 @@ public class SecurityConfig {
                         .logoutSuccessUrl("/login?logout=true")
                         .permitAll()
                 )
-                .oauth2Client(Customizer.withDefaults())
                 .exceptionHandling(exception -> exception
                         .accessDeniedPage("/access-denied")
                 );
@@ -72,11 +78,11 @@ public class SecurityConfig {
     }
 
     @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider daoProvider = new DaoAuthenticationProvider();
+        daoProvider.setUserDetailsService(userDetailsService);
+        daoProvider.setPasswordEncoder(passwordEncoder());
+        return new RateLimitedAuthenticationProvider(daoProvider, loginAttemptService);
     }
 
     @Bean

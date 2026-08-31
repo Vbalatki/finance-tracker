@@ -3,13 +3,13 @@ package com.finance.finance_tracker.controller;
 import com.finance.finance_tracker.dto.AccountDto;
 import com.finance.finance_tracker.dto.CategoryDto;
 import com.finance.finance_tracker.dto.TransactionDto;
-import com.finance.finance_tracker.util.SecurityUtil;
 import com.finance.finance_tracker.entity.enums.TransactionType;
 import com.finance.finance_tracker.exception.AccessDeniedException;
 import com.finance.finance_tracker.service.AccountService;
 import com.finance.finance_tracker.service.CategoryService;
 import com.finance.finance_tracker.service.TransactionService;
 import com.finance.finance_tracker.service.UserService;
+import com.finance.finance_tracker.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -223,6 +223,9 @@ public class TransactionController {
                                     @Valid @ModelAttribute TransactionDto dto,
                                     BindingResult result,
                                     RedirectAttributes redirectAttributes) {
+
+        Long userId = SecurityUtil.getCurrentUserId();
+
         TransactionDto existing = transactionService.getTransactionById(id);
         AccountDto account = accountService.findById(existing.getAccountId());
         SecurityUtil.requireOwnership(account);
@@ -233,7 +236,7 @@ public class TransactionController {
         }
         dto.setId(id);
         try {
-            transactionService.updateTransaction(dto);
+            transactionService.updateTransaction(dto, userId);
             redirectAttributes.addFlashAttribute("success", "Транзакция обновлена");
         } catch (ObjectOptimisticLockingFailureException e) {
             redirectAttributes.addFlashAttribute("error",

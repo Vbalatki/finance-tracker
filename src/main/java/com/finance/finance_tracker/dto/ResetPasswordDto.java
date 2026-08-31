@@ -9,10 +9,7 @@ import lombok.Data;
 
 @Data
 @PasswordsMatch
-public class ChangePasswordDto implements PasswordConfirmation {
-
-    @NotBlank(message = "Введите текущий пароль")
-    private String currentPassword;
+public class ResetPasswordDto implements PasswordConfirmation {
 
     @NotBlank(message = "Введите новый пароль")
     @Size(min = DataConstants.MIN_PASSWORD_LENGTH, max = 255,

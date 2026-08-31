@@ -27,3 +27,5 @@ databaseChangeLog:
       file: db/changelog/changelog/V12__drop_locale.yaml
   - include:
       file: db/changelog/changelog/V13__oauth2_authorized_client.yaml
+  - include:
+      file: db/changelog/changelog/V14__password_reset_tokens.yaml

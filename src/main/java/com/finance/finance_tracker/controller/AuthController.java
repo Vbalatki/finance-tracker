@@ -2,6 +2,8 @@ package com.finance.finance_tracker.controller;
 
 import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.service.UserService;
+import com.finance.finance_tracker.service.impl.LoginAttemptService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,12 +25,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequiredArgsConstructor
 public class AuthController {
     private final UserService userService;
+    private final LoginAttemptService loginAttemptService;
 
-    /**
-     * Страница логина.
-     *
-     * @return {@code "auth/login"}
-     */
     @GetMapping("/login")
     public String loginPage(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails != null) {
@@ -38,12 +36,6 @@ public class AuthController {
         return "auth/login";
     }
 
-    /**
-     * Страница формы регистрации.
-     *
-     * @param model модель представления
-     * @return {@code "auth/register"}
-     */
     @GetMapping("/register")
     public String registerPage(Model model) {
         model.addAttribute("userDto", new UserDto());
@@ -51,22 +43,27 @@ public class AuthController {
     }
 
     /**
-     * Обрабатывает отправку формы регистрации. Если email уже
-     * зарегистрирован, ошибка отображается как ошибка поля {@code email}.
-     *
-     * @param dto                данные регистрации
-     * @param result             результат валидации
-     * @param redirectAttributes атрибуты для flash-сообщений
-     * @return редирект на {@code /login} при успехе, иначе {@code "auth/register"}
+     * Обрабатывает отправку формы регистрации. Ограничение по IP — не
+     * более 5 попыток за 15 минут, счётчик считает каждый POST независимо
+     * от результата (см. {@link LoginAttemptService}).
      */
     @PostMapping("/register")
     public String register(@ModelAttribute("userDto") @Valid UserDto dto,
                            BindingResult result,
                            @AuthenticationPrincipal UserDetails userDetails,
+                           HttpServletRequest request,
+                           Model model,
                            RedirectAttributes redirectAttributes) {
         if (userDetails != null) {
             return "redirect:/dashboard";
         }
+
+        String clientIp = request.getRemoteAddr();
+        if (loginAttemptService.isBlocked(clientIp)) {
+            model.addAttribute("error", "Слишком много попыток регистрации с этого адреса. Попробуйте позже.");
+            return "auth/register";
+        }
+        loginAttemptService.recordFailedAttempt(clientIp);
 
         if (result.hasErrors()) {
             return "auth/register";

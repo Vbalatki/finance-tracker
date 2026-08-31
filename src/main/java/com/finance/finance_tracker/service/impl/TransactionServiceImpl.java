@@ -5,6 +5,7 @@ import com.finance.finance_tracker.entity.Account;
 import com.finance.finance_tracker.entity.Category;
 import com.finance.finance_tracker.entity.Transaction;
 import com.finance.finance_tracker.entity.enums.TransactionType;
+import com.finance.finance_tracker.exception.AccessDeniedException;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
 import com.finance.finance_tracker.exception.InvalidAmountException;
 import com.finance.finance_tracker.exception.InvalidDataException;
@@ -52,7 +53,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Transactional
-    public void updateTransaction(TransactionDto dto) {
+    public void updateTransaction(TransactionDto dto, Long currentUserId) {
         log.debug("Обновление транзакции: id={}", dto.getId());
 
         Transaction oldTx = transactionRepository.findById(dto.getId())
@@ -85,6 +86,11 @@ public class TransactionServiceImpl implements TransactionService {
                         log.error("Счёт не найден при обновлении транзакции: accountId={}", dto.getAccountId());
                         return new EntityNotFoundException(ACCOUNT_NOT_FOUND + ", id: " + dto.getAccountId());
                     });
+            if (newAccount.getUser().getId() == null || !newAccount.getUser().getId().equals(currentUserId)) {
+                log.warn("Попытка перенести транзакцию id={} на чужой счёт: accountId={}, currentUserId={}",
+                        dto.getId(), dto.getAccountId(), currentUserId);
+                throw new AccessDeniedException("Нет доступа к этому счёту");
+            }
             oldTx.setAccount(newAccount);
             changed = true;
         }

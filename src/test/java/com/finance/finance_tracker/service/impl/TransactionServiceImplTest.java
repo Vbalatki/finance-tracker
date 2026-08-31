@@ -4,8 +4,10 @@ import com.finance.finance_tracker.dto.TransactionDto;
 import com.finance.finance_tracker.entity.Account;
 import com.finance.finance_tracker.entity.Category;
 import com.finance.finance_tracker.entity.Transaction;
+import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.entity.enums.Currency;
 import com.finance.finance_tracker.entity.enums.TransactionType;
+import com.finance.finance_tracker.exception.AccessDeniedException;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
 import com.finance.finance_tracker.exception.InvalidAmountException;
 import com.finance.finance_tracker.exception.InvalidDataException;
@@ -36,10 +38,13 @@ import static org.mockito.Mockito.when;
 /**
  * Unit-тесты для {@link TransactionServiceImpl}.
  * Основной фокус — корректность пересчёта баланса счёта при
- * создании / обновлении / удалении транзакций.
+ * создании / обновлении / удалении транзакций, а также (после фикса S-IDOR-1)
+ * проверка владения ТЕКУЩИМ и НОВЫМ счётом при обновлении транзакции.
  */
 @ExtendWith(MockitoExtension.class)
 class TransactionServiceImplTest {
+
+    private static final Long CURRENT_USER_ID = 1L;
 
     @Mock
     private TransactionRepository transactionRepository;
@@ -53,16 +58,21 @@ class TransactionServiceImplTest {
     @InjectMocks
     private TransactionServiceImpl transactionService;
 
+    private User owner;
     private Account account;
     private TransactionDto transactionDto;
 
     @BeforeEach
     void setUp() {
+        owner = new User();
+        owner.setId(CURRENT_USER_ID);
+
         account = new Account();
         account.setId(10L);
         account.setName("Основной счет");
         account.setBalance(new BigDecimal("1000.00"));
         account.setCurrency(Currency.RUB);
+        account.setUser(owner);
 
         transactionDto = new TransactionDto();
         transactionDto.setAccountId(10L);
@@ -222,7 +232,7 @@ class TransactionServiceImplTest {
             when(transactionRepository.save(any(Transaction.class))).thenReturn(existing);
             when(accountRepository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
 
-            transactionService.updateTransaction(dto);
+            transactionService.updateTransaction(dto, CURRENT_USER_ID);
 
             // было +100 в балансе, стало +300 => чистое изменение +200
             assertThat(account.getBalance()).isEqualByComparingTo("700.00");
@@ -246,20 +256,21 @@ class TransactionServiceImplTest {
             when(transactionRepository.save(any(Transaction.class))).thenReturn(existing);
             when(accountRepository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
 
-            transactionService.updateTransaction(dto);
+            transactionService.updateTransaction(dto, CURRENT_USER_ID);
 
             // отмена старого +100 (-100), затем применение нового как расхода (-100) => -200 от исходных 500
             assertThat(account.getBalance()).isEqualByComparingTo("300.00");
         }
 
         @Test
-        @DisplayName("при смене счёта корректирует баланс обоих счетов")
-        void updateTransaction_accountChanged_adjustsBothAccounts() {
+        @DisplayName("при смене счёта на СВОЙ другой счёт корректирует баланс обоих счетов")
+        void updateTransaction_accountChangedToOwnAccount_adjustsBothAccounts() {
             account.setBalance(new BigDecimal("500.00"));
             Account newAccount = new Account();
             newAccount.setId(20L);
             newAccount.setBalance(new BigDecimal("200.00"));
             newAccount.setCurrency(Currency.RUB);
+            newAccount.setUser(owner); // тот же владелец — легитимная смена своего счёта
 
             Transaction existing = new Transaction();
             existing.setId(1L);
@@ -276,10 +287,74 @@ class TransactionServiceImplTest {
             when(transactionRepository.save(any(Transaction.class))).thenReturn(existing);
             when(accountRepository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
 
-            transactionService.updateTransaction(dto);
+            transactionService.updateTransaction(dto, CURRENT_USER_ID);
 
             assertThat(account.getBalance()).isEqualByComparingTo("400.00");
             assertThat(newAccount.getBalance()).isEqualByComparingTo("300.00");
+        }
+
+        @Test
+        @DisplayName("S-IDOR-1: бросает AccessDeniedException при попытке перенести транзакцию на ЧУЖОЙ счёт")
+        void updateTransaction_accountChangedToOtherUsersAccount_throwsAccessDenied() {
+            User otherUser = new User();
+            otherUser.setId(999L);
+
+            Account otherUsersAccount = new Account();
+            otherUsersAccount.setId(20L);
+            otherUsersAccount.setBalance(new BigDecimal("200.00"));
+            otherUsersAccount.setCurrency(Currency.RUB);
+            otherUsersAccount.setUser(otherUser); // ЧУЖОЙ владелец
+
+            Transaction existing = new Transaction();
+            existing.setId(1L);
+            existing.setAmount(new BigDecimal("100.00"));
+            existing.setType(TransactionType.INCOME);
+            existing.setAccount(account); // account принадлежит owner (id=1)
+
+            TransactionDto dto = new TransactionDto();
+            dto.setId(1L);
+            dto.setAccountId(20L); // подделанный accountId с формы
+
+            when(transactionRepository.findById(1L)).thenReturn(Optional.of(existing));
+            when(accountRepository.findById(20L)).thenReturn(Optional.of(otherUsersAccount));
+
+            assertThrows(AccessDeniedException.class,
+                    () -> transactionService.updateTransaction(dto, CURRENT_USER_ID));
+
+            // Ничего не должно было сохраниться и балансы не должны были измениться
+            verify(transactionRepository, never()).save(any());
+            verify(accountRepository, never()).save(any());
+            assertThat(account.getBalance()).isEqualByComparingTo("1000.00");
+            assertThat(otherUsersAccount.getBalance()).isEqualByComparingTo("200.00");
+        }
+
+        @Test
+        @DisplayName("бросает AccessDeniedException, если сама транзакция уже на чужом (текущем) счёте")
+        void updateTransaction_existingAccountNotOwnedByCurrentUser_throwsAccessDenied() {
+            User otherUser = new User();
+            otherUser.setId(999L);
+
+            Account otherUsersAccount = new Account();
+            otherUsersAccount.setId(10L);
+            otherUsersAccount.setBalance(new BigDecimal("500.00"));
+            otherUsersAccount.setUser(otherUser);
+
+            Transaction existing = new Transaction();
+            existing.setId(1L);
+            existing.setAmount(new BigDecimal("100.00"));
+            existing.setType(TransactionType.INCOME);
+            existing.setAccount(otherUsersAccount);
+
+            TransactionDto dto = new TransactionDto();
+            dto.setId(1L);
+            dto.setAmount(new BigDecimal("300.00"));
+
+            when(transactionRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+            assertThrows(AccessDeniedException.class,
+                    () -> transactionService.updateTransaction(dto, CURRENT_USER_ID));
+
+            verify(transactionRepository, never()).save(any());
         }
 
         @Test
@@ -297,7 +372,7 @@ class TransactionServiceImplTest {
             when(transactionRepository.findById(1L)).thenReturn(Optional.of(existing));
             when(transactionRepository.save(any(Transaction.class))).thenReturn(existing);
 
-            transactionService.updateTransaction(dto);
+            transactionService.updateTransaction(dto, CURRENT_USER_ID);
 
             verify(accountRepository, never()).save(any());
             assertThat(account.getBalance()).isEqualByComparingTo("1000.00");
@@ -311,7 +386,7 @@ class TransactionServiceImplTest {
 
             when(transactionRepository.findById(404L)).thenReturn(Optional.empty());
 
-            assertThrows(EntityNotFoundException.class, () -> transactionService.updateTransaction(dto));
+            assertThrows(EntityNotFoundException.class, () -> transactionService.updateTransaction(dto, CURRENT_USER_ID));
         }
     }
 

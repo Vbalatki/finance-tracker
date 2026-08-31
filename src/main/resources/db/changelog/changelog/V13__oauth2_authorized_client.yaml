@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: 29
-      author: justin
+      author: dmitriy-sidorov
       comment: >
         Таблица под OAuth2-токены банковских интеграций с полноценным
         Authorization Code Flow (Alfa API, песочница). Адаптация
