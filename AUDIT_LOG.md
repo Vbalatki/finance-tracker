@@ -69,3 +69,24 @@
   это поле вообще не читает (использует `account.getUser().getId()` из уже
   загруженной сущности) — реальной дыры там нет, трогать не стали, чтобы не
   расширять диапазон правки без запроса.
+
+## 2026-09-01 — фикс сломанного роутинга /recurring + тест контроллера (🟣)
+
+**Что делали:** recurring/list.html и recurring/form.html ссылались на
+несуществующий путь /templates/recurring/... вместо /recurring/... —
+контроллер RecurringCommitmentController замаплен на /recurring без
+префикса. Кнопки "Добавить", toggle (пауза/плей), "Удалить" вели в 404.
+Фича не была покрыта тестами вообще — RecurringCommitmentControllerTest
+не существовал, поэтому регрессия не ловилась.
+
+**Пропатчено:**
+1. recurring/list.html — 3 ссылки/action поправлены на /recurring/...
+2. recurring/form.html — form action и cancel-ссылка поправлены на /recurring
+3. Добавлен RecurringCommitmentControllerTest — покрывает list/create/
+   save (valid+invalid)/toggle (success+error)/delete (success+error)
+
+**Не тронуто:** RecurringCommitmentService/Impl, RecurringCommitmentDto —
+сама бизнес-логика была рабочей, ломался только фронт.
+
+**Не проверено:** mvn verify не запускался (нет сети до Maven Central в
+песочнице) — правки вычитаны вручную.

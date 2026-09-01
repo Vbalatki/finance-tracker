@@ -10,7 +10,7 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1><i class="bi bi-arrow-repeat"></i> Плановые списания</h1>
-        <a th:href="@{/templates/recurring/form}" class="btn btn-primary">
+        <a class="btn btn-primary" th:href="@{/recurring/create}">
             <i class="bi bi-plus-circle"></i> Добавить
         </a>
     </div>
@@ -53,12 +53,12 @@
                               th:text="${c.active} ? 'Активно' : 'Приостановлено'"></span>
                     </td>
                     <td>
-                        <form th:action="@{/templates/recurring/{id}/toggle(id=${c.id})}" method="post" class="d-inline">
+                        <form class="d-inline" method="post" th:action="@{/recurring/{id}/toggle(id=${c.id})}">
                             <button type="submit" class="btn btn-sm btn-outline-secondary">
                                 <i th:class="${c.active} ? 'bi bi-pause' : 'bi bi-play'"></i>
                             </button>
                         </form>
-                        <form th:action="@{/templates/recurring/{id}/delete(id=${c.id})}" method="post" class="d-inline"
+                        <form class="d-inline" method="post" th:action="@{/recurring/{id}/delete(id=${c.id})}"
                               onsubmit="return confirm('Удалить плановое списание?')">
                             <button type="submit" class="btn btn-sm btn-outline-danger">
                                 <i class="bi bi-trash"></i>

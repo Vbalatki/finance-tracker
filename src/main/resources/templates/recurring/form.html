@@ -15,7 +15,7 @@
                     <h4>Новое плановое списание</h4>
                 </div>
                 <div class="card-body">
-                    <form th:action="@{/templates/recurring}" th:object="${commitmentDto}" method="post">
+                    <form method="post" th:action="@{/recurring}" th:object="${commitmentDto}">
                         <div class="mb-3">
                             <label class="form-label">Название</label>
                             <input type="text" class="form-control" th:field="*{name}"
@@ -62,7 +62,7 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            <a th:href="@{/templates/recurring}" class="btn btn-secondary">Отмена</a>
+                            <a class="btn btn-secondary" th:href="@{/recurring}">Отмена</a>
                             <button type="submit" class="btn btn-primary">Сохранить</button>
                         </div>
                     </form>
