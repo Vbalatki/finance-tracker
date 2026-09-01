@@ -3,8 +3,11 @@ package com.finance.finance_tracker.controller;
 import com.finance.finance_tracker.dto.AccountDto;
 import com.finance.finance_tracker.dto.ChangePasswordDto;
 import com.finance.finance_tracker.dto.UserDto;
+import com.finance.finance_tracker.dto.UserSettingsDto;
 import com.finance.finance_tracker.entity.SecurityUser;
 import com.finance.finance_tracker.entity.User;
+import com.finance.finance_tracker.entity.enums.Currency;
+import com.finance.finance_tracker.entity.enums.Theme;
 import com.finance.finance_tracker.exception.InvalidDataException;
 import com.finance.finance_tracker.service.UserService;
 import com.finance.finance_tracker.service.impl.UserDetailsServiceImpl;
@@ -14,6 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -195,5 +199,65 @@ class UserControllerTest {
                         .param("confirmPassword", "newPassword123"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("users/change-password"));
+    }
+
+    @Test
+    @DisplayName("GET /profile/settings возвращает страницу настроек с текущими значениями")
+    void settingsPage_returnsSettingsView() throws Exception {
+        when(userService.getUserByEmail("user@example.com")).thenReturn(currentUserDto);
+        UserSettingsDto settings = new UserSettingsDto();
+        settings.setTheme(Theme.LIGHT);
+        settings.setDefaultCurrency(Currency.RUB);
+        when(userService.getUserSettings(1L)).thenReturn(settings);
+
+        mockMvc.perform(get("/profile/settings"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("users/settings"))
+                .andExpect(model().attribute("settingsDto", settings))
+                .andExpect(model().attributeExists("currencies"));
+    }
+
+    @Test
+    @DisplayName("до фикса маршрут отдавал бы 404 из-за задвоенного префикса /profile/profile/settings")
+    void settingsPage_pathIsNotDoublePrefixed() throws Exception {
+        when(userService.getUserByEmail("user@example.com")).thenReturn(currentUserDto);
+        when(userService.getUserSettings(1L)).thenReturn(new UserSettingsDto());
+
+        mockMvc.perform(get("/profile/settings"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("POST /profile/settings/theme сохраняет новую тему")
+    void updateTheme_success_returnsOk() throws Exception {
+        when(userService.getUserByEmail("user@example.com")).thenReturn(currentUserDto);
+        UserSettingsDto settings = new UserSettingsDto();
+        settings.setTheme(Theme.LIGHT);
+        settings.setDefaultCurrency(Currency.RUB);
+        when(userService.getUserSettings(1L)).thenReturn(settings);
+
+        mockMvc.perform(post("/profile/settings/theme").param("theme", "DARK"))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<UserSettingsDto> captor = ArgumentCaptor.forClass(UserSettingsDto.class);
+        verify(userService).updateUserSettings(eq(1L), captor.capture());
+        assertThat(captor.getValue().getTheme()).isEqualTo(Theme.DARK);
+    }
+
+    @Test
+    @DisplayName("POST /profile/settings/currency сохраняет новую основную валюту")
+    void updateDefaultCurrency_success_returnsOk() throws Exception {
+        when(userService.getUserByEmail("user@example.com")).thenReturn(currentUserDto);
+        UserSettingsDto settings = new UserSettingsDto();
+        settings.setTheme(Theme.LIGHT);
+        settings.setDefaultCurrency(Currency.RUB);
+        when(userService.getUserSettings(1L)).thenReturn(settings);
+
+        mockMvc.perform(post("/profile/settings/currency").param("defaultCurrency", "USD"))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<UserSettingsDto> captor = ArgumentCaptor.forClass(UserSettingsDto.class);
+        verify(userService).updateUserSettings(eq(1L), captor.capture());
+        assertThat(captor.getValue().getDefaultCurrency()).isEqualTo(Currency.USD);
     }
 }

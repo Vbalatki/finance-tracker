@@ -153,7 +153,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/profile/settings")
+    @GetMapping("/settings")
     public String settingsPage(Model model, @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
         UserDto user = userService.getUserByEmail(userDetails.getUsername());
         model.addAttribute("settingsDto", userService.getUserSettings(user.getId()));
@@ -168,7 +168,7 @@ public class UserController {
      * целиком — переиспользует существующий bulk-метод сервиса, не плодит
      * отдельный узкий метод в сервисном слое ради одного поля.
      */
-    @PostMapping("/profile/settings/theme")
+    @PostMapping("/settings/theme")
     @ResponseBody
     public ResponseEntity<Void> updateTheme(@RequestParam Theme theme,
                                             @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
@@ -182,7 +182,7 @@ public class UserController {
     /**
      * Мгновенное сохранение основной валюты — тот же приём, что и для темы.
      */
-    @PostMapping("/profile/settings/currency")
+    @PostMapping("/settings/currency")
     @ResponseBody
     public ResponseEntity<Void> updateDefaultCurrency(@RequestParam Currency defaultCurrency,
                                                       @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
