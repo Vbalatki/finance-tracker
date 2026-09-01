@@ -28,6 +28,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -213,7 +214,7 @@ class TransactionControllerTest {
     }
 
     @Test
-    @DisplayName("POST /transactions/{id}/update для своей транзакции обновляет и редиректит")
+    @DisplayName("POST /transactions/{id}/update для своей транзакции обновляет и редиректит, передавая currentUserId в сервис")
     void updateTransaction_ownTransaction_success() throws Exception {
         TransactionDto existing = new TransactionDto();
         existing.setId(1L);
@@ -233,11 +234,14 @@ class TransactionControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/transactions"));
 
-        verify(transactionService).updateTransaction(any(TransactionDto.class));
+        // Важная часть фикса S-IDOR-1: контроллер обязан передавать currentUserId (1L),
+        // а не просто вызывать updateTransaction с одним аргументом — иначе сервис
+        // не сможет проверить владение новым счётом.
+        verify(transactionService).updateTransaction(any(TransactionDto.class), eq(1L));
     }
 
     @Test
-    @DisplayName("POST /transactions/{id}/update для чужой транзакции возвращает 403 и не обновляет")
+    @DisplayName("POST /transactions/{id}/update для чужой транзакции (по текущему счёту) возвращает 403 и не обновляет")
     void updateTransaction_otherUsersTransaction_returnsForbidden() throws Exception {
         TransactionDto existing = new TransactionDto();
         existing.setId(1L);
@@ -256,7 +260,37 @@ class TransactionControllerTest {
                         .param("accountId", "10"))
                 .andExpect(status().isForbidden());
 
-        verify(transactionService, never()).updateTransaction(any());
+        verify(transactionService, never()).updateTransaction(any(), any());
+    }
+
+    @Test
+    @DisplayName("S-IDOR-1 (контроллер->сервис): попытка подсунуть чужой accountId в форму редиректит с flash-ошибкой, а не тихо переносит транзакцию")
+    void updateTransaction_spoofedAccountIdInForm_serviceRejectsAndControllerShowsError() throws Exception {
+        // Своя транзакция на своём счёте — контроллер пропускает ownership-check на входе...
+        TransactionDto existing = new TransactionDto();
+        existing.setId(1L);
+        existing.setAccountId(10L);
+
+        AccountDto ownAccount = new AccountDto();
+        ownAccount.setId(10L);
+        ownAccount.setUserId(1L);
+
+        when(transactionService.getTransactionById(1L)).thenReturn(existing);
+        when(accountService.findById(10L)).thenReturn(ownAccount);
+
+        // ...но дальше в форме подделан accountId=20 (чужой счёт) — сервис должен это отклонить
+        org.mockito.Mockito.doThrow(new com.finance.finance_tracker.exception.AccessDeniedException("Нет доступа к этому счёту"))
+                .when(transactionService).updateTransaction(any(TransactionDto.class), eq(1L));
+
+        mockMvc.perform(post("/transactions/1/update")
+                        .param("amount", "70.00")
+                        .param("type", "EXPENSE")
+                        .param("accountId", "20"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/transactions"))
+                .andExpect(flash().attributeExists("error"));
+
+        verify(transactionService).updateTransaction(any(TransactionDto.class), eq(1L));
     }
 
     @Test

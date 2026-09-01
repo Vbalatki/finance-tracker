@@ -58,13 +58,18 @@ public class TransactionServiceImpl implements TransactionService {
 
         Transaction oldTx = transactionRepository.findById(dto.getId())
                 .orElseThrow(() -> {
-                    log.error("Транзакция не найдена при обновлении: id={}", dto.getId());
                     return new EntityNotFoundException(TRANSACTION_NOT_FOUND + ", id: " + dto.getId());
                 });
+
 
         Account oldAccount = oldTx.getAccount();
         BigDecimal oldAmount = oldTx.getAmount();
         TransactionType oldType = oldTx.getType();
+
+        if (oldAccount == null || oldAccount.getUser() == null
+                || !oldAccount.getUser().getId().equals(currentUserId)) {
+            throw new AccessDeniedException("Нет доступа к этой транзакции");
+        }
 
         boolean changed = false;
 
@@ -83,7 +88,6 @@ public class TransactionServiceImpl implements TransactionService {
         if (dto.getAccountId() != null && !dto.getAccountId().equals(oldAccount.getId())) {
             Account newAccount = accountRepository.findById(dto.getAccountId())
                     .orElseThrow(() -> {
-                        log.error("Счёт не найден при обновлении транзакции: accountId={}", dto.getAccountId());
                         return new EntityNotFoundException(ACCOUNT_NOT_FOUND + ", id: " + dto.getAccountId());
                     });
             if (newAccount.getUser().getId() == null || !newAccount.getUser().getId().equals(currentUserId)) {
@@ -100,7 +104,6 @@ public class TransactionServiceImpl implements TransactionService {
             if (dto.getCategoryId() != null) {
                 newCategory = categoryRepository.findById(dto.getCategoryId())
                         .orElseThrow(() -> {
-                            log.error("Категория не найдена при обновлении транзакции: categoryId={}", dto.getCategoryId());
                             return new EntityNotFoundException(CATEGORY_NOT_FOUND + ", id: " + dto.getCategoryId());
                         });
             }
