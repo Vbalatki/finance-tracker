@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 27
+      id: 28
       author: dimtriy_sidorov
       comment: >
         Полное мягкое удаление (C3): без этих колонок @SQLDelete/@Where на

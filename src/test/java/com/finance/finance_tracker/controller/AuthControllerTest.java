@@ -3,6 +3,7 @@ package com.finance.finance_tracker.controller;
 import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.exception.DuplicateEntityException;
 import com.finance.finance_tracker.service.UserService;
+import com.finance.finance_tracker.service.impl.LoginAttemptService;
 import com.finance.finance_tracker.testsupport.TestValidators;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,11 +35,14 @@ class AuthControllerTest {
     @Mock
     private UserService userService;
 
+    @Mock
+    private LoginAttemptService loginAttemptService;
+
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        AuthController controller = new AuthController(userService);
+        AuthController controller = new AuthController(userService, loginAttemptService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .setValidator(TestValidators.permissive())

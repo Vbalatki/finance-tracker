@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 26
+      id: 27
       author: dimtriy_sidorov
       comment: >
         Устраняет гонку в AccountServiceImpl.saveAccount/updateAccount (C1):

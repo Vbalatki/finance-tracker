@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -123,7 +124,7 @@ class RecurringCommitmentControllerTest {
                 .andExpect(redirectedUrl("/recurring"))
                 .andExpect(flash().attributeExists("success"));
 
-        verify(recurringCommitmentService).save(any(RecurringCommitmentDto.class), eqUserId());
+        verify(recurringCommitmentService).save(any(RecurringCommitmentDto.class), eq(eqUserId()));
     }
 
     @Test
