@@ -5,12 +5,10 @@ import com.finance.finance_tracker.dto.ChangePasswordDto;
 import com.finance.finance_tracker.dto.TransactionDto;
 import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.dto.UserSettingsDto;
-import com.finance.finance_tracker.entity.Account;
 import com.finance.finance_tracker.entity.Role;
 import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.entity.enums.Currency;
 import com.finance.finance_tracker.entity.enums.TransactionType;
-import com.finance.finance_tracker.exception.DuplicateEntityException;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
 import com.finance.finance_tracker.mapper.AccountMapper;
 import com.finance.finance_tracker.mapper.UserMapper;
@@ -32,7 +30,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.finance.finance_tracker.util.DataConstants.ACCOUNT_NAME_EXISTS;
 import static com.finance.finance_tracker.util.DataConstants.ROLE_NOT_FOUND;
 import static com.finance.finance_tracker.util.DataConstants.USER_NOT_FOUND;
 
@@ -186,27 +183,6 @@ public class UserServiceImpl implements UserService {
         log.info("Пароль изменён для пользователя: id={}", userId);
     }
 
-    @Transactional
-    public AccountDto addAccountToUser(Long userId, AccountDto accountDto) {
-        log.debug("Добавление счёта пользователю: userId={}, accountName={}", userId, accountDto.getName());
-        User user = findById(userId);
-
-        if (accountRepository.existsByNameAndUserId(accountDto.getName(), user.getId())) {
-            log.warn("Попытка создать счёт с дублирующимся именем: userId={}, name={}", userId, accountDto.getName());
-            throw new DuplicateEntityException(ACCOUNT_NAME_EXISTS + ": " + accountDto.getName());
-        }
-
-        Account account = accountMapper.toEntity(accountDto);
-        account.setUser(user);
-        account.setBalance(BigDecimal.ZERO);
-
-        Account savedAccount = accountRepository.save(account);
-        user.getAccounts().add(savedAccount);
-
-        log.info("Создан новый счёт для пользователя {}: accountId={}, name={}", userId, savedAccount.getId(), savedAccount.getName());
-        return accountMapper.toDto(savedAccount);
-    }
-
     @Transactional(readOnly = true)
     public List<AccountDto> getUserAccounts(Long userId) {
         log.debug("Запрос счетов пользователя: userId={}", userId);
@@ -230,9 +206,9 @@ public class UserServiceImpl implements UserService {
             BigDecimal balance = dto.getBalance();
             Currency currency = dto.getCurrency();
             BigDecimal rubAmount = currency == Currency.RUB
-                                    ? balance
-                                    : currencyApiService
-                                        .convertCurrency(currency.name(), "RUB", balance);
+                    ? balance
+                    : currencyApiService
+                    .convertCurrency(currency.name(), "RUB", balance);
             totalInRub = totalInRub.add(rubAmount);
         }
         log.debug("Общий баланс в рублях: {}", totalInRub);
@@ -251,7 +227,7 @@ public class UserServiceImpl implements UserService {
 
 
     private BigDecimal getUserTotalIncomeOrExpenseInRub(List<TransactionDto> transactions,
-                                                       TransactionType type) {
+                                                        TransactionType type) {
         if (transactions == null || transactions.isEmpty()) {
             return BigDecimal.ZERO;
         }
@@ -283,15 +259,6 @@ public class UserServiceImpl implements UserService {
                     log.error("Пользователь не найден: id={}", id);
                     return new EntityNotFoundException(USER_NOT_FOUND + ", id: " + id);
                 });
-    }
-
-    private BigDecimal convertToRub(BigDecimal amount, Currency currency) {
-        if (currency == null || currency == Currency.RUB) {
-            return amount;
-        }
-
-        BigDecimal rate = currencyApiService.convertCurrency(currency.name(), "RUB", BigDecimal.ONE);
-        return amount.multiply(rate);
     }
 
     @Transactional(readOnly = true)

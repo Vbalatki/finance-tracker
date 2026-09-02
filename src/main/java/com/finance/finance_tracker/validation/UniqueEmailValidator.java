@@ -1,6 +1,5 @@
 package com.finance.finance_tracker.validation;
 
-import com.finance.finance_tracker.dto.UserDto;
 import com.finance.finance_tracker.repository.UserRepository;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
@@ -9,12 +8,12 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class UniqueEmailValidator implements ConstraintValidator<UniqueEmail, UserDto> {
+public class UniqueEmailValidator implements ConstraintValidator<UniqueEmail, UniqueEmailOwner> {
 
     private final UserRepository userRepository;
 
     @Override
-    public boolean isValid(UserDto dto, ConstraintValidatorContext context) {
+    public boolean isValid(UniqueEmailOwner dto, ConstraintValidatorContext context) {
         if (dto.getEmail() == null || dto.getEmail().isBlank()) {
             return true;
         }

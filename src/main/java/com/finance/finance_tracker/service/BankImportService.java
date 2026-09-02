@@ -8,6 +8,9 @@ public interface BankImportService {
      * Создаёт новый Account, привязанный к внешнему банковскому счёту,
      * без импорта истории — сама синхронизация запускается отдельно.
      *
+     * * @throws com.finance.finance_tracker.exception.InvalidDataException
+     *         если bankCode не входит в список поддерживаемых банков
+     *
      * @throws com.finance.finance_tracker.exception.DuplicateEntityException
      *         если этот банковский счёт уже привязан к другому Account
      */

@@ -37,6 +37,13 @@ import static org.mockito.Mockito.when;
  * updateCategory_duplicateName_throws / updateCategory_sameName_skipsUniquenessCheck
  * удалены — эта логика переехала в @NotBlank + @UniqueCategoryName на
  * CategoryDto, тестируется отдельно в UniqueCategoryNameValidatorTest.
+ *
+ * Nested-класс "getUserCategories" удалён вместе с самим методом
+ * CategoryServiceImpl.getUserCategories — метод не был задекларирован в
+ * интерфейсе CategoryService (лишний публичный метод прямо на классе),
+ * ни один контроллер его не вызывал (CategoryController/BudgetController/
+ * RecurringCommitmentController/TransactionController используют только
+ * getAllCategoriesByUserId). См. AUDIT_LOG.md, запись про мёртвый код.
  */
 @ExtendWith(MockitoExtension.class)
 class CategoryServiceImplTest {
@@ -244,32 +251,6 @@ class CategoryServiceImplTest {
 
             assertThrows(AccessDeniedException.class, () -> categoryService.deleteCategory(5L, 1L));
             verify(categoryRepository, never()).delete(any());
-        }
-    }
-
-    @Nested
-    @DisplayName("getUserCategories")
-    class GetUserCategories {
-
-        @Test
-        @DisplayName("возвращает категории конкретного пользователя")
-        void getUserCategories_success() {
-            when(userRepository.existsById(1L)).thenReturn(true);
-            when(categoryRepository.findByUserId(1L)).thenReturn(List.of(category));
-            when(categoryMapper.toDto(category)).thenReturn(categoryDto);
-
-            List<CategoryDto> result = categoryService.getUserCategories(1L);
-
-            assertThat(result).containsExactly(categoryDto);
-        }
-
-        @Test
-        @DisplayName("бросает EntityNotFoundException, если пользователь не существует")
-        void getUserCategories_userNotFound_throws() {
-            when(userRepository.existsById(99L)).thenReturn(false);
-
-            assertThrows(EntityNotFoundException.class, () -> categoryService.getUserCategories(99L));
-            verify(categoryRepository, never()).findByUserId(any());
         }
     }
 }

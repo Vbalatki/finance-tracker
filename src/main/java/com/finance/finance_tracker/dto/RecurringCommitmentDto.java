@@ -37,6 +37,4 @@ public class RecurringCommitmentDto {
     private String accountName;
 
     private boolean active = true;
-
-    private Long userId;
 }

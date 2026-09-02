@@ -152,22 +152,4 @@ public class CategoryServiceImpl implements CategoryService {
         categoryRepository.delete(category);
         log.info("Удалена категория: id={}, name={}", id, category.getName());
     }
-
-    @Transactional(readOnly = true)
-    public List<CategoryDto> getUserCategories(Long userId) {
-        log.debug("Запрос категорий для пользователя: userId={}", userId);
-
-        if (!userRepository.existsById(userId)) {
-            log.error("Пользователь не найден при запросе категорий: userId={}", userId);
-            throw new EntityNotFoundException(USER_NOT_FOUND + ", id: " + userId);
-        }
-
-        List<Category> categories = categoryRepository.findByUserId(userId);
-
-        log.debug("Найдено категорий для пользователя {}: {}", userId, categories.size());
-
-        return categories.stream()
-                .map(categoryMapper::toDto)
-                .collect(Collectors.toList());
-    }
 }

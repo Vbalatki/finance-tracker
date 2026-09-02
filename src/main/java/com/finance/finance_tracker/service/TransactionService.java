@@ -26,11 +26,20 @@ public interface TransactionService {
      * Если сумма, тип или счёт изменились — баланс затронутых счетов
      * пересчитывается (старый эффект транзакции отменяется, новый применяется).
      *
-     * @param dto данные для обновления, {@code dto.id} обязателен
+     * <p>Владение проверяется в самом сервисе (а не только в контроллере) —
+     * и для текущего счёта транзакции, и для нового, если {@code dto.accountId}
+     * указывает на смену счёта. Это защита от IDOR: раньше контроллер проверял
+     * владение только СТАРЫМ счётом транзакции, а новый счёт из тела формы
+     * резолвился без проверки — пользователь мог перенести балансовый эффект
+     * своей транзакции на чужой счёт, просто подставив чужой accountId в форму.
+     *
+     * @param dto           данные для обновления, {@code dto.id} обязателен
+     * @param currentUserId id текущего аутентифицированного пользователя
      * @throws com.finance.finance_tracker.exception.EntityNotFoundException если транзакция, новый счёт или новая категория не найдены
      * @throws com.finance.finance_tracker.exception.InvalidAmountException если новая сумма не положительна
+     * @throws com.finance.finance_tracker.exception.AccessDeniedException если текущий или новый счёт принадлежит другому пользователю
      */
-    void updateTransaction(TransactionDto dto, Long userId);
+    void updateTransaction(TransactionDto dto, Long currentUserId);
 
     /**
      * Создаёт новую транзакцию и сразу применяет её эффект к балансу счёта
@@ -69,15 +78,6 @@ public interface TransactionService {
      * @return список транзакций счёта
      */
     List<TransactionDto> findByAccountId(Long accountId);
-
-    /**
-     * Возвращает все транзакции пользователя. Функционально идентичен
-     * {@link #getUserTransactions(Long)}.
-     *
-     * @param userId id пользователя
-     * @return список транзакций
-     */
-    List<TransactionDto> findByUserId(Long userId);
 
     /**
      * Возвращает транзакции сразу по нескольким счетам одним запросом —

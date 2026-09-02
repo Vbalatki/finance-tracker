@@ -2,7 +2,6 @@ package com.finance.finance_tracker.service.impl;
 
 import com.finance.finance_tracker.dto.AuditDto;
 import com.finance.finance_tracker.entity.Audit;
-import com.finance.finance_tracker.exception.EntityNotFoundException;
 import com.finance.finance_tracker.exception.InvalidDataException;
 import com.finance.finance_tracker.mapper.AuditMapper;
 import com.finance.finance_tracker.repository.AuditRepository;
@@ -19,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.finance.finance_tracker.util.DataConstants.AUDIT_NOT_FOUND;
 import static com.finance.finance_tracker.util.DataConstants.DEFAULT_SORT_FIELD;
 
 @Slf4j
@@ -63,20 +61,6 @@ public class AuditServiceImpl implements AuditService {
     }
 
     @Transactional(readOnly = true)
-    public List<AuditDto> getAllAudits() {
-        log.debug("Запрос всех записей аудита");
-        List<Audit> list = auditRepository.findAll();
-
-        if (list.isEmpty()) {
-            log.debug("Записи аудита не найдены");
-        }
-
-        return list.stream()
-                .map(auditMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
     public List<AuditDto> getRecentLogs(int limit) {
         if (limit <= 0) {
             throw new InvalidDataException("Лимит записей должен быть положительным числом, получено: " + limit);
@@ -115,34 +99,5 @@ public class AuditServiceImpl implements AuditService {
         log.debug("Найдено записей аудита: {}", auditPage.getTotalElements());
 
         return auditPage;
-    }
-
-    @Transactional(readOnly = true)
-    public AuditDto getAuditById(Long id) {
-        log.debug("Поиск записи аудита по id: {}", id);
-
-        Audit audit = auditRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(AUDIT_NOT_FOUND + ", id: " + id));
-
-        return auditMapper.toDto(audit);
-    }
-
-    @Transactional
-    public void deleteAudit(Long id) {
-        log.debug("Удаление записи аудита по id: {}", id);
-
-        if (!auditRepository.existsById(id)) {
-            throw new EntityNotFoundException(AUDIT_NOT_FOUND + ", id: " + id);
-        }
-
-        auditRepository.deleteById(id);
-        log.info("Удалена запись аудита с id: {}", id);
-    }
-
-    @Transactional
-    public void deleteAllAudits() {
-        log.warn("Удаление всех записей аудита");
-        auditRepository.deleteAll();
-        log.info("Все записи аудита удалены");
     }
 }

@@ -112,18 +112,6 @@ public interface UserService {
     UserDto getUserByEmail(String email);
 
     /**
-     * Добавляет пользователю новый счёт с нулевым начальным балансом
-     * (значение {@code dto.balance} игнорируется).
-     *
-     * @param userId id пользователя
-     * @param dto    данные счёта (используются только имя и валюта)
-     * @return созданный счёт
-     * @throws com.finance.finance_tracker.exception.EntityNotFoundException если пользователь не найден
-     * @throws com.finance.finance_tracker.exception.DuplicateEntityException если у пользователя уже есть счёт с таким именем
-     */
-    AccountDto addAccountToUser(Long userId, AccountDto dto);
-
-    /**
      * Возвращает все счета пользователя.
      *
      * @param userId id пользователя

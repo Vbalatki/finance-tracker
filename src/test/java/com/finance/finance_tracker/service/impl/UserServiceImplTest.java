@@ -4,12 +4,10 @@ import com.finance.finance_tracker.dto.AccountDto;
 import com.finance.finance_tracker.dto.ChangePasswordDto;
 import com.finance.finance_tracker.dto.TransactionDto;
 import com.finance.finance_tracker.dto.UserDto;
-import com.finance.finance_tracker.entity.Account;
 import com.finance.finance_tracker.entity.Role;
 import com.finance.finance_tracker.entity.User;
 import com.finance.finance_tracker.entity.enums.Currency;
 import com.finance.finance_tracker.entity.enums.TransactionType;
-import com.finance.finance_tracker.exception.DuplicateEntityException;
 import com.finance.finance_tracker.exception.EntityNotFoundException;
 import com.finance.finance_tracker.exception.InvalidDataException;
 import com.finance.finance_tracker.mapper.AccountMapper;
@@ -52,6 +50,16 @@ import static org.mockito.Mockito.when;
  * переехала в @UniqueEmail (Bean Validation на UserDto), тестируется
  * отдельно в UniqueEmailValidatorTest. changePassword_tooShort_throws
  * удалён по той же причине (теперь @Size на ChangePasswordDto).
+ *
+ * Нested-класс "счета пользователя" (addAccountToUser_*) удалён вместе с
+ * самим методом UserServiceImpl.addAccountToUser — подтверждено grep'ом,
+ * что ни один контроллер/шаблон его не вызывал (создание счёта у пользователя
+ * идёт через AccountService.saveAccount, а не через UserService). См.
+ * AUDIT_LOG.md, запись "мёртвый код".
+ *
+ * AccountRepository/AccountMapper остаются как @Mock, потому что нужны
+ * конструктору UserServiceImpl (AccountMapper реально используется в
+ * getUserAccounts), а не потому что тестируют что-то из удалённого метода.
  */
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
@@ -306,51 +314,6 @@ class UserServiceImplTest {
 
             assertThrows(InvalidDataException.class, () -> userService.changePassword(1L, dto));
             verify(userRepository, never()).save(any());
-        }
-    }
-
-    @Nested
-    @DisplayName("счета пользователя")
-    class UserAccounts {
-
-        @Test
-        @DisplayName("addAccountToUser создаёт счёт с нулевым балансом")
-        void addAccountToUser_success() {
-            AccountDto dto = new AccountDto();
-            dto.setName("Новый счет");
-            dto.setBalance(new BigDecimal("500.00"));
-            dto.setCurrency(Currency.RUB);
-
-            Account entity = new Account();
-            entity.setName("Новый счет");
-
-            Account saved = new Account();
-            saved.setId(50L);
-            saved.setName("Новый счет");
-            saved.setBalance(BigDecimal.ZERO);
-
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(accountRepository.existsByNameAndUserId("Новый счет", 1L)).thenReturn(false);
-            when(accountMapper.toEntity(dto)).thenReturn(entity);
-            when(accountRepository.save(entity)).thenReturn(saved);
-            when(accountMapper.toDto(saved)).thenReturn(dto);
-
-            userService.addAccountToUser(1L, dto);
-
-            assertThat(entity.getBalance()).isEqualByComparingTo(BigDecimal.ZERO);
-            assertThat(entity.getUser()).isEqualTo(user);
-        }
-
-        @Test
-        @DisplayName("addAccountToUser бросает DuplicateEntityException при дублирующемся имени")
-        void addAccountToUser_duplicateName_throws() {
-            AccountDto dto = new AccountDto();
-            dto.setName("Занято");
-
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(accountRepository.existsByNameAndUserId("Занято", 1L)).thenReturn(true);
-
-            assertThrows(DuplicateEntityException.class, () -> userService.addAccountToUser(1L, dto));
         }
     }
 

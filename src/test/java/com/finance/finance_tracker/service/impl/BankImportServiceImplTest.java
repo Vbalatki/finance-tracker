@@ -28,6 +28,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -142,5 +143,23 @@ class BankImportServiceImplTest {
 
         assertThat(imported).isEqualTo(1);
         verify(transactionRepository).saveAll(argThat(list -> ((List<?>) list).size() == 1));
+    }
+
+    @Test
+    @DisplayName("linkAccount бросает InvalidDataException для неизвестного bankCode")
+    void linkAccount_unknownBankCode_throws() {
+        assertThrows(InvalidDataException.class,
+                () -> bankImportService.linkAccount(1L, "SBER", "40702810000000000001",
+                        "Сбер счёт", com.finance.finance_tracker.entity.enums.Currency.RUB));
+
+        verifyNoInteractions(userRepository, accountRepository);
+    }
+
+    @Test
+    @DisplayName("linkAccount бросает InvalidDataException для null bankCode")
+    void linkAccount_nullBankCode_throws() {
+        assertThrows(InvalidDataException.class,
+                () -> bankImportService.linkAccount(1L, null, "40702810000000000001",
+                        "Счёт", com.finance.finance_tracker.entity.enums.Currency.RUB));
     }
 }

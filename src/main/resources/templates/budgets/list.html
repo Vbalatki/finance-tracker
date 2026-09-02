@@ -48,7 +48,6 @@
                                      th:class="${budget.currentSpending <= budget.monthlyLimit ? 'bg-success' : 'bg-danger'}"
                                      th:style="'width: ' + ${budget.currentSpending.doubleValue() / budget.monthlyLimit.doubleValue() * 100} + '%;'"
                                      th:attr="aria-valuenow=${budget.currentSpending}, aria-valuemin=0, aria-valuemax=${budget.monthlyLimit}">
-                                    <div class="progress-bar" th:style="'width: ' + ${budget.currentSpending * 100 / budget.monthlyLimit} + '%;'"></div>
                                 </div>
                             </div>
                             <div class="d-flex justify-content-between mt-2">

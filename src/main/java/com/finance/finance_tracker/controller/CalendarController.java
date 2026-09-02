@@ -1,16 +1,19 @@
 package com.finance.finance_tracker.controller;
 
 import com.finance.finance_tracker.dto.CalendarMonthDto;
-import com.finance.finance_tracker.util.SecurityUtil;
 import com.finance.finance_tracker.service.SpendingCalendarService;
+import com.finance.finance_tracker.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.time.DateTimeException;
 import java.time.YearMonth;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class CalendarController {
@@ -23,9 +26,18 @@ public class CalendarController {
                            Model model) {
         Long userId = SecurityUtil.getCurrentUserId();
 
-        YearMonth targetMonth = (year != null && month != null)
-                ? YearMonth.of(year, month)
-                : YearMonth.now();
+        YearMonth targetMonth;
+        if (year != null && month != null) {
+            try {
+                targetMonth = YearMonth.of(year, month);
+            } catch (DateTimeException e) {
+                log.warn("Некорректные year/month в запросе календаря: year={}, month={} — редирект на /calendar",
+                        year, month);
+                return "redirect:/calendar";
+            }
+        } else {
+            targetMonth = YearMonth.now();
+        }
 
         CalendarMonthDto calendarMonth = spendingCalendarService.getMonth(userId, targetMonth);
 

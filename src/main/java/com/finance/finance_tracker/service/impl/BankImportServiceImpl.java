@@ -47,10 +47,17 @@ public class BankImportServiceImpl implements BankImportService {
 
     private final @Qualifier("tBankConnector") BankConnector tBankConnector;
     private final @Qualifier("alfaBankConnector") BankConnector alfaBankConnector;
+
+    private static final Set<String> SUPPORTED_BANK_CODES = Set.of("TBANK", "ALFA");
+
     @Override
     @Transactional
     public Long linkAccount(Long userId, String bankCode, String externalAccountNumber,
                             String accountName, Currency currency) {
+        if (bankCode == null || !SUPPORTED_BANK_CODES.contains(bankCode)) {
+            throw new InvalidDataException("Неизвестный банк: " + bankCode);
+        }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND + ", id: " + userId));
 

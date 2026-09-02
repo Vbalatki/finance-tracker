@@ -31,13 +31,6 @@ public interface AuditService {
     void log(Long userId, String username, String action, String entityType, Long entityId, String details);
 
     /**
-     * Возвращает все записи аудита без пагинации.
-     *
-     * @return список всех записей аудита
-     */
-    List<AuditDto> getAllAudits();
-
-    /**
      * Возвращает последние {@code limit} записей аудита, отсортированные
      * по дате создания (сначала новые).
      *

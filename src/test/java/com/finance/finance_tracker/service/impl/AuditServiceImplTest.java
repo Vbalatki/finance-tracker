@@ -2,7 +2,6 @@ package com.finance.finance_tracker.service.impl;
 
 import com.finance.finance_tracker.dto.AuditDto;
 import com.finance.finance_tracker.entity.Audit;
-import com.finance.finance_tracker.exception.EntityNotFoundException;
 import com.finance.finance_tracker.exception.InvalidDataException;
 import com.finance.finance_tracker.mapper.AuditMapper;
 import com.finance.finance_tracker.repository.AuditRepository;
@@ -19,7 +18,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -32,6 +30,17 @@ import static org.mockito.Mockito.when;
  * Unit-тесты для {@link AuditServiceImpl}.
  * Метод log() помечен @Async, но в юнит-тестах (без Spring-контекста)
  * вызывается синхронно — это нормально для проверки бизнес-логики валидации.
+ *
+ * Тест getAllAudits_success удалён вместе с самим методом
+ * AuditService(Impl).getAllAudits — подтверждено grep'ом, что AdminController
+ * использует только getRecentLogs/getAuditLogs (пагинация), полный список
+ * нигде не запрашивался.
+ *
+ * Nested-класс "getAuditById / удаление" удалён вместе с методами
+ * getAuditById/deleteAudit/deleteAllAudits — все три не были задекларированы
+ * в интерфейсе AuditService (лишние публичные методы прямо на классе) и
+ * не вызывались НИ ОДНИМ контроллером/шаблоном во всём проекте (не только
+ * AdminController — проверен весь src). См. AUDIT_LOG.md, запись "мёртвый код".
  */
 @ExtendWith(MockitoExtension.class)
 class AuditServiceImplTest {
@@ -110,15 +119,6 @@ class AuditServiceImplTest {
     class Queries {
 
         @Test
-        @DisplayName("getAllAudits возвращает все записи")
-        void getAllAudits_success() {
-            when(auditRepository.findAll()).thenReturn(List.of(audit));
-            when(auditMapper.toDto(audit)).thenReturn(auditDto);
-
-            assertThat(auditService.getAllAudits()).containsExactly(auditDto);
-        }
-
-        @Test
         @DisplayName("getRecentLogs возвращает последние N записей")
         void getRecentLogs_success() {
             Page<Audit> page = new PageImpl<>(List.of(audit));
@@ -157,54 +157,6 @@ class AuditServiceImplTest {
         @DisplayName("getAuditLogs бросает InvalidDataException для неположительного размера страницы")
         void getAuditLogs_invalidSize_throws() {
             assertThrows(InvalidDataException.class, () -> auditService.getAuditLogs(0, 0));
-        }
-    }
-
-    @Nested
-    @DisplayName("getAuditById / удаление")
-    class GetAndDelete {
-
-        @Test
-        @DisplayName("getAuditById возвращает запись по id")
-        void getAuditById_success() {
-            when(auditRepository.findById(1L)).thenReturn(Optional.of(audit));
-            when(auditMapper.toDto(audit)).thenReturn(auditDto);
-
-            assertThat(auditService.getAuditById(1L)).isEqualTo(auditDto);
-        }
-
-        @Test
-        @DisplayName("getAuditById бросает EntityNotFoundException, если запись не найдена")
-        void getAuditById_notFound_throws() {
-            when(auditRepository.findById(404L)).thenReturn(Optional.empty());
-
-            assertThrows(EntityNotFoundException.class, () -> auditService.getAuditById(404L));
-        }
-
-        @Test
-        @DisplayName("deleteAudit удаляет существующую запись")
-        void deleteAudit_success() {
-            when(auditRepository.existsById(1L)).thenReturn(true);
-
-            auditService.deleteAudit(1L);
-
-            verify(auditRepository).deleteById(1L);
-        }
-
-        @Test
-        @DisplayName("deleteAudit бросает EntityNotFoundException для несуществующей записи")
-        void deleteAudit_notFound_throws() {
-            when(auditRepository.existsById(404L)).thenReturn(false);
-
-            assertThrows(EntityNotFoundException.class, () -> auditService.deleteAudit(404L));
-        }
-
-        @Test
-        @DisplayName("deleteAllAudits удаляет все записи")
-        void deleteAllAudits_success() {
-            auditService.deleteAllAudits();
-
-            verify(auditRepository).deleteAll();
         }
     }
 }

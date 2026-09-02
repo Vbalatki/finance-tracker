@@ -54,20 +54,25 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Transactional
     public void updateTransaction(TransactionDto dto, Long currentUserId) {
-        log.debug("Обновление транзакции: id={}", dto.getId());
+        log.debug("Обновление транзакции: id={}, currentUserId={}", dto.getId(), currentUserId);
 
         Transaction oldTx = transactionRepository.findById(dto.getId())
                 .orElseThrow(() -> {
+                    log.error("Транзакция не найдена при обновлении: id={}", dto.getId());
                     return new EntityNotFoundException(TRANSACTION_NOT_FOUND + ", id: " + dto.getId());
                 });
-
 
         Account oldAccount = oldTx.getAccount();
         BigDecimal oldAmount = oldTx.getAmount();
         TransactionType oldType = oldTx.getType();
 
+        // Defense-in-depth: контроллер уже проверяет владение старым счётом
+        // через SecurityUtil.requireOwnership до вызова этого метода, но
+        // сервис не должен полагаться только на это — проверяем ещё раз здесь.
         if (oldAccount == null || oldAccount.getUser() == null
                 || !oldAccount.getUser().getId().equals(currentUserId)) {
+            log.warn("Попытка изменить транзакцию на чужом счёте: transactionId={}, currentUserId={}",
+                    dto.getId(), currentUserId);
             throw new AccessDeniedException("Нет доступа к этой транзакции");
         }
 
@@ -88,13 +93,21 @@ public class TransactionServiceImpl implements TransactionService {
         if (dto.getAccountId() != null && !dto.getAccountId().equals(oldAccount.getId())) {
             Account newAccount = accountRepository.findById(dto.getAccountId())
                     .orElseThrow(() -> {
+                        log.error("Счёт не найден при обновлении транзакции: accountId={}", dto.getAccountId());
                         return new EntityNotFoundException(ACCOUNT_NOT_FOUND + ", id: " + dto.getAccountId());
                     });
-            if (newAccount.getUser().getId() == null || !newAccount.getUser().getId().equals(currentUserId)) {
+
+            // КЛЮЧЕВОЙ ФИКС (S-IDOR-1): без этой проверки пользователь мог
+            // указать в форме чужой accountId и перенести балансовый эффект
+            // своей транзакции на чужой счёт — контроллер проверял владение
+            // только исходным счётом транзакции, а новый счёт из тела запроса
+            // резолвился здесь безо всякой проверки.
+            if (newAccount.getUser() == null || !newAccount.getUser().getId().equals(currentUserId)) {
                 log.warn("Попытка перенести транзакцию id={} на чужой счёт: accountId={}, currentUserId={}",
                         dto.getId(), dto.getAccountId(), currentUserId);
                 throw new AccessDeniedException("Нет доступа к этому счёту");
             }
+
             oldTx.setAccount(newAccount);
             changed = true;
         }
@@ -104,6 +117,7 @@ public class TransactionServiceImpl implements TransactionService {
             if (dto.getCategoryId() != null) {
                 newCategory = categoryRepository.findById(dto.getCategoryId())
                         .orElseThrow(() -> {
+                            log.error("Категория не найдена при обновлении транзакции: categoryId={}", dto.getCategoryId());
                             return new EntityNotFoundException(CATEGORY_NOT_FOUND + ", id: " + dto.getCategoryId());
                         });
             }
@@ -201,11 +215,6 @@ public class TransactionServiceImpl implements TransactionService {
         return list.stream()
                 .map(transactionMapper::toDto)
                 .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public List<TransactionDto> findByUserId(Long userId) {
-        return getUserTransactions(userId);
     }
 
     @Transactional(readOnly = true)
