@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 30
+      id: 31
       author: dmitriy-sidorov
       comment: >
         Таблица под OAuth2-токены банковских интеграций с полноценным

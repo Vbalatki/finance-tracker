@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 29
+      id: 30
       author: dmitriy-sidorov
       comment: >
         Убирает locale — решили не делать переключение языка, банки и
